@@ -1,0 +1,540 @@
+openapi: 3.0.3
+info:
+  title: WASAPhoto
+  description: |
+    Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto!  
+    You can upload your photos directly from your PC, and they will be visible to everyone following you
+  version: 0.0.1
+servers: 
+  - url: http://localhost:3000
+
+paths:
+  /session:
+    post:
+      tags: ["MyProfile"]
+      summary: Log in the user
+      description: |-
+        If the user does not exist, it will be created, and an identifier is returned.
+        If the user exists, the user identifier is returned.
+      operationId: doLogin
+      requestBody:
+        description: User details
+        content:
+          application/json: 
+            schema: {$ref: "#/components/schemas/Username"}
+        required: true
+      responses:
+        '201':
+          description: User log-in avtion successfully
+          content:
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  identifier:
+                    type: string
+                    example: "abcdef012345"
+
+  /:
+    get:
+      security:
+        - bearerAuth: []  
+      tags: ["MyProfile"]
+      operationId: getMyStream
+      summary: Get user's stream
+      description: |
+        The stream is composed by photos from “following” (other users that the user follows).
+      responses:
+        '200':
+          description: User stream successfully found
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+
+  /users/{uId}:
+    parameters:
+        - $ref: "#/components/parameters/UserId"   
+    get:
+      security:
+        - bearerAuth: []   
+      tags: ["MyProfile"]  
+      operationId:  getUserProfile
+      summary: Search by username
+      description: Get the profile of the user with the given one username in the request.
+      responses:
+        '200':
+          description: User profile successfully found
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+
+    put:
+      security:
+        - bearerAuth: []
+      tags: ["MyProfile"]
+      operationId: setMyUserName
+      summary: Change username
+      description: Set a new username for the current user.
+      requestBody:
+        description: User details
+        content:
+          application/json: 
+            schema: {$ref: "#/components/schemas/Username"}
+        required: true
+      responses:
+        '200':
+          description: Username successfully changed
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+  
+  /users/{uId}/bio/:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+    put:
+      security:
+        - bearerAuth: []
+      tags: ["MyProfile"]
+      operationId: setMyBiografy
+      summary: Change biografy
+      description: Set a new biografy for the current user.
+      requestBody:
+        description: New biografy
+        content:
+          application/json: 
+            schema: {$ref: "#/components/schemas/Profile/properties/ProfileBio"}
+        required: true
+      responses:
+        '200':
+          description: Biografy successfully changed
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+    
+  /users/{uId}/propic/:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+    put:
+      security:
+        - bearerAuth: []
+      tags: ["MyProfile"]
+      operationId: setMyPropic
+      summary: Change profile picture
+      description: Set a new profile picture for the current user.
+      requestBody:
+        description: New profile picture
+        content:
+          application/json: 
+            schema: {$ref: "#/components/schemas/Post/properties/Photo"}
+        required: true
+      responses:
+        '200':
+          description: Profile picture successfully changed
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+
+  /users/{uId}/followers/{followeruId}:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+        - name: followerUId
+          schema: {$ref: "#/components/schemas/Username"}
+          description: Follower user identifier
+          in: path
+          required: true
+    put:
+      security:
+        - bearerAuth: []
+      tags: ["ManageProfile"]
+      operationId: followUser
+      summary: Follow an user
+      description: Follow an user if it's not followed yet.
+      responses:
+        '200':
+          description: User successfully followed
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+    delete:
+      security:
+        - bearerAuth: []
+      tags: ["ManageProfile"]
+      operationId: unfollowUser
+      summary: Unfollow an user
+      description: Unfollow an user if it's already followed.
+      responses:
+        '200':
+          description: User successfully unfollowed
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+
+  /users/{uId}/banned/{banneduId}:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+        - name: banneduId
+          schema: {$ref: "#/components/schemas/Username"}
+          description: Banned user identifier
+          in: path
+          required: true
+    put:
+      security:
+        - bearerAuth: []
+      tags: ["ManageProfile"]
+      operationId: banUser
+      summary: Ban an user
+      description: Ban an user if it's not banned yet.
+      responses:
+        '200':
+          description: User successfully banned
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+    delete:
+      security:
+        - bearerAuth: []
+      tags: ["ManageProfile"]
+      operationId: unbanUser
+      summary: Unban an user
+      description: Unban an user if it's already banned.
+      responses:
+        '200':
+          description: User successfully unbanned
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+
+  /users/{uId}/post/:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+    post:
+      security:
+        - bearerAuth: []
+      tags: ["ManageProfile"]
+      operationId: uploadPhoto
+      summary: Upload a photo
+      description: Upload a photo on the profile.
+      requestBody:
+        description: Photo details
+        content:
+          multipart/form-data: 
+            schema:
+              type: object
+              properties:
+                Photo: {$ref: "#/components/schemas/Post/properties/Photo"}
+                Description: {$ref: "#/components/schemas/Post/properties/Description"}
+        required: true
+      responses:
+        '201':
+          description: Photo successfully uploaded
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+  
+  /users/{uId}/post/{postId}:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+        - name: postId
+          schema: {$ref: "#/components/schemas/Post/properties/Id"}
+          description: Post identifier
+          in: path
+          required: true
+    delete:
+      security:
+        - bearerAuth: []
+      tags: ["ManageProfile"]
+      operationId: deletePhoto
+      summary: Delete a photo
+      description: |
+        Delete a photo from the profile.
+
+        Removal of an image will also remove likes and comments.
+      responses:
+        '200':
+          description: Photo successfully deleted
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+    
+  /users/{uId}/post/{postId}/likes/:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+        - name: postId
+          schema: {$ref: "#/components/schemas/Post/properties/Id"}
+          description: Post identifier
+          in: path
+          required: true
+    put:
+      security:
+        - bearerAuth: []
+      tags: ["ManagePost"]
+      operationId: likePhoto
+      summary: Like a Photo
+      description: Like a post if it's not liked yet.
+      responses:
+        '200':
+          description: Photo successfully liked
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+    
+  /users/{uId}/post/{postId}/likes/{likeuId}:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+        - name: postId
+          schema: {$ref: "#/components/schemas/Post/properties/Id"}
+          description: Post identifier
+          in: path
+          required: true
+        - name: likeuId
+          schema: {$ref: "#/components/schemas/Username"}
+          description: Like user identifier
+          in: path
+          required: true
+    delete:
+      security:
+        - bearerAuth: []
+      tags: ["ManagePost"]
+      operationId: unlikePhoto
+      summary: Unlike a Photo
+      description: Remove like from a photo if it's already liked.
+      responses:
+        '200':
+          description: Photo successfully unliked
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+  
+  /users/{uId}/post/{postId}/comments/:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+        - name: postId
+          schema: {$ref: "#/components/schemas/Post/properties/Id"}
+          description: Post identifier
+          in: path
+          required: true
+    post:
+      security:
+        - bearerAuth: []
+      tags: ["ManagePost"]
+      operationId: commentPhoto
+      summary: Comment a photo
+      description: Public a comment about a post.
+      requestBody:
+        description: Comment details
+        content:
+          application/json: 
+            schema: {$ref: '#/components/schemas/Comment/properties/Text'}
+        required: true
+      responses:
+        '201':
+          description: Comment successfully created
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+    
+  /users/{uId}/post/{postId}/comments/{commentuId}:
+    parameters:
+        - $ref: "#/components/parameters/UserId" 
+        - name: postId
+          schema: {$ref: "#/components/schemas/Post/properties/Id"}
+          description: Post identifier
+          in: path
+          required: true
+        - name: commentuId
+          schema: {$ref: "#/components/schemas/Username"}
+          description: Comment user identifier
+          in: path
+          required: true
+    delete:
+      security:
+        - bearerAuth: []
+      tags: ["ManagePost"]
+      operationId: uncommentPhoto
+      summary: Delete a comment
+      description: |
+        Delete a comment from a post. 
+      
+        Only authors can remove their comments.
+      responses:
+        '200':
+          description: Photo successfully uncommented
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+    
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT 
+  
+  responses:
+    400BadRequest: 
+      description: The request was not compliant with the documnetation (eg. missing field, etc).
+    401UnauthorizedError: 
+      description: Unauthorised, the user does not have valid authentication credentials for the target resource.
+    404NotFound:
+      description: The requested resource could not be found but may be available in the future.
+    500InternalServerError:
+      description: Server side error.
+    
+  parameters:
+    UserId:
+      schema: {$ref: "#/components/schemas/Username"}
+      name: uId
+      description: User identifier
+      in: path
+      required: true
+
+  schemas:
+    Username:
+      description: Username schema
+      type: object 
+      properties:
+        name:
+          type: string
+          example: Eve
+          pattern: '^.*?$'
+          minLength: 3
+          maxLength: 16
+
+    Profile:
+      description: |
+        A profile contains an user's photos (in reverse chronological order), how many photos have been uploaded, and the user's followers and following.
+      type: object
+      properties:
+        Username: {$ref: "#/components/schemas/Username"}
+        ProfileBio:
+          description: Biografy of the profile
+          type: string
+          minLength: 0
+          maxLength: 150
+          example: This is a biografy
+        ProfilePicture:
+          description: File of the profile picture
+          type: string
+          format: binary
+        Followers:
+          description: List of followers' profile with relative number of them
+          type: object
+          properties:
+            Count:
+              type: integer
+              minumum: 0
+              example: 52
+              readonly: true
+            List:
+              type: array
+              items: {$ref: "#/components/schemas/Username"}
+              minItems: 0
+              uniqueItems: true
+        Following:
+          description: List of following's profile with relative number of them
+          type: object
+          properties:
+            Count:
+              type: integer
+              minumum: 0
+              example: 52
+              readonly: true
+            List:
+              type: array
+              items: {$ref: "#/components/schemas/Username"}
+              minItems: 0
+              uniqueItems: true
+        Posts:
+          description: List of user's photos with relative number of its
+          type: object
+          properties:
+            Count:
+              type: integer
+              minumum: 0
+              example: 24
+              readonly: true
+            List:
+              type: array
+              items: {$ref: "#/components/schemas/Username"}
+              minItems: 0
+              uniqueItems: true
+
+    Post:
+      description: An uploaded photo with its description, date, likes and comments
+      type: object
+      properties:
+        Id:
+          description: Post ID
+          type: integer
+          example: 100034
+          readOnly: true
+          unique: true
+        Photo:
+          description: File of the photo posted
+          type: string
+          format: binary
+        Description:
+          description: Description about the post
+          type: string
+          minLength: 0
+          maxLength: 150
+          example: This is a description
+        Date&Time:
+          description: Date and time when the post got uploaded
+          type: string
+          format: date-time 
+          example: 2023-11-05T20:43:48Z
+        Likes:
+          description: List of users who liked the post with relative number of them
+          type: object
+          properties:
+            Count:
+              type: integer
+              minumum: 0
+              example: 24
+              readonly: true
+            List:
+              type: array
+              items: {$ref: "#/components/schemas/Username"}
+              minItems: 0
+              uniqueItems: true 
+        Comments:
+          description: List of comments about the post
+          type: array
+          items: {$ref: "#/components/schemas/Comment"}
+          minItems: 0
+          
+    Comment:
+        description: A generic comment about a post
+        type: object 
+        properties:
+          User:
+            description: User who writed the comment
+            type: string
+            schemas: {$ref: "#/components/schemas/Username"}
+            example: Eve
+          Text:
+            desciption: Text of  the comment
+            type: string
+            minLength: 0
+            maxLength: 100
+            example: This is a comment
+          Date&Time:
+            description: Date and time when the comment got posted
+            type: string
+            format: date-time 
+            example: 2023-11-06T14:38:28Z

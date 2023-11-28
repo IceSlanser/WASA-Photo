@@ -4,7 +4,7 @@ info:
   description: |
     Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto!  
     You can upload your photos directly from your PC, and they will be visible to everyone following you
-  version: 0.0.1
+  version: 0.0.5
 servers: 
   - url: http://localhost:3000
 
@@ -29,6 +29,7 @@ paths:
           content:
             application/json: 
               schema:
+                description: Returned username
                 type: object
                 properties:
                   identifier:
@@ -47,6 +48,9 @@ paths:
       responses:
         '200':
           description: User stream successfully found
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Post"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -65,6 +69,9 @@ paths:
       responses:
         '200':
           description: User profile successfully found
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Profile"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -86,6 +93,9 @@ paths:
       responses:
         '200':
           description: Username successfully changed
+          content:
+            application/json: 
+              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
@@ -104,11 +114,14 @@ paths:
         description: New biografy
         content:
           application/json: 
-            schema: {$ref: "#/components/schemas/Profile/properties/ProfileBio"}
+            schema: {$ref: "#/components/schemas/ProfileBio"}
         required: true
       responses:
         '200':
           description: Biografy successfully changed
+          content:
+            application/json: 
+              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
@@ -127,16 +140,19 @@ paths:
         description: New profile picture
         content:
           application/json: 
-            schema: {$ref: "#/components/schemas/Post/properties/Photo"}
+            schema: {$ref: "#/components/schemas/Photo"}
         required: true
       responses:
         '200':
           description: Profile picture successfully changed
+          content:
+            application/json: 
+              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
 
-  /users/{uId}/followers/{followeruId}:
+  /users/{uId}/followers/{followerUId}:
     parameters:
         - $ref: "#/components/parameters/UserId" 
         - name: followerUId
@@ -154,6 +170,9 @@ paths:
       responses:
         '200':
           description: User successfully followed
+          content:
+            application/json: 
+              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -166,7 +185,7 @@ paths:
       summary: Unfollow an user
       description: Unfollow an user if it's already followed.
       responses:
-        '200':
+        '204':
           description: User successfully unfollowed
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
@@ -191,6 +210,9 @@ paths:
       responses:
         '200':
           description: User successfully banned
+          content:
+            application/json: 
+              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -203,7 +225,7 @@ paths:
       summary: Unban an user
       description: Unban an user if it's already banned.
       responses:
-        '200':
+        '204':
           description: User successfully unbanned
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
@@ -233,6 +255,9 @@ paths:
       responses:
         '201':
           description: Photo successfully uploaded
+          content:
+            application/json: 
+              schema: {$ref: "#/components/schemas/Post/properties/Id"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -257,31 +282,8 @@ paths:
 
         Removal of an image will also remove likes and comments.
       responses:
-        '200':
+        '204':
           description: Photo successfully deleted
-        '400': {$ref: "#/components/responses/400BadRequest"}
-        '401': {$ref: "#/components/responses/401UnauthorizedError"}
-        '404': {$ref: "#/components/responses/404NotFound"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
-    
-  /users/{uId}/post/{postId}/likes/:
-    parameters:
-        - $ref: "#/components/parameters/UserId" 
-        - name: postId
-          schema: {$ref: "#/components/schemas/Post/properties/Id"}
-          description: Post identifier
-          in: path
-          required: true
-    put:
-      security:
-        - bearerAuth: []
-      tags: ["ManagePost"]
-      operationId: likePhoto
-      summary: Like a Photo
-      description: Like a post if it's not liked yet.
-      responses:
-        '200':
-          description: Photo successfully liked
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -300,6 +302,25 @@ paths:
           description: Like user identifier
           in: path
           required: true
+    
+    put:
+      security:
+        - bearerAuth: []
+      tags: ["ManagePost"]
+      operationId: likePhoto
+      summary: Like a Photo
+      description: Like a post if it's not liked yet.
+      responses:
+        '200':
+          description: Photo successfully liked
+          content:
+            application/json: 
+              schema: {$ref: "#/components/schemas/Post/properties/Id"}
+        '400': {$ref: "#/components/responses/400BadRequest"}
+        '401': {$ref: "#/components/responses/401UnauthorizedError"}
+        '404': {$ref: "#/components/responses/404NotFound"}
+        '500': {$ref: "#/components/responses/500InternalServerError"}
+    
     delete:
       security:
         - bearerAuth: []
@@ -308,7 +329,7 @@ paths:
       summary: Unlike a Photo
       description: Remove like from a photo if it's already liked.
       responses:
-        '200':
+        '204':
           description: Photo successfully unliked
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
@@ -334,11 +355,14 @@ paths:
         description: Comment details
         content:
           application/json: 
-            schema: {$ref: '#/components/schemas/Comment/properties/Text'}
+            schema: {$ref: '#/components/schemas/Text'}
         required: true
       responses:
         '201':
           description: Comment successfully created
+          content:
+            application/json: 
+              schema: {$ref: "#/components/schemas/Comment/properties/Id"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -368,7 +392,7 @@ paths:
       
         Only authors can remove their comments.
       responses:
-        '200':
+        '204':
           description: Photo successfully uncommented
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
@@ -419,13 +443,9 @@ components:
         A profile contains an user's photos (in reverse chronological order), how many photos have been uploaded, and the user's followers and following.
       type: object
       properties:
+        Id: {$ref: "#/components/schemas/Id"}
         Username: {$ref: "#/components/schemas/Username"}
-        ProfileBio:
-          description: Biografy of the profile
-          type: string
-          minLength: 0
-          maxLength: 150
-          example: This is a biografy
+        ProfileBio: {$ref: "#/components/schemas/ProfileBio"}
         ProfilePicture:
           description: File of the profile picture
           type: string
@@ -434,11 +454,7 @@ components:
           description: List of followers' profile with relative number of them
           type: object
           properties:
-            Count:
-              type: integer
-              minumum: 0
-              example: 52
-              readonly: true
+            Count: {$ref: "#/components/schemas/Count"}
             List:
               type: array
               items: {$ref: "#/components/schemas/Username"}
@@ -448,11 +464,7 @@ components:
           description: List of following's profile with relative number of them
           type: object
           properties:
-            Count:
-              type: integer
-              minumum: 0
-              example: 52
-              readonly: true
+            Count: {$ref: "#/components/schemas/Count"}
             List:
               type: array
               items: {$ref: "#/components/schemas/Username"}
@@ -462,31 +474,19 @@ components:
           description: List of user's photos with relative number of its
           type: object
           properties:
-            Count:
-              type: integer
-              minumum: 0
-              example: 24
-              readonly: true
+            Count: {$ref: "#/components/schemas/Count"}
             List:
               type: array
               items: {$ref: "#/components/schemas/Username"}
               minItems: 0
               uniqueItems: true
-
+    
     Post:
       description: An uploaded photo with its description, date, likes and comments
       type: object
       properties:
-        Id:
-          description: Post ID
-          type: integer
-          example: 100034
-          readOnly: true
-          unique: true
-        Photo:
-          description: File of the photo posted
-          type: string
-          format: binary
+        Id: {$ref: "#/components/schemas/Id"}
+        Photo: {$ref: "#/components/schemas/Photo"}
         Description:
           description: Description about the post
           type: string
@@ -502,11 +502,7 @@ components:
           description: List of users who liked the post with relative number of them
           type: object
           properties:
-            Count:
-              type: integer
-              minumum: 0
-              example: 24
-              readonly: true
+            Count: {$ref: "#/components/schemas/Count"}
             List:
               type: array
               items: {$ref: "#/components/schemas/Username"}
@@ -517,24 +513,46 @@ components:
           type: array
           items: {$ref: "#/components/schemas/Comment"}
           minItems: 0
+    
+    Text:
+      description: Text of  the comment
+      type: string
+      minLength: 0
+      maxLength: 100
+      example: This is a comment
           
     Comment:
         description: A generic comment about a post
         type: object 
         properties:
-          User:
-            description: User who writed the comment
-            type: string
-            schemas: {$ref: "#/components/schemas/Username"}
-            example: Eve
-          Text:
-            desciption: Text of  the comment
-            type: string
-            minLength: 0
-            maxLength: 100
-            example: This is a comment
+          Id: {$ref: "#/components/schemas/Id"}
+          User: {$ref: "#/components/schemas/Username"}
+          Text: {$ref: "#/components/schemas/Text"}
           Date&Time:
             description: Date and time when the comment got posted
             type: string
             format: date-time 
             example: 2023-11-06T14:38:28Z
+        
+    ProfileBio:
+      description: Biografy of the profile
+      type: string
+      minLength: 0
+      maxLength: 150
+      example: This is a biografy
+          
+    Photo:
+      description: File of the photo posted
+      type: string
+      format: binary
+    
+    Id:
+      description: Post ID
+      type: integer
+      example: 1993737
+      readOnly: true
+    
+    Count:
+      type: integer
+      minimum: 0
+      example: 24

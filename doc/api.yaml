@@ -50,7 +50,7 @@ paths:
           description: User stream successfully found
           content:
             application/json:
-              schema: {$ref: "#/components/schemas/Post"}
+              schema: {$ref: "#/components/schemas/Stream"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -100,7 +100,7 @@ paths:
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
   
-  /users/{uId}/bio/:
+  /users/{uId}/bio:
     parameters:
         - $ref: "#/components/parameters/UserId" 
     put:
@@ -126,7 +126,7 @@ paths:
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
     
-  /users/{uId}/propic/:
+  /users/{uId}/propic:
     parameters:
         - $ref: "#/components/parameters/UserId" 
     put:
@@ -232,7 +232,7 @@ paths:
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
 
-  /users/{uId}/post/:
+  /users/{uId}/post:
     parameters:
         - $ref: "#/components/parameters/UserId" 
     post:
@@ -336,7 +336,7 @@ paths:
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
   
-  /users/{uId}/post/{postId}/comments/:
+  /users/{uId}/post/{postId}/comments:
     parameters:
         - $ref: "#/components/parameters/UserId" 
         - name: postId
@@ -553,6 +553,14 @@ components:
       readOnly: true
     
     Count:
+      description: Just a counter
       type: integer
       minimum: 0
       example: 24
+      
+    Stream:
+      description: User stream
+      type: array
+      items: {$ref: "#/components/schemas/Post"}
+      minItems: 0
+      uniqueItems: true

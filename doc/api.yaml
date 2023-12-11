@@ -34,6 +34,8 @@ paths:
                 properties:
                   identifier:
                     type: string
+                    minLength: 3
+                    maxLength: 16
                     example: "abcdef012345"
 
   /:
@@ -247,6 +249,7 @@ paths:
         content:
           multipart/form-data: 
             schema:
+              description: Request for photo image and photo description.
               type: object
               properties:
                 Photo: {$ref: "#/components/schemas/Post/properties/Photo"}
@@ -490,6 +493,7 @@ components:
         Description:
           description: Description about the post
           type: string
+          pattern: '^.*?$'
           minLength: 0
           maxLength: 150
           example: This is a description
@@ -517,6 +521,7 @@ components:
     Text:
       description: Text of  the comment
       type: string
+      pattern: '^.*?$'
       minLength: 0
       maxLength: 100
       example: This is a comment
@@ -537,6 +542,7 @@ components:
     ProfileBio:
       description: Biografy of the profile
       type: string
+      pattern: '^.*?$'
       minLength: 0
       maxLength: 150
       example: This is a biografy

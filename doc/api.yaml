@@ -458,31 +458,19 @@ components:
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List:
-              type: array
-              items: {$ref: "#/components/schemas/Username"}
-              minItems: 0
-              uniqueItems: true
+            List: {$ref: "#/components/schemas/ListOfUsername"}
         Following:
           description: List of following's profile with relative number of them
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List:
-              type: array
-              items: {$ref: "#/components/schemas/Username"}
-              minItems: 0
-              uniqueItems: true
+            List: {$ref: "#/components/schemas/ListOfUsername"}
         Posts:
           description: List of user's photos with relative number of its
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List:
-              type: array
-              items: {$ref: "#/components/schemas/Username"}
-              minItems: 0
-              uniqueItems: true
+            List: {$ref: "#/components/schemas/ListOfUsername"}
     
     Post:
       description: An uploaded photo with its description, date, likes and comments
@@ -507,16 +495,13 @@ components:
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List:
-              type: array
-              items: {$ref: "#/components/schemas/Username"}
-              minItems: 0
-              uniqueItems: true 
+            List: {$ref: "#/components/schemas/ListOfUsername"}
         Comments:
           description: List of comments about the post
           type: array
           items: {$ref: "#/components/schemas/Comment"}
           minItems: 0
+          maxItems: 9999
     
     Text:
       description: Text of  the comment
@@ -569,4 +554,13 @@ components:
       type: array
       items: {$ref: "#/components/schemas/Post"}
       minItems: 0
+      maxItems: 9999
+      uniqueItems: true
+      
+    ListOfUsername:
+      description: List of usernames
+      type: array
+      items: {$ref: "#/components/schemas/Username"}
+      minItems: 0
+      maxItems: 9999
       uniqueItems: true

@@ -24,19 +24,18 @@ paths:
             schema: {$ref: "#/components/schemas/Username"}
         required: true
       responses:
-        '201':
+        '200':
           description: User log-in avtion successfully
           content:
             application/json: 
-              schema:
-                description: Returned username
-                type: object
-                properties:
-                  identifier:
-                    type: string
-                    minLength: 3
-                    maxLength: 16
-                    example: "abcdef012345"
+              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
+
+        '201':
+          description: User created
+          content:
+            application/json: 
+              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
+
 
   /:
     get:
@@ -308,7 +307,8 @@ paths:
     
     put:
       security:
-        - bearerAuth: []
+        - bearerAuth: []"fmt"
+	"regexp"
       tags: ["ManagePost"]
       operationId: likePhoto
       summary: Like a Photo
@@ -538,7 +538,7 @@ components:
       format: binary
     
     Id:
-      description: Post ID
+      description: ID
       type: integer
       example: 1993737
       readOnly: true

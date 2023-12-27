@@ -36,9 +36,16 @@ import (
 	"fmt"
 )
 
+var ErrorUserDoesNotExist = errors.New("Error: User does not exist")
+
+type User struct {
+	UserId   uint64 `json:"userId"`
+	Username string `json:"username"`
+}
+
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
-	//TODO: Inserire i metodi
+	LoginUser(string) (User, error, bool)
 
 	Ping() error
 }

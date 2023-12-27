@@ -12,18 +12,13 @@ import (
 // doLogin checks if the user does exist.
 // If the user does exist it'll return the HTTP Status 200 and return the user ID; otherwise, with HTTP Status 201.
 func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	type UserName struct {
-		Identifier string `json:"identifier"`
-	}
-	var userName UserName
-
-	err := json.NewDecoder(r.Body).Decode(&userName)
+	username, err := utils.GetUsername(w, r, ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	isLegal, err := utils.IsLegal(userName.Identifier)
+	isLegal, err := utils.IsLegal(username)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Error during func isLegal")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -34,18 +29,21 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 
-	// Inserisci nel database l'username, se esiste già
-	// fai la query dell'id dell'username
-	var id, exist = getId()
-	if exist {
-		w.WriteHeader(200)
+	user, err, exist := rt.db.LoginUser(username)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error during func LoginUser")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	} else {
-		w.WriteHeader(201)
+		if exist {
+			w.WriteHeader(200)
+		} else {
+			w.WriteHeader(201)
+		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(id)
+	err = json.NewEncoder(w).Encode(user.UserId)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Error during func getId")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -60,6 +58,22 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 }
 
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	username, err := utils.GetUsername(w, r, ctx)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	isLegal, err := utils.IsLegal(username)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Error during func isLegal")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if !isLegal {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 }
 

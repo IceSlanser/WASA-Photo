@@ -8,6 +8,14 @@ info:
 servers: 
   - url: http://localhost:3000
 
+tags:
+  - name: "MyProfile"
+    description: "All about your Profile"
+  - name: "ManageProfile"
+    description: "Interact with Profiles"
+  - name: "ManagePost"
+    description: "All about your Post"
+
 paths:
   /session:
     post:
@@ -157,7 +165,7 @@ paths:
     parameters:
         - $ref: "#/components/parameters/UserId" 
         - name: followerUId
-          schema: {$ref: "#/components/schemas/Username"}
+          schema: {$ref: "#/components/schemas/User/properties/Id"}
           description: Follower user identifier
           in: path
           required: true
@@ -197,7 +205,7 @@ paths:
     parameters:
         - $ref: "#/components/parameters/UserId" 
         - name: banneduId
-          schema: {$ref: "#/components/schemas/Username"}
+          schema: {$ref: "#/components/schemas/User/properties/Id"}
           description: Banned user identifier
           in: path
           required: true
@@ -300,7 +308,7 @@ paths:
           in: path
           required: true
         - name: likeuId
-          schema: {$ref: "#/components/schemas/Username"}
+          schema: {$ref: "#/components/schemas/User/properties/Id"}
           description: Like user identifier
           in: path
           required: true
@@ -380,7 +388,7 @@ paths:
           in: path
           required: true
         - name: commentuId
-          schema: {$ref: "#/components/schemas/Username"}
+          schema: {$ref: "#/components/schemas/User/properties/Id"}
           description: Comment user identifier
           in: path
           required: true
@@ -423,13 +431,21 @@ components:
     
   parameters:
     UserId:
-      schema: {$ref: "#/components/schemas/Username"}
+      schema: {$ref: "#/components/schemas/User/properties/Id"}
       name: uId
       description: User identifier
       in: path
       required: true
 
   schemas:
+
+    User:
+      description: User schema
+      type: object
+      properties:
+        userId: {$ref: "#/components/schemas/Id"}
+        username: {$ref: "#/components/schemas/User/properties/Id"}
+
     Username:
       description: Username schema
       type: object 
@@ -446,8 +462,7 @@ components:
         A profile contains an user's photos (in reverse chronological order), how many photos have been uploaded, and the user's followers and following.
       type: object
       properties:
-        Id: {$ref: "#/components/schemas/Id"}
-        Username: {$ref: "#/components/schemas/Username"}
+        User: {$ref: "#/components/schemas/User"}
         ProfileBio: {$ref: "#/components/schemas/ProfileBio"}
         ProfilePicture:
           description: File of the profile picture
@@ -458,19 +473,19 @@ components:
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUsername"}
+            List: {$ref: "#/components/schemas/ListOfUser"}
         Following:
           description: List of following's profile with relative number of them
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUsername"}
+            List: {$ref: "#/components/schemas/ListOfUser"}
         Posts:
           description: List of user's photos with relative number of its
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUsername"}
+            List: {$ref: "#/components/schemas/ListOfUser"}
     
     Post:
       description: An uploaded photo with its description, date, likes and comments
@@ -495,7 +510,7 @@ components:
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUsername"}
+            List: {$ref: "#/components/schemas/ListOfUser"}
         Comments:
           description: List of comments about the post
           type: array
@@ -516,7 +531,7 @@ components:
         type: object 
         properties:
           Id: {$ref: "#/components/schemas/Id"}
-          User: {$ref: "#/components/schemas/Username"}
+          User: {$ref: "#/components/schemas/User"}
           Text: {$ref: "#/components/schemas/Text"}
           Date&Time:
             description: Date and time when the comment got posted
@@ -540,6 +555,7 @@ components:
     Id:
       description: ID
       type: integer
+      minimum: 1
       example: 1993737
       readOnly: true
     
@@ -557,10 +573,10 @@ components:
       maxItems: 9999
       uniqueItems: true
       
-    ListOfUsername:
-      description: List of usernames
+    ListOfUser:
+      description: List of users
       type: array
-      items: {$ref: "#/components/schemas/Username"}
+      items: {$ref: "#/components/schemas/User"}
       minItems: 0
       maxItems: 9999
       uniqueItems: true

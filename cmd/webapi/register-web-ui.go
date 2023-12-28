@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/webui"
+	"github.com/IceSlanserUni/WASAPhoto/webui"
 )
 
 func registerWebUI(hdl http.Handler) (http.Handler, error) {

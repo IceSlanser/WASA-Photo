@@ -36,7 +36,7 @@ import (
 	"fmt"
 )
 
-var ErrorUserDoesNotExist = errors.New("Error: User does not exist")
+var ErrorUserDoesNotExist = errors.New("error: User does not exist")
 
 type User struct {
 	UserId   uint64 `json:"userId"`
@@ -45,7 +45,9 @@ type User struct {
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
-	LoginUser(string) (User, error, bool)
+	LoginUser(string) (User, bool, error)
+	SetUsername(uint64, string) error
+	IsAvailable(string) (bool, error)
 
 	Ping() error
 }
@@ -65,8 +67,13 @@ func New(db *sql.DB) (AppDatabase, error) {
 	var tableName string
 	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='example_table';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE example_table (id INTEGER NOT NULL PRIMARY KEY, name TEXT);`
-		_, err = db.Exec(sqlStmt)
+
+		userDB := `CREATE TABLE users (
+			UserId INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
+			Username TEXT UNIQUE
+			);`
+
+		_, err = db.Exec(userDB)
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}

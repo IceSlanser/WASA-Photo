@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"regexp"
-
-	"github.com/IceSlanserUni/WASAPhoto/service/api/reqcontext"
 )
 
-func GetUsername(w http.ResponseWriter, r *http.Request, ctx reqcontext.RequestContext) (string, error) {
+func GetUsername(r *http.Request) (string, error) {
 	type Temp struct {
 		Username string `json:"username"`
 	}

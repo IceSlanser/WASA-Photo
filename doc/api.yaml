@@ -45,7 +45,9 @@ paths:
               schema: {$ref: "#/components/schemas/Profile/properties/Id"}
 
 
-  /:
+  /users/{uId}/stream:
+    parameters:
+      - $ref: "#/components/parameters/UserId"  
     get:
       security:
         - bearerAuth: []  
@@ -65,7 +67,7 @@ paths:
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
 
-  /users/{uId}:
+  /users/{uId}/profile:
     parameters:
         - $ref: "#/components/parameters/UserId"   
     get:
@@ -164,11 +166,7 @@ paths:
   /users/{uId}/followers/{followerUId}:
     parameters:
         - $ref: "#/components/parameters/UserId" 
-        - name: followerUId
-          schema: {$ref: "#/components/schemas/User/properties/Id"}
-          description: Follower user identifier
-          in: path
-          required: true
+        - $ref: "#/components/parameters/FollowerId" 
     put:
       security:
         - bearerAuth: []
@@ -204,11 +202,7 @@ paths:
   /users/{uId}/banned/{banneduId}:
     parameters:
         - $ref: "#/components/parameters/UserId" 
-        - name: banneduId
-          schema: {$ref: "#/components/schemas/User/properties/Id"}
-          description: Banned user identifier
-          in: path
-          required: true
+        - $ref: "#/components/parameters/BannedId" 
     put:
       security:
         - bearerAuth: []
@@ -276,11 +270,7 @@ paths:
   /users/{uId}/post/{postId}:
     parameters:
         - $ref: "#/components/parameters/UserId" 
-        - name: postId
-          schema: {$ref: "#/components/schemas/Post/properties/Id"}
-          description: Post identifier
-          in: path
-          required: true
+        - $ref: "#/components/parameters/PostId" 
     delete:
       security:
         - bearerAuth: []
@@ -302,31 +292,21 @@ paths:
   /users/{uId}/post/{postId}/likes/{likeuId}:
     parameters:
         - $ref: "#/components/parameters/UserId" 
-        - name: postId
-          schema: {$ref: "#/components/schemas/Post/properties/Id"}
-          description: Post identifier
-          in: path
-          required: true
-        - name: likeuId
-          schema: {$ref: "#/components/schemas/User/properties/Id"}
-          description: Like user identifier
-          in: path
-          required: true
-    
+        - $ref: "#/components/parameters/PostId" 
+        - $ref: "#/components/parameters/LikeId" 
     put:
       security:
-        - bearerAuth: []"fmt"
-	"regexp"
+        - bearerAuth: []
       tags: ["ManagePost"]
       operationId: likePhoto
       summary: Like a Photo
       description: Like a post if it's not liked yet.
       responses:
-        '200':
+        '201':
           description: Photo successfully liked
           content:
             application/json: 
-              schema: {$ref: "#/components/schemas/Post/properties/Id"}
+              schema: {$ref: "#/components/schemas/Like"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -350,11 +330,7 @@ paths:
   /users/{uId}/post/{postId}/comments:
     parameters:
         - $ref: "#/components/parameters/UserId" 
-        - name: postId
-          schema: {$ref: "#/components/schemas/Post/properties/Id"}
-          description: Post identifier
-          in: path
-          required: true
+        - $ref: "#/components/parameters/PostId" 
     post:
       security:
         - bearerAuth: []
@@ -382,16 +358,8 @@ paths:
   /users/{uId}/post/{postId}/comments/{commentuId}:
     parameters:
         - $ref: "#/components/parameters/UserId" 
-        - name: postId
-          schema: {$ref: "#/components/schemas/Post/properties/Id"}
-          description: Post identifier
-          in: path
-          required: true
-        - name: commentuId
-          schema: {$ref: "#/components/schemas/User/properties/Id"}
-          description: Comment user identifier
-          in: path
-          required: true
+        - $ref: "#/components/parameters/PostId" 
+        - $ref: "#/components/parameters/CommentId" 
     delete:
       security:
         - bearerAuth: []
@@ -431,37 +399,66 @@ components:
     
   parameters:
     UserId:
-      schema: {$ref: "#/components/schemas/User/properties/Id"}
       name: uId
       description: User identifier
+      schema: {$ref: "#/components/schemas/User/properties/Id"}
       in: path
       required: true
+    PostId:
+      name: postId
+      description: Post identifier
+      schema: {$ref: "#/components/schemas/Post/properties/Id"}
+      in: path
+      required: true
+    CommentId:
+      name: commentuId
+      description: Comment user identifier
+      schema: {$ref: "#/components/schemas/User/properties/Id"}
+      in: path
+      required: true
+    LikeId:
+      name: likeuId
+      description: Like user identifier
+      schema: {$ref: "#/components/schemas/User/properties/Id"}
+      in: path
+      required: true
+    BannedId:
+      name: banneduId
+      description: Banned user identifier
+      schema: {$ref: "#/components/schemas/User/properties/Id"}
+      in: path
+      required: true
+    FollowerId:
+      name: followerUId
+      description: Follower user identifier
+      schema: {$ref: "#/components/schemas/User/properties/Id"}
+      in: path
+      required: true
+    
 
   schemas:
-
     User:
       description: User schema
       type: object
       properties:
-        userId: {$ref: "#/components/schemas/Id"}
+        Id: {$ref: "#/components/schemas/Id"}
         username: {$ref: "#/components/schemas/User/properties/Id"}
-
-    Username:
-      description: Username schema
-      type: object 
+          
+    Stream:
+      description: User stream schema
+      type: object
       properties:
-        name:
-          type: string
-          example: Eve
-          pattern: '^.*?$'
-          minLength: 3
-          maxLength: 16
+        Id: {$ref: "#/components/schemas/Id"}
+        Posts: {$ref: "#/components/schemas/ListOfPosts"}
 
     Profile:
       description: |
-        A profile contains an user's photos (in reverse chronological order), how many photos have been uploaded, and the user's followers and following.
+        A profile contains an user's photos (in reverse chronological order),
+        how many photos have been uploaded, and the user's followers and
+        following.
       type: object
       properties:
+        Id: {$ref: "#/components/schemas/Id"}
         User: {$ref: "#/components/schemas/User"}
         ProfileBio: {$ref: "#/components/schemas/ProfileBio"}
         ProfilePicture:
@@ -469,23 +466,29 @@ components:
           type: string
           format: binary
         Followers:
-          description: List of followers' profile with relative number of them
+          description: List of followers' profiles with relative number of them
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUser"}
+            List: {$ref: "#/components/schemas/ListOfUsers"}
         Following:
-          description: List of following's profile with relative number of them
+          description: List of following's profiles with relative number of them
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUser"}
+            List: {$ref: "#/components/schemas/ListOfUsers"}
+        Banned:
+          description: List of banned profiles with relative number of them
+          type: object
+          properties:
+            Count: {$ref: "#/components/schemas/Count"}
+            List: {$ref: "#/components/schemas/ListOfUsers"}
         Posts:
           description: List of user's photos with relative number of its
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUser"}
+            List: {$ref: "#/components/schemas/ListOfUsers"}
     
     Post:
       description: An uploaded photo with its description, date, likes and comments
@@ -500,47 +503,68 @@ components:
           minLength: 0
           maxLength: 150
           example: This is a description
-        Date&Time:
-          description: Date and time when the post got uploaded
-          type: string
-          format: date-time 
-          example: 2023-11-05T20:43:48Z
         Likes:
           description: List of users who liked the post with relative number of them
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUser"}
+            List: {$ref: "#/components/schemas/ListOfLikes"}
         Comments:
           description: List of comments about the post
-          type: array
-          items: {$ref: "#/components/schemas/Comment"}
-          minItems: 0
-          maxItems: 9999
-    
+          type: object
+          properties:
+            Count: {$ref: "#/components/schemas/Count"}
+            List: {$ref: "#/components/schemas/ListOfComments"}
+        DateTime: {$ref: "#/components/schemas/DateTime"}
+          
+    Comment:
+      description: A generic comment
+      type: object 
+      properties:
+        Id: {$ref: "#/components/schemas/Id"}
+        Post: {$ref: "#/components/schemas/Post"}
+        Owner: {$ref: "#/components/schemas/User"}
+        CommentUser: {$ref: "#/components/schemas/User"}
+        Text: {$ref: "#/components/schemas/Text"}
+        DateTime: {$ref: "#/components/schemas/DateTime"}
+            
+    Like:
+      description: A generic like
+      type: object
+      properties:
+        Id: {$ref: "#/components/schemas/Id"}
+        Post: {$ref: "#/components/schemas/Post"}
+        Owner: {$ref: "#/components/schemas/User"}
+        LikeUser: {$ref: "#/components/schemas/User"}
+          
+    Id:
+      description: ID
+      type: integer
+      minimum: 1
+      example: 1993737
+      readOnly: true
+
+    Username:
+      description: Username schema
+      type: object 
+      properties:
+        name:
+          type: string
+          example: Eve
+          pattern: '^.*?$'
+          minLength: 3
+          maxLength: 16
+        
     Text:
-      description: Text of  the comment
+      description: Text schema
       type: string
       pattern: '^.*?$'
       minLength: 0
       maxLength: 100
-      example: This is a comment
-          
-    Comment:
-        description: A generic comment about a post
-        type: object 
-        properties:
-          Id: {$ref: "#/components/schemas/Id"}
-          User: {$ref: "#/components/schemas/User"}
-          Text: {$ref: "#/components/schemas/Text"}
-          Date&Time:
-            description: Date and time when the comment got posted
-            type: string
-            format: date-time 
-            example: 2023-11-06T14:38:28Z
-        
+      example: This is a text
+    
     ProfileBio:
-      description: Biografy of the profile
+      description: Profile's biografy
       type: string
       pattern: '^.*?$'
       minLength: 0
@@ -552,31 +576,46 @@ components:
       type: string
       format: binary
     
-    Id:
-      description: ID
-      type: integer
-      minimum: 1
-      example: 1993737
-      readOnly: true
-    
     Count:
-      description: Just a counter
+      description: Counter schema
       type: integer
       minimum: 0
       example: 24
+    
+    DateTime:
+      description: Date and time schema
+      type: string
+      format: date-time 
+      example: 2023-11-06T14:38:28Z
       
-    Stream:
-      description: User stream
+    ListOfUsers:
+      description: List of users
+      type: array
+      items: {$ref: "#/components/schemas/User"}
+      minItems: 0
+      maxItems: 9999
+      uniqueItems: true
+    
+    ListOfPosts:
+      description: List of posts
       type: array
       items: {$ref: "#/components/schemas/Post"}
       minItems: 0
       maxItems: 9999
       uniqueItems: true
-      
-    ListOfUser:
-      description: List of users
+    
+    ListOfLikes:
+      description: List of likes
       type: array
-      items: {$ref: "#/components/schemas/User"}
+      items: {$ref: "#/components/schemas/Like"}
+      minItems: 0
+      maxItems: 9999
+      uniqueItems: true
+      
+    ListOfComments:
+      description: List of comments
+      type: array
+      items: {$ref: "#/components/schemas/Comment"}
       minItems: 0
       maxItems: 9999
       uniqueItems: true

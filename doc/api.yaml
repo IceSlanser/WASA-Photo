@@ -4,7 +4,7 @@ info:
   description: |
     Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto!  
     You can upload your photos directly from your PC, and they will be visible to everyone following you
-  version: 0.0.5
+  version: 0.1.0
 servers: 
   - url: http://localhost:3000
 
@@ -22,8 +22,8 @@ paths:
       tags: ["MyProfile"]
       summary: Log in the user
       description: |-
-        If the user does not exist, it will be created, and an identifier is returned.
-        If the user exists, the user identifier is returned.
+        If the username does not exist, it will create a new profile, and an IDentifier is returned.
+        If the username exists, the profile IDentifier is returned.
       operationId: doLogin
       requestBody:
         description: User details
@@ -33,21 +33,21 @@ paths:
         required: true
       responses:
         '200':
-          description: User log-in avtion successfully
+          description: Log-in successfully
           content:
             application/json: 
-              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
+              schema: {$ref: "#/components/schemas/Profile/properties/ID"}
 
         '201':
-          description: User created
+          description: Profile created
           content:
             application/json: 
-              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
+              schema: {$ref: "#/components/schemas/Profile/properties/ID"}
 
 
-  /users/{uId}/stream:
+  /users/{UID}/stream:
     parameters:
-      - $ref: "#/components/parameters/UserId"  
+      - $ref: "#/components/parameters/UserID"  
     get:
       security:
         - bearerAuth: []  
@@ -67,9 +67,9 @@ paths:
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
 
-  /users/{uId}/profile:
+  /users/{UID}/profile:
     parameters:
-        - $ref: "#/components/parameters/UserId"   
+        - $ref: "#/components/parameters/UserID"   
     get:
       security:
         - bearerAuth: []   
@@ -106,67 +106,15 @@ paths:
           description: Username successfully changed
           content:
             application/json: 
-              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
+              schema: {$ref: "#/components/schemas/Username"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
   
-  /users/{uId}/bio:
+  /users/{UID}/followers/{followerUID}:
     parameters:
-        - $ref: "#/components/parameters/UserId" 
-    put:
-      security:
-        - bearerAuth: []
-      tags: ["MyProfile"]
-      operationId: setMyBiografy
-      summary: Change biografy
-      description: Set a new biografy for the current user.
-      requestBody:
-        description: New biografy
-        content:
-          application/json: 
-            schema: {$ref: "#/components/schemas/ProfileBio"}
-        required: true
-      responses:
-        '200':
-          description: Biografy successfully changed
-          content:
-            application/json: 
-              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
-        '400': {$ref: "#/components/responses/400BadRequest"}
-        '401': {$ref: "#/components/responses/401UnauthorizedError"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
-    
-  /users/{uId}/propic:
-    parameters:
-        - $ref: "#/components/parameters/UserId" 
-    put:
-      security:
-        - bearerAuth: []
-      tags: ["MyProfile"]
-      operationId: setMyPropic
-      summary: Change profile picture
-      description: Set a new profile picture for the current user.
-      requestBody:
-        description: New profile picture
-        content:
-          application/json: 
-            schema: {$ref: "#/components/schemas/Photo"}
-        required: true
-      responses:
-        '200':
-          description: Profile picture successfully changed
-          content:
-            application/json: 
-              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
-        '400': {$ref: "#/components/responses/400BadRequest"}
-        '401': {$ref: "#/components/responses/401UnauthorizedError"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
-
-  /users/{uId}/followers/{followerUId}:
-    parameters:
-        - $ref: "#/components/parameters/UserId" 
-        - $ref: "#/components/parameters/FollowerId" 
+        - $ref: "#/components/parameters/UserID" 
+        - $ref: "#/components/parameters/FollowerUID" 
     put:
       security:
         - bearerAuth: []
@@ -179,7 +127,7 @@ paths:
           description: User successfully followed
           content:
             application/json: 
-              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
+              schema: {$ref: "#/components/schemas/Profile/properties/ID"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -199,10 +147,10 @@ paths:
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
 
-  /users/{uId}/banned/{banneduId}:
+  /users/{UID}/banned/{banUID}:
     parameters:
-        - $ref: "#/components/parameters/UserId" 
-        - $ref: "#/components/parameters/BannedId" 
+        - $ref: "#/components/parameters/UserID" 
+        - $ref: "#/components/parameters/BanUID" 
     put:
       security:
         - bearerAuth: []
@@ -215,7 +163,7 @@ paths:
           description: User successfully banned
           content:
             application/json: 
-              schema: {$ref: "#/components/schemas/Profile/properties/Id"}
+              schema: {$ref: "#/components/schemas/Profile/properties/ID"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -235,9 +183,7 @@ paths:
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
 
-  /users/{uId}/post:
-    parameters:
-        - $ref: "#/components/parameters/UserId" 
+  /posts:
     post:
       security:
         - bearerAuth: []
@@ -261,16 +207,15 @@ paths:
           description: Photo successfully uploaded
           content:
             application/json: 
-              schema: {$ref: "#/components/schemas/Post/properties/Id"}
+              schema: {$ref: "#/components/schemas/Post/properties/ID"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
   
-  /users/{uId}/post/{postId}:
+  /posts/{postID}:
     parameters:
-        - $ref: "#/components/parameters/UserId" 
-        - $ref: "#/components/parameters/PostId" 
+        - $ref: "#/components/parameters/PostID" 
     delete:
       security:
         - bearerAuth: []
@@ -289,11 +234,10 @@ paths:
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
     
-  /users/{uId}/post/{postId}/likes/{likeuId}:
+  /posts/{postID}/likes/{UID}:
     parameters:
-        - $ref: "#/components/parameters/UserId" 
-        - $ref: "#/components/parameters/PostId" 
-        - $ref: "#/components/parameters/LikeId" 
+        - $ref: "#/components/parameters/UserID" 
+        - $ref: "#/components/parameters/PostID" 
     put:
       security:
         - bearerAuth: []
@@ -306,7 +250,7 @@ paths:
           description: Photo successfully liked
           content:
             application/json: 
-              schema: {$ref: "#/components/schemas/Like"}
+              schema: {$ref: "#/components/schemas/Like/properties/ID"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -327,10 +271,9 @@ paths:
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
   
-  /users/{uId}/post/{postId}/comments:
-    parameters:
-        - $ref: "#/components/parameters/UserId" 
-        - $ref: "#/components/parameters/PostId" 
+  /posts/{postID}/comments:
+    parameters: 
+        - $ref: "#/components/parameters/PostID" 
     post:
       security:
         - bearerAuth: []
@@ -349,17 +292,16 @@ paths:
           description: Comment successfully created
           content:
             application/json: 
-              schema: {$ref: "#/components/schemas/Comment/properties/Id"}
+              schema: {$ref: "#/components/schemas/Comment/properties/ID"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
     
-  /users/{uId}/post/{postId}/comments/{commentuId}:
+  /posts/{postID}/comments/{UID}:
     parameters:
-        - $ref: "#/components/parameters/UserId" 
-        - $ref: "#/components/parameters/PostId" 
-        - $ref: "#/components/parameters/CommentId" 
+        - $ref: "#/components/parameters/UserID" 
+        - $ref: "#/components/parameters/PostID" 
     delete:
       security:
         - bearerAuth: []
@@ -395,60 +337,42 @@ components:
     404NotFound:
       description: The requested resource could not be found but may be available in the future.
     500InternalServerError:
-      description: Server side error.
+      description: Server sIDe error.
     
   parameters:
-    UserId:
-      name: uId
+    UserID:
+      name: UID
       description: User identifier
-      schema: {$ref: "#/components/schemas/User/properties/Id"}
+      schema: {$ref: "#/components/schemas/Profile/properties/ID"}
       in: path
       required: true
-    PostId:
-      name: postId
+    PostID:
+      name: postID
       description: Post identifier
-      schema: {$ref: "#/components/schemas/Post/properties/Id"}
+      schema: {$ref: "#/components/schemas/Post/properties/ID"}
       in: path
       required: true
-    CommentId:
-      name: commentuId
-      description: Comment user identifier
-      schema: {$ref: "#/components/schemas/User/properties/Id"}
-      in: path
-      required: true
-    LikeId:
-      name: likeuId
-      description: Like user identifier
-      schema: {$ref: "#/components/schemas/User/properties/Id"}
-      in: path
-      required: true
-    BannedId:
-      name: banneduId
+    BanUID:
+      name: banUID
       description: Banned user identifier
-      schema: {$ref: "#/components/schemas/User/properties/Id"}
+      schema: {$ref: "#/components/schemas/Profile/properties/ID"}
       in: path
       required: true
-    FollowerId:
-      name: followerUId
+    FollowerUID:
+      name: followerUID
       description: Follower user identifier
-      schema: {$ref: "#/components/schemas/User/properties/Id"}
+      schema: {$ref: "#/components/schemas/Profile/properties/ID"}
       in: path
       required: true
     
 
   schemas:
-    User:
-      description: User schema
-      type: object
-      properties:
-        Id: {$ref: "#/components/schemas/Id"}
-        username: {$ref: "#/components/schemas/User/properties/Id"}
           
     Stream:
       description: User stream schema
       type: object
       properties:
-        Id: {$ref: "#/components/schemas/Id"}
+        ID: {$ref: "#/components/schemas/ID"}
         Posts: {$ref: "#/components/schemas/ListOfPosts"}
 
     Profile:
@@ -458,8 +382,7 @@ components:
         following.
       type: object
       properties:
-        Id: {$ref: "#/components/schemas/Id"}
-        User: {$ref: "#/components/schemas/User"}
+        ID: {$ref: "#/components/schemas/ID"}
         ProfileBio: {$ref: "#/components/schemas/ProfileBio"}
         ProfilePicture:
           description: File of the profile picture
@@ -470,31 +393,30 @@ components:
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUsers"}
+            List: {$ref: "#/components/schemas/ListOfProfiles"}
         Following:
           description: List of following's profiles with relative number of them
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUsers"}
+            List: {$ref: "#/components/schemas/ListOfProfiles"}
         Banned:
           description: List of banned profiles with relative number of them
           type: object
           properties:
-            Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUsers"}
+            List: {$ref: "#/components/schemas/ListOfProfiles"}
         Posts:
           description: List of user's photos with relative number of its
           type: object
           properties:
             Count: {$ref: "#/components/schemas/Count"}
-            List: {$ref: "#/components/schemas/ListOfUsers"}
+            List: {$ref: "#/components/schemas/ListOfProfiles"}
     
     Post:
       description: An uploaded photo with its description, date, likes and comments
       type: object
       properties:
-        Id: {$ref: "#/components/schemas/Id"}
+        ID: {$ref: "#/components/schemas/ID"}
         Photo: {$ref: "#/components/schemas/Photo"}
         Description:
           description: Description about the post
@@ -516,15 +438,24 @@ components:
             Count: {$ref: "#/components/schemas/Count"}
             List: {$ref: "#/components/schemas/ListOfComments"}
         DateTime: {$ref: "#/components/schemas/DateTime"}
-          
+    
+    Photo:
+      description: File of the photo posted
+      type: object
+      properties:
+        ID: {$ref: "#/components/schemas/ID"}
+        File:
+          type: string
+          format: binary
+    
     Comment:
       description: A generic comment
       type: object 
       properties:
-        Id: {$ref: "#/components/schemas/Id"}
+        ID: {$ref: "#/components/schemas/ID"}
         Post: {$ref: "#/components/schemas/Post"}
-        Owner: {$ref: "#/components/schemas/User"}
-        CommentUser: {$ref: "#/components/schemas/User"}
+        OwnerUID: {$ref: "#/components/schemas/Profile/properties/ID"}
+        CommentUID: {$ref: "#/components/schemas/Profile/properties/ID"}
         Text: {$ref: "#/components/schemas/Text"}
         DateTime: {$ref: "#/components/schemas/DateTime"}
             
@@ -532,12 +463,12 @@ components:
       description: A generic like
       type: object
       properties:
-        Id: {$ref: "#/components/schemas/Id"}
+        ID: {$ref: "#/components/schemas/ID"}
         Post: {$ref: "#/components/schemas/Post"}
-        Owner: {$ref: "#/components/schemas/User"}
-        LikeUser: {$ref: "#/components/schemas/User"}
+        OwnerUID: {$ref: "#/components/schemas/Profile/properties/ID"}
+        LikeUID: {$ref: "#/components/schemas/Profile/properties/ID"}
           
-    Id:
+    ID:
       description: ID
       type: integer
       minimum: 1
@@ -570,11 +501,6 @@ components:
       minLength: 0
       maxLength: 150
       example: This is a biografy
-          
-    Photo:
-      description: File of the photo posted
-      type: string
-      format: binary
     
     Count:
       description: Counter schema
@@ -588,10 +514,10 @@ components:
       format: date-time 
       example: 2023-11-06T14:38:28Z
       
-    ListOfUsers:
+    ListOfProfiles:
       description: List of users
       type: array
-      items: {$ref: "#/components/schemas/User"}
+      items: {$ref: "#/components/schemas/Profile/properties/ID"}
       minItems: 0
       maxItems: 9999
       uniqueItems: true
@@ -599,7 +525,7 @@ components:
     ListOfPosts:
       description: List of posts
       type: array
-      items: {$ref: "#/components/schemas/Post"}
+      items: {$ref: "#/components/schemas/Post/properties/ID"}
       minItems: 0
       maxItems: 9999
       uniqueItems: true
@@ -607,7 +533,7 @@ components:
     ListOfLikes:
       description: List of likes
       type: array
-      items: {$ref: "#/components/schemas/Like"}
+      items: {$ref: "#/components/schemas/Like/properties/ID"}
       minItems: 0
       maxItems: 9999
       uniqueItems: true
@@ -615,7 +541,7 @@ components:
     ListOfComments:
       description: List of comments
       type: array
-      items: {$ref: "#/components/schemas/Comment"}
+      items: {$ref: "#/components/schemas/Comment/properties/ID"}
       minItems: 0
       maxItems: 9999
       uniqueItems: true

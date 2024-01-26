@@ -12,8 +12,6 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/", rt.wrap(rt.getMyStream))
 	rt.router.GET("/users/:uId", rt.wrap(rt.getUserProfile))
 	rt.router.PUT("/users/:uId", rt.wrap(rt.setMyUserName))
-	rt.router.PUT("/users/:uId/bio", rt.wrap(rt.setMyBiografy))
-	rt.router.PUT("/users/:uId/propic", rt.wrap(rt.setMyPropic))
 
 	// ManageProfile
 	rt.router.PUT("/users/:uId/followers/:followerUId", rt.wrap(rt.followUser))

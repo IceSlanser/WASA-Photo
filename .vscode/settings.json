@@ -1,0 +1,12 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "IceSlanser",
+            "group": "IceSlanser",
+            "database": "${workspaceFolder:WASAPhoto}/service/database/database.go"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

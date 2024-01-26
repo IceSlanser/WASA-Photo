@@ -34,21 +34,29 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 )
 
 var ErrorUserDoesNotExist = errors.New("error: User does not exist")
 
-type User struct {
-	UserId   uint64 `json:"userId"`
-	Username string `json:"username"`
-}
-
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
-	LoginUser(string) (User, bool, error)
+	LoginUser(string) (uint64, bool, error)
 	SetUsername(uint64, string) error
 	IsAvailable(string) (bool, error)
 
+	GetProfile(uint64) (User, error)
+	GetFollowing(uint64) ([]uint64, error)
+	GetPosts([]uint64, time.Time, time.Time) ([]Post, error)
+
+	PostComment(uint64, uint64, string) (uint64, error)
+
+	PutLike(uint64, uint64) (uint64, bool, error)
+	PutFollow(uint64, uint64) (uint64, bool, error)
+
+	DeleteLike(uint64, uint64) (bool, error)
+	DeleteComment(uint64, uint64) (bool, error)
+	DeleteFollow(uint64, uint64) (bool, error)
 	Ping() error
 }
 
@@ -68,12 +76,101 @@ func New(db *sql.DB) (AppDatabase, error) {
 	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='example_table';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
 
-		userDB := `CREATE TABLE users (
-			UserId INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
-			Username TEXT UNIQUE
-			);`
+		// Database's tables
+		profiles := `CREATE TABLE profiles (
+			ID INTEGER PRIMARY KEY,
+			Username TEXT UNIQUE,
+			FollowingCount INTEGER DEFAULT 0,
+			FollowerCount INTEGER DEFAULT 0,
+			PostCount INTEGER DEFAULT 0,
+		)`
 
-		_, err = db.Exec(userDB)
+		posts := `CREATE TABLE posts (
+			ID INTEGER PRIMARY KEY,
+			ProfileID INTEGER NOT NULL,
+			Description TEXT DEFAULT "",
+			LikeCount INTEGER DEFAULT 0,
+			CommentCount INTEGER DEFAULT 0,
+			DateTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+			FOREIGN KEY (ProfileID) REFERENCES profiles(ID)
+		)`
+
+		photos := `CREATE TABLE photos (
+			ID INTEGER PRIMARY KEY,
+			File BLOB NOT NULL,
+			PostID INTEGER NOT NULL,
+
+			FOREIGN KEY (PostID) REFERENCES posts(ID)
+		)`
+
+		follows := `CREATE TABLE followers (
+			ID INTEGER PRIMARY KEY,
+			FollowerUID INTEGER,
+			FollowedUID INTEGER,
+			UNIQUE (FollowerUID, FollowedUID),
+
+			FOREIGN KEY (FollowerUID) REFERENCES profiles(ID) ON DELETE CASCADE,
+			FOREIGN KEY (FollowedUID) REFERENCES profiles(ID) ON DELETE CASCADE
+		)`
+
+		bans := `CREATE TABLE bans (
+			ID INTEGER PRIMARY KEY,
+			BannerUID INTEGER,
+			BannedUID INTEGER,
+			UNIQUE (BannerUID, BannedUID),
+
+			FOREIGN KEY (BannerUID) REFERENCES profiles(ID) ON DELETE CASCADE,
+			FOREIGN KEY (BannedUID) REFERENCES profiles(ID) ON DELETE CASCADE
+		)`
+
+		likes := `CREATE TABLE likes (
+			ID INTEGER PRIMARY KEY,
+			PostID INTEGER,
+			OwnerID INTEGER,
+			UNIQUE (PostID, OwnerID),
+
+			FOREIGN KEY (PostID) REFERENCES posts(ID) ON DELETE CASCADE,
+			FOREIGN KEY (OwnerID) REFERENCES profiles(ID) ON DELETE CASCADE
+		)`
+
+		comments := `CREATE TABLE comments (
+			ID INTEGER PRIMARY KEY,
+			PostID INTEGER NOT NULL,
+			OwnerID INTEGER NOT NULL,
+			Text TEXT NOT NULL,
+			DateTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+			FOREIGN KEY (PostID) REFERENCES posts(ID) ON DELETE CASCADE,
+			FOREIGN KEY (OwnerID) REFERENCES profiles(ID) ON DELETE CASCADE
+		)`
+
+		// Tables error check
+		_, err = db.Exec(profiles)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(posts)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(photos)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(follows)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(bans)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(likes)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+		_, err = db.Exec(comments)
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}

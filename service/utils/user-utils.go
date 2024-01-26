@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-func GetUsername(r *http.Request) (string, error) {
+func GetMyUsername(r *http.Request) (string, error) {
 	type Temp struct {
 		Username string `json:"username"`
 	}

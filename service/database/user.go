@@ -53,21 +53,18 @@ func (db *appdbimpl) IsAvailable(newname string) (bool, error) {
 	return false, nil
 }
 
-func (db *appdbimpl) GetProfile(ID uint64) (User, error) {
+func (db *appdbimpl) GetProfile(myUID uint64, userID uint64) (User, error) {
 	var user User
+	valid, err := db.IsValid(userID)
+	if err != nil {
+		return User{}, err
+	}
+	if !valid {
+		return User{}, err
+	}
 
-	/*
-		valid, err := db.IsValid(ID)
-		if err != nil {
-			return User{}, err
-		}
-		if !valid {
-			return User{}, err
-		}
-	*/
-
-	err := db.c.QueryRow("SELECT * FROM profiles WHERE ID = ?", ID).Scan(&user.ID, &user.Username,
-		&user.Following, &user.Followers, &user.Post)
+	err = db.c.QueryRow("SELECT * FROM profiles WHERE ID = ? AND ID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", userID, myUID).Scan(&user.ID, &user.Username,
+		&user.FollowingCount, &user.FollowersCount, &user.PostCount)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return User{}, err
@@ -88,33 +85,31 @@ func (db *appdbimpl) IsValid(ID uint64) (bool, error) {
 	return true, nil
 }
 
-func (db *appdbimpl) GetFollowing(ID uint64) ([]uint64, error) {
-	// Select all followings
-	rows, err := db.c.Query("SELECT FollowedUID FROM follows WHERE FollowerUID = ?", ID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// Store following
-	var following []uint64
+func (db *appdbimpl) GetPosts(myUID uint64, userID uint64) ([]Post, error) {
+	// Store posts
+	rows, err := db.c.Query("SELECT * FROM posts WHERE ProfileID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", userID, myUID)
+	var posts []Post
 	for rows.Next() {
-		var followingUID uint64
-		if err := rows.Scan(&followingUID); err != nil {
+		var post Post
+		err = rows.Scan(&post.ID, &post.ProfileID, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
+		if err != nil {
 			return nil, err
 		}
-		following = append(following, followingUID)
+		posts = append(posts, post)
 	}
-	return following, nil
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, nil
 }
 
-func (db *appdbimpl) GetPosts(UID uint64, startTime time.Time, endTime time.Time) ([]Post, error) {
-	query := `SELECT posts.*, EXISTS(SELECT * FROM bans WHERE BannerUID = ProfileID and BannedUID = 1) as banned
+func (db *appdbimpl) GetStream(UID uint64, startTime time.Time, endTime time.Time) ([]Post, error) {
+	query := `SELECT posts.*
 				FROM posts
 				LEFT JOIN follows ON FollowedUID = ProfileID
-				WHERE follows.FollowerUID = ? AND DateTime BETWEEN ? AND ?
+				WHERE ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?) AND follows.FollowerUID = ? AND DateTime BETWEEN ? AND ?
 			  	ORDER BY DateTime DESC`
-	//////////////////// Vedere se esiste un modo migliore per vedere i ban
 	rows, err := db.c.Query(query, UID, UID, startTime, endTime)
 
 	if err != nil {
@@ -126,7 +121,6 @@ func (db *appdbimpl) GetPosts(UID uint64, startTime time.Time, endTime time.Time
 	var posts []Post
 	for rows.Next() {
 		var post Post
-		/// IN caso controllare la colonna banned
 		err = rows.Scan(&post.ID, &post.ProfileID, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
 		if err != nil {
 			return nil, err
@@ -139,6 +133,46 @@ func (db *appdbimpl) GetPosts(UID uint64, startTime time.Time, endTime time.Time
 	}
 
 	return posts, nil
+}
+
+func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64, error) {
+	// Store followings
+	query := `SELECT FollowedUID 
+				FROM follows 
+				WHERE FollowerUID = ? AND FollowedUID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
+	followingRows, err := db.c.Query(query, userID, myUID)
+	var followings []uint64
+	for followingRows.Next() {
+		var followingUID uint64
+		err = followingRows.Scan(&followingUID)
+		if err != nil {
+			return nil, nil, err
+		}
+		followings = append(followings, followingUID)
+	}
+	if err := followingRows.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	// Store followers
+	query2 := `SELECT FollowerUID 
+				FROM follows 
+				WHERE FollowedUID = ? AND FollowedUID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
+	followerRows, err := db.c.Query(query2, userID, myUID)
+	var followers []uint64
+	for followerRows.Next() {
+		var followerUID uint64
+		err = followerRows.Scan(&followerUID)
+		if err != nil {
+			return nil, nil, err
+		}
+		followers = append(followers, followerUID)
+	}
+	if err := followerRows.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	return followings, followers, nil
 }
 
 func (db *appdbimpl) PutFollow(followedUID uint64, UID uint64) (uint64, bool, error) {

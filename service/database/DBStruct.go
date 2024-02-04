@@ -5,11 +5,11 @@ import (
 )
 
 type User struct {
-	ID        uint64 `json:"ID"`
-	Username  string `json:"Username"`
-	Following uint64 `json:"Following"`
-	Followers uint64 `json:"Followers"`
-	Post      uint64 `json:"Post"`
+	ID             uint64 `json:"ID"`
+	Username       string `json:"Username"`
+	FollowingCount uint64 `json:"Following_count"`
+	FollowersCount uint64 `json:"Followers_count"`
+	PostCount      uint64 `json:"Post_count"`
 }
 
 type Post struct {
@@ -25,4 +25,12 @@ type Like struct {
 	ID      uint64 `json:"ID"`
 	PostID  uint64 `json:"post_ID"`
 	OwnerID uint64 `json:"owner_ID"`
+}
+
+type Comment struct {
+	ID       uint64    `json:"ID"`
+	PostID   uint64    `json:"post_ID"`
+	OwnerID  uint64    `json:"owner_ID"`
+	Text     string    `json:"text"`
+	DateTime time.Time `json:"date_time"`
 }

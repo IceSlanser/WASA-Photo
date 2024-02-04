@@ -17,6 +17,8 @@ tags:
     description: "All about your Post"
 
 paths:
+  # CHANGE: Profile to User
+  # ADD: getFullProfile
   /session:
     post:
       tags: ["MyProfile"]
@@ -368,7 +370,6 @@ components:
     
 
   schemas:
-          
     Stream:
       description: User stream schema
       type: object

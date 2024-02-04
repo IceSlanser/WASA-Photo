@@ -71,16 +71,24 @@ INSERT INTO profiles (Username) VALUES
 
 -- Insert multiple values into the followers table
 INSERT INTO follows (FollowerUID, FollowedUID) VALUES
-    (1, 3),
-    (1, 4),
-    (1, 5),
-    (2, 1);
+    (5, 4),
+    (4, 5),
+    (4, 2);
 
 INSERT INTO posts (ProfileID) VALUES
-    (2), (3), (3), (5);
+    (4), (4), (4), (4);
 
 INSERT INTO bans (BannerUID, BannedUID) VALUES
         (3, 1);
+
+INSERT INTO comments (PostID, OwnerID, Text) VALUES
+    (1, 5, 'Soyeon MLML'),
+    (1, 4, 'IL REEEEE'),
+    (1, 3, 'Bomb on Kiev'),
+    (1, 1, 'Kiryu enjoyer');
+
+INSERT INTO likes (PostID, OwnerID) VALUES
+    (1, 1), (1, 3), (1, 4), (1, 5), (1, 2);
 
 -- Select
 SELECT * FROM profiles;
@@ -88,7 +96,7 @@ SELECT * FROM follows;
 SELECT * FROM posts;
 SELECT * FROM bans;
 
-SELECT posts.*
-FROM posts
-LEFT JOIN follows ON FollowedUID = ProfileID
-WHERE ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = 1) AND follows.FollowerUID = 1
+-- Try
+SELECT FollowedUID
+FROM follows
+WHERE FollowerUID = 3 AND FollowedUID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = 1)

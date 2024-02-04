@@ -45,9 +45,12 @@ type AppDatabase interface {
 	SetUsername(uint64, string) error
 	IsAvailable(string) (bool, error)
 
-	GetProfile(uint64) (User, error)
-	GetFollowing(uint64) ([]uint64, error)
-	GetPosts(uint64, time.Time, time.Time) ([]Post, error)
+	GetProfile(uint64, uint64) (User, error)
+	GetPosts(uint64, uint64) ([]Post, error)
+	GetStream(uint64, time.Time, time.Time) ([]Post, error)
+	GetFollows(uint64, uint64) ([]uint64, []uint64, error)
+	GetComments(uint64, uint64) ([]Comment, error)
+	GetLikes(uint64, uint64) ([]uint64, error)
 
 	PostComment(uint64, uint64, string) (uint64, error)
 

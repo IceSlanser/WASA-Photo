@@ -81,7 +81,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Get list of DBPosts
-	DBPosts, err := rt.db.GetPosts(UID, TimeRange.StartTime, TimeRange.EndTime)
+	DBPosts, err := rt.db.GetStream(UID, TimeRange.StartTime, TimeRange.EndTime)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Error during func GetPosts")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -90,8 +90,8 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Convert DBPosts to APIPosts
 	var APIPosts []Post
-	for _, dbPost := range DBPosts {
-		APIPost := NewPost(dbPost)
+	for _, DBPost := range DBPosts {
+		APIPost := NewPost(DBPost)
 		APIPosts = append(APIPosts, APIPost)
 	}
 
@@ -103,37 +103,6 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-}
-
-// Get the profile of the user with the given one username in the request.
-func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Get UserID from the Header
-	UID, authorization, err := SecurityHandler(r, rt)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if !authorization {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	// Get DBUser
-	dbProfile, err := rt.db.GetProfile(UID)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	// Convert DBUser into APIUser
-	userProfile := NewUser(dbProfile)
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(userProfile)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 }
 
 // Set a new username for the current user.

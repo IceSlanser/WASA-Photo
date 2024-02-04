@@ -9,6 +9,60 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	// Get RequestUserID from the Header
+	myUID, authorization, err := SecurityHandler(r, rt)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !authorization {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// Get user's post
+	var post Post
+	err = json.NewDecoder(r.Body).Decode(&post)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get postComments
+	DBComments, err := rt.db.GetComments(myUID, post.ID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	// Convert DBPosts to APIPosts
+	var APIComments []Comment
+	for _, DBComment := range DBComments {
+		APIComment := NewComment(DBComment)
+		APIComments = append(APIComments, APIComment)
+	}
+
+	// Get likeOwners
+	likeOwners, err := rt.db.GetLikes(myUID, post.ID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(APIComments)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(likeOwners)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)

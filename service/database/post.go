@@ -4,6 +4,28 @@ import (
 	"database/sql"
 )
 
+func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, error) {
+	// Store likes
+	query := `SELECT OwnerID 
+				FROM likes
+				WHERE PostID = ? AND OwnerID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
+	rows, err := db.c.Query(query, postID, myUID)
+	var likeOwners []uint64
+	for rows.Next() {
+		var ownerID uint64
+		err = rows.Scan(&ownerID)
+		if err != nil {
+			return nil, err
+		}
+		likeOwners = append(likeOwners, ownerID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return likeOwners, nil
+}
+
 func (db *appdbimpl) PutLike(UID uint64, postID uint64) (uint64, bool, error) {
 
 	// Try to insert a like
@@ -45,6 +67,28 @@ func (db *appdbimpl) DeleteLike(UID uint64, likeID uint64) (bool, error) {
 		return true, err
 	}
 	return true, nil
+}
+
+func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, error) {
+	// Store comments
+	query := `SELECT * 
+				FROM comments 
+				WHERE PostID = ? AND OwnerID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
+	rows, err := db.c.Query(query, postID, myUID)
+	var comments []Comment
+	for rows.Next() {
+		var comment Comment
+		err = rows.Scan(&comment.ID, &comment.PostID, &comment.OwnerID, &comment.Text, &comment.DateTime)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return comments, nil
 }
 
 func (db *appdbimpl) PostComment(UID uint64, postID uint64, text string) (uint64, error) {

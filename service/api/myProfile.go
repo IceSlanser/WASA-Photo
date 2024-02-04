@@ -68,14 +68,6 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Get list of following ID
-	following, err := rt.db.GetFollowing(UID)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Error during func GetFollowing")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	var TimeRange struct {
 		StartTime time.Time `json:"start_time"`
 		EndTime   time.Time `json:"end_time"`
@@ -89,7 +81,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Get list of DBPosts
-	DBPosts, err := rt.db.GetPosts(following, TimeRange.StartTime, TimeRange.EndTime)
+	DBPosts, err := rt.db.GetPosts(UID, TimeRange.StartTime, TimeRange.EndTime)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Error during func GetPosts")
 		w.WriteHeader(http.StatusInternalServerError)

@@ -9,23 +9,23 @@ func (rt *_router) Handler() http.Handler {
 
 	// MyProfile
 	rt.router.POST("/session", rt.wrap(rt.doLogin))
-	rt.router.GET("/", rt.wrap(rt.getMyStream))
-	rt.router.GET("/users/:uId", rt.wrap(rt.getUserProfile))
-	rt.router.PUT("/users/:uId", rt.wrap(rt.setMyUserName))
+	rt.router.GET("/stream", rt.wrap(rt.getMyStream))
+	rt.router.GET("/users/:UID/profile", rt.wrap(rt.getUserProfile))
+	rt.router.PUT("/profile/setUserName", rt.wrap(rt.setMyUserName))
 
 	// ManageProfile
-	rt.router.PUT("/users/:uId/followers/:followerUId", rt.wrap(rt.followUser))
-	rt.router.DELETE("/users/:uId/followers/:followerUId", rt.wrap(rt.unfollowUser))
-	rt.router.POST("/users/:uId/banned/:banneduId", rt.wrap(rt.banUser))
-	rt.router.DELETE("/users/:uId/banned/:banneduId", rt.wrap(rt.unbanUser))
-	rt.router.POST("/users/:uId/post", rt.wrap(rt.uploadPhoto))
-	rt.router.DELETE("/users/:uId/post/:postId", rt.wrap(rt.deletePhoto))
+	rt.router.POST("/users/:UID/follow", rt.wrap(rt.followUser))
+	rt.router.DELETE("/users/:UID/follow", rt.wrap(rt.unfollowUser))
+	rt.router.POST("/users/:UID/ban", rt.wrap(rt.banUser))
+	rt.router.DELETE("/users/:UID/ban", rt.wrap(rt.unbanUser))
+	rt.router.POST("/post", rt.wrap(rt.uploadPhoto))
+	rt.router.DELETE("/post/:postId", rt.wrap(rt.deletePhoto))
 
 	// ManagePost
-	rt.router.POST("/users/:uId/post/:postId/likes/:likeuId", rt.wrap(rt.likePhoto))
-	rt.router.DELETE("/users/:uId/post/:postId/likes/:likeuId", rt.wrap(rt.unlikePhoto))
-	rt.router.POST("/users/:uId/post/:postId/comments", rt.wrap(rt.commentPhoto))
-	rt.router.DELETE("/users/:uId/post/:postId/comments/:commentuId", rt.wrap(rt.uncommentPhoto))
+	rt.router.POST("/post/:postId/likes", rt.wrap(rt.likePhoto))
+	rt.router.DELETE("/post/:postId/likes", rt.wrap(rt.unlikePhoto))
+	rt.router.POST("/post/:postId/comments", rt.wrap(rt.commentPhoto))
+	rt.router.DELETE("/post/:postId/comments/:commentuId", rt.wrap(rt.uncommentPhoto))
 
 	return rt.router
 }

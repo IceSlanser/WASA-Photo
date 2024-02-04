@@ -45,7 +45,7 @@ paths:
               schema: {$ref: "#/components/schemas/Profile/properties/ID"}
 
 
-  /users/{UID}/stream:
+  /stream:
     parameters:
       - $ref: "#/components/parameters/UserID"  
     get:
@@ -87,7 +87,8 @@ paths:
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
-
+  
+  /profile/setUserName:
     put:
       security:
         - bearerAuth: []

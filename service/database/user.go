@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"strings"
 	"time"
 )
 
@@ -109,26 +108,15 @@ func (db *appdbimpl) GetFollowing(ID uint64) ([]uint64, error) {
 	return following, nil
 }
 
-func (db *appdbimpl) GetPosts(following []uint64, startTime time.Time, endTime time.Time) ([]Post, error) {
-	// If the is following anyone
-	if len(following) == 0 {
-		return nil, nil
-	}
+func (db *appdbimpl) GetPosts(UID uint64, startTime time.Time, endTime time.Time) ([]Post, error) {
+	query := `SELECT posts.*, EXISTS(SELECT * FROM bans WHERE BannerUID = ProfileID and BannedUID = 1) as banned
+				FROM posts
+				LEFT JOIN follows ON FollowedUID = ProfileID
+				WHERE follows.FollowerUID = ? AND DateTime BETWEEN ? AND ?
+			  	ORDER BY DateTime DESC`
+	//////////////////// Vedere se esiste un modo migliore per vedere i ban
+	rows, err := db.c.Query(query, UID, UID, startTime, endTime)
 
-	// Prepare for query
-	args := make([]interface{}, len(following)+2)
-	for i, v := range following {
-		args[i] = v
-	}
-	args[len(args)-2] = startTime
-	args[len(args)-1] = endTime
-
-	query := `SELECT ID, ProfileID, Description, LikeCount, CommentCount, DateTime
-			  FROM posts
-			  WHERE ProfileID IN (?` + strings.Repeat(", ?", len(following)-1) + `)
-			  AND DateTime BETWEEN ? AND ?
-			  ORDER BY DateTime DESC`
-	rows, err := db.c.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +126,7 @@ func (db *appdbimpl) GetPosts(following []uint64, startTime time.Time, endTime t
 	var posts []Post
 	for rows.Next() {
 		var post Post
+		/// IN caso controllare la colonna banned
 		err = rows.Scan(&post.ID, &post.ProfileID, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
 		if err != nil {
 			return nil, err

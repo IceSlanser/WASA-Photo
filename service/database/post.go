@@ -33,18 +33,13 @@ func (db *appdbimpl) PutLike(UID uint64, postID uint64) (uint64, bool, error) {
 
 func (db *appdbimpl) DeleteLike(UID uint64, likeID uint64) (bool, error) {
 	// Check if there is an existent like
-	var fooUID uint64
-	err := db.c.QueryRow("SELECT OwnerID FROM likes WHERE ID = ?", likeID).Scan(&fooUID)
+	err := db.c.QueryRow("SELECT * FROM likes WHERE ID = ? AND OwnerID = ?", likeID, UID).Scan()
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, err
 		}
 	}
 
-	// Check if the user are allowed to delete that like
-	if fooUID != UID {
-		return false, nil
-	}
 	_, err = db.c.Exec("DELETE FROM likes WHERE ID = ?", likeID)
 	if err != nil {
 		return true, err

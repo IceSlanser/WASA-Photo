@@ -47,7 +47,7 @@ type AppDatabase interface {
 
 	GetProfile(uint64) (User, error)
 	GetFollowing(uint64) ([]uint64, error)
-	GetPosts([]uint64, time.Time, time.Time) ([]Post, error)
+	GetPosts(uint64, time.Time, time.Time) ([]Post, error)
 
 	PostComment(uint64, uint64, string) (uint64, error)
 
@@ -77,7 +77,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 	if errors.Is(err, sql.ErrNoRows) {
 
 		// Database's tables
-		profiles := `CREATE TABLE profiles (
+		profiles := `CREATE TABLE IF NOT EXISTS profiles (
 			ID INTEGER PRIMARY KEY,
 			Username TEXT UNIQUE,
 			FollowingCount INTEGER DEFAULT 0,
@@ -85,9 +85,10 @@ func New(db *sql.DB) (AppDatabase, error) {
 			PostCount INTEGER DEFAULT 0,
 		)`
 
-		posts := `CREATE TABLE posts (
+		posts := `CREATE TABLE IF NOT EXISTS posts (
 			ID INTEGER PRIMARY KEY,
 			ProfileID INTEGER NOT NULL,
+			File BLOB NOT NULL,
 			Description TEXT DEFAULT "",
 			LikeCount INTEGER DEFAULT 0,
 			CommentCount INTEGER DEFAULT 0,
@@ -96,15 +97,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			FOREIGN KEY (ProfileID) REFERENCES profiles(ID)
 		)`
 
-		photos := `CREATE TABLE photos (
-			ID INTEGER PRIMARY KEY,
-			File BLOB NOT NULL,
-			PostID INTEGER NOT NULL,
-
-			FOREIGN KEY (PostID) REFERENCES posts(ID)
-		)`
-
-		follows := `CREATE TABLE followers (
+		follows := `CREATE TABLE IF NOT EXISTS followers (
 			ID INTEGER PRIMARY KEY,
 			FollowerUID INTEGER,
 			FollowedUID INTEGER,
@@ -114,7 +107,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			FOREIGN KEY (FollowedUID) REFERENCES profiles(ID) ON DELETE CASCADE
 		)`
 
-		bans := `CREATE TABLE bans (
+		bans := `CREATE TABLE IF NOT EXISTS bans (
 			ID INTEGER PRIMARY KEY,
 			BannerUID INTEGER,
 			BannedUID INTEGER,
@@ -124,7 +117,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			FOREIGN KEY (BannedUID) REFERENCES profiles(ID) ON DELETE CASCADE
 		)`
 
-		likes := `CREATE TABLE likes (
+		likes := `CREATE TABLE IF NOT EXISTS likes (
 			ID INTEGER PRIMARY KEY,
 			PostID INTEGER,
 			OwnerID INTEGER,
@@ -134,7 +127,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			FOREIGN KEY (OwnerID) REFERENCES profiles(ID) ON DELETE CASCADE
 		)`
 
-		comments := `CREATE TABLE comments (
+		comments := `CREATE TABLE IF NOT EXISTS comments (
 			ID INTEGER PRIMARY KEY,
 			PostID INTEGER NOT NULL,
 			OwnerID INTEGER NOT NULL,
@@ -151,10 +144,6 @@ func New(db *sql.DB) (AppDatabase, error) {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}
 		_, err = db.Exec(posts)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
-		_, err = db.Exec(photos)
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}

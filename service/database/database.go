@@ -56,10 +56,12 @@ type AppDatabase interface {
 
 	PutLike(uint64, uint64) (uint64, bool, error)
 	PutFollow(uint64, uint64) (uint64, bool, error)
+	PutBan(uint64, uint64) (uint64, bool, error)
 
 	DeleteLike(uint64, uint64) (bool, error)
 	DeleteComment(uint64, uint64) (bool, error)
 	DeleteFollow(uint64, uint64) (bool, error)
+	DeleteBan(uint64, uint64) (bool, error)
 	Ping() error
 }
 

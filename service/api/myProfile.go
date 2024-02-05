@@ -47,6 +47,8 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 			w.WriteHeader(http.StatusCreated)
 		}
 	}
+
+	// Responses
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(userID)
 	if err != nil {
@@ -95,6 +97,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		APIPosts = append(APIPosts, APIPost)
 	}
 
+	// Responses
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(APIPosts)
@@ -166,16 +169,16 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 }
 
 func SecurityHandler(r *http.Request, rt *_router) (uint64, bool, error) {
-	authHeader := r.Header.Get("Authorization")
+	authentication := r.Header.Get("Authorization")
 
-	available, err := rt.db.IsAvailable(authHeader)
+	available, err := rt.db.IsAvailable(authentication)
 	if err != nil {
 		return 0, false, err
 	}
 	if available {
 		return 0, false, nil
 	}
-	res, _ := strconv.Atoi(authHeader)
+	res, _ := strconv.Atoi(authentication)
 
 	return uint64(res), true, nil
 }

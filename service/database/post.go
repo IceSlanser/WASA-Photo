@@ -38,7 +38,7 @@ func (db *appdbimpl) PutLike(UID uint64, postID uint64) (uint64, bool, error) {
 		// There is already an existent like
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return like.ID, false, err
+				return 0, false, err
 			}
 		}
 		return like.ID, true, nil
@@ -53,9 +53,10 @@ func (db *appdbimpl) PutLike(UID uint64, postID uint64) (uint64, bool, error) {
 	return like.ID, false, nil
 }
 
-func (db *appdbimpl) DeleteLike(UID uint64, likeID uint64) (bool, error) {
+func (db *appdbimpl) DeleteLike(UID uint64, postID uint64) (bool, error) {
 	// Check if there is an existent like
-	err := db.c.QueryRow("SELECT * FROM likes WHERE ID = ? AND OwnerID = ?", likeID, UID).Scan()
+	var likeID uint64
+	err := db.c.QueryRow("SELECT ID FROM likes WHERE PostID = ? AND OwnerID = ?", postID, UID).Scan(&likeID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, err
@@ -126,7 +127,7 @@ func (db *appdbimpl) DeleteComment(UID uint64, commentID uint64) (bool, error) {
 		}
 	}
 
-	// Check if the user are allowed to delete that comment
+	// Check if the user are allowed to delete the comment
 	if ownerID == UID || ownerID == userID {
 		_, err = db.c.Exec("DELETE FROM comments WHERE ID = ?", commentID)
 		if err != nil {

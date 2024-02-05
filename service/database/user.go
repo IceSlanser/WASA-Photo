@@ -176,20 +176,18 @@ func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64
 }
 
 func (db *appdbimpl) PutFollow(followedUID uint64, UID uint64) (uint64, bool, error) {
-	var followerFoo uint64
-	var followedFoo uint64
-
+	var followID uint64
 	// Try to insert the follow into the database
-	res, err := db.c.Exec("INSERT INTO follows(followerUID, followedUID) VALUES (?, ?)", UID, followedUID)
+	res, err := db.c.Exec("INSERT INTO follows(FollowerUID, FollowedUID) VALUES (?, ?)", UID, followedUID)
 	if err != nil {
-		err = db.c.QueryRow("SELECT * FROM follows WHERE FollowerUID = ? AND FollowedUID = ?", followerFoo, followedFoo).Scan()
+		err = db.c.QueryRow("SELECT ID FROM follows WHERE FollowerUID = ? AND FollowedUID = ?", UID, followedUID).Scan(&followID)
 		if err != nil {
 			// There is already an existent follow
 			if err == sql.ErrNoRows {
 				return 0, false, err
 			}
 		}
-		return 0, true, nil
+		return followID, true, nil
 	}
 
 	// A new follow has been added
@@ -202,19 +200,57 @@ func (db *appdbimpl) PutFollow(followedUID uint64, UID uint64) (uint64, bool, er
 
 func (db *appdbimpl) DeleteFollow(UID uint64, followedUID uint64) (bool, error) {
 	// Check if there is an existent follow
-	err := db.c.QueryRow("SELECT ID FROM follows WHERE FollowerUID = ? AND FollowedUID = ?", UID, followedUID).Scan()
+	var followID uint64
+	err := db.c.QueryRow("SELECT ID FROM follows WHERE FollowerUID = ? AND FollowedUID = ?", UID, followedUID).Scan(&followID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, err
 		}
 	}
 
-	// Check if the user are allowed to delete that like
-	var fooUID uint64
-	if fooUID != UID { //////////////Passare inpath username e non ID
-		return false, nil
+	// Unfollow
+	_, err = db.c.Exec("DELETE FROM follows WHERE ID = ?", followID)
+	if err != nil {
+		return true, err
 	}
-	_, err = db.c.Exec("DELETE FROM likes WHERE ID = ?", followedUID)
+	return true, nil
+}
+
+func (db *appdbimpl) PutBan(bannedUID uint64, UID uint64) (uint64, bool, error) {
+	var banID uint64
+	// Try to insert the follow into the database
+	res, err := db.c.Exec("INSERT INTO bans(BannerUID, BannedUID) VALUES (?, ?)", UID, bannedUID)
+	if err != nil {
+		err = db.c.QueryRow("SELECT ID FROM bans WHERE BannerUID = ? AND BannedUID = ?", UID, bannedUID).Scan(&banID)
+		if err != nil {
+			// There is already an existent follow
+			if err == sql.ErrNoRows {
+				return 0, false, err
+			}
+		}
+		return banID, true, nil
+	}
+
+	// A new follow has been added
+	ID, err := res.LastInsertId()
+	if err != nil {
+		return 0, false, err
+	}
+	return uint64(ID), false, nil
+}
+
+func (db *appdbimpl) DeleteBan(UID uint64, bannedUID uint64) (bool, error) {
+	// Check if there is an existent follow
+	var banID uint64
+	err := db.c.QueryRow("SELECT ID FROM bans WHERE BannerUID = ? AND BannedUID = ?", UID, bannedUID).Scan(&banID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, err
+		}
+	}
+
+	// Unban
+	_, err = db.c.Exec("DELETE FROM bans WHERE ID = ?", banID)
 	if err != nil {
 		return true, err
 	}

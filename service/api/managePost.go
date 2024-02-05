@@ -127,7 +127,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Deletelike
+	// Delete like
 	authorization, err = rt.db.DeleteLike(UID, likeID)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)

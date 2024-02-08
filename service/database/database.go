@@ -37,8 +37,6 @@ import (
 	"time"
 )
 
-var ErrorUserDoesNotExist = errors.New("error: User does not exist")
-
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
 	LoginUser(string) (uint64, bool, error)
@@ -93,7 +91,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 		posts := `CREATE TABLE IF NOT EXISTS posts (
 			ID INTEGER PRIMARY KEY,
 			ProfileID INTEGER NOT NULL,
-			File BLOB NOT NULL,
+			File []byte NOT NULL,
 			Description TEXT DEFAULT "",
 			LikeCount INTEGER DEFAULT 0,
 			CommentCount INTEGER DEFAULT 0,

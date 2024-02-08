@@ -13,10 +13,12 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	// Get RequestUserID from the Header
 	myUID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -67,10 +69,12 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -110,10 +114,12 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -147,10 +153,12 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -194,10 +202,12 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

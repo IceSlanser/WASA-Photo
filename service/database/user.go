@@ -16,7 +16,7 @@ func (db *appdbimpl) LoginUser(name string) (uint64, bool, error) {
 		if err != nil {
 			// There is already an existent user with the input username
 			if err == sql.ErrNoRows {
-				return u.ID, false, ErrorUserDoesNotExist
+				return u.ID, false, err
 			}
 		}
 		return u.ID, false, nil
@@ -85,25 +85,6 @@ func (db *appdbimpl) IsValid(ID uint64) (bool, error) {
 	return true, nil
 }
 
-func (db *appdbimpl) GetPosts(myUID uint64, userID uint64) ([]Post, error) {
-	// Store posts
-	rows, err := db.c.Query("SELECT * FROM posts WHERE ProfileID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", userID, myUID)
-	var posts []Post
-	for rows.Next() {
-		var post Post
-		err = rows.Scan(&post.ID, &post.ProfileID, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
-		if err != nil {
-			return nil, err
-		}
-		posts = append(posts, post)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return posts, nil
-}
-
 func (db *appdbimpl) GetStream(UID uint64, startTime time.Time, endTime time.Time) ([]Post, error) {
 	query := `SELECT posts.*
 				FROM posts
@@ -121,7 +102,7 @@ func (db *appdbimpl) GetStream(UID uint64, startTime time.Time, endTime time.Tim
 	var posts []Post
 	for rows.Next() {
 		var post Post
-		err = rows.Scan(&post.ID, &post.ProfileID, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
+		err = rows.Scan(&post.ID, &post.ProfileID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
 		if err != nil {
 			return nil, err
 		}

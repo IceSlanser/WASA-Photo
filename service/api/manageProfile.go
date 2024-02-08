@@ -18,6 +18,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -52,6 +53,7 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -108,10 +110,12 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -146,10 +150,12 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -170,6 +176,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -183,10 +190,12 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -220,10 +229,12 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -254,7 +265,53 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 }
 
 func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	// Get UserID from the Header
+	/**UID, authorization, err := SecurityHandler(r, rt)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
+	// Limit From data to 10MB
+	err = r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to parse form")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Get the uploaded photoFile and description
+	var photoFile []byte
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to get file from form")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+	photoFile, err = ioutil.ReadAll(file)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to read form file")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Get the uploaded description
+	var descriptionData []byte
+	file, _, err := r.FormFile("description")
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to get file from form")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+	*/
 }
 
 func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {

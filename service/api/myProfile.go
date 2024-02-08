@@ -62,10 +62,12 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -113,10 +115,12 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("Operation not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

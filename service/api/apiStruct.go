@@ -17,6 +17,7 @@ type User struct {
 type Post struct {
 	ID           uint64    `json:"ID"`
 	ProfileID    string    `json:"profile_ID"`
+	File         []byte    `json:"file"`
 	Description  string    `json:"description"`
 	LikeCount    uint64    `json:"like_count"`
 	CommentCount uint64    `json:"comment_count"`
@@ -45,6 +46,7 @@ func NewPost(post database.Post) Post {
 	return Post{
 		ID:           post.ID,
 		ProfileID:    post.ProfileID,
+		File:         post.File,
 		Description:  post.Description,
 		LikeCount:    post.LikeCount,
 		CommentCount: post.CommentCount,

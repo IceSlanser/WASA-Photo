@@ -14,7 +14,7 @@ func (rt *_router) Handler() http.Handler {
 
 	// ManageProfile
 	rt.router.GET("/users/:UID/profile", rt.wrap(rt.getUserProfile))
-	rt.router.GET("/users/:UID/profile", rt.wrap(rt.getFullProfile))
+	//rt.router.GET("/users/:UID/profile", rt.wrap(rt.getFullProfile))
 	rt.router.PUT("/users/:UID/follow", rt.wrap(rt.followUser))
 	rt.router.DELETE("/users/:UID/follow", rt.wrap(rt.unfollowUser))
 	rt.router.PUT("/users/:UID/ban", rt.wrap(rt.banUser))

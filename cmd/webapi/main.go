@@ -171,14 +171,6 @@ func run() error {
 			logger.WithError(err).Warning("error during graceful shutdown of HTTP server")
 			err = apiserver.Close()
 		}
-
-		// Log the status of this shutdown.
-		switch {
-		case sig == syscall.SIGSTOP:
-			return errors.New("integrity issue caused shutdown")
-		case err != nil:
-			return fmt.Errorf("could not stop server gracefully: %w", err)
-		}
 	}
 
 	return nil

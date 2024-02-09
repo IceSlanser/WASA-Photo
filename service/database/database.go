@@ -51,11 +51,13 @@ type AppDatabase interface {
 	GetLikes(uint64, uint64) ([]uint64, error)
 
 	PostComment(uint64, uint64, string) (uint64, error)
+	PostPost(uint64, []byte, string) (uint64, error)
 
 	PutLike(uint64, uint64) (uint64, bool, error)
 	PutFollow(uint64, uint64) (uint64, bool, error)
 	PutBan(uint64, uint64) (uint64, bool, error)
 
+	DeletePost(uint64, uint64) (bool, error)
 	DeleteLike(uint64, uint64) (bool, error)
 	DeleteComment(uint64, uint64) (bool, error)
 	DeleteFollow(uint64, uint64) (bool, error)
@@ -92,7 +94,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			ID INTEGER PRIMARY KEY,
 			ProfileID INTEGER NOT NULL,
 			File []byte NOT NULL,
-			Description TEXT DEFAULT "",
+			Description TEXT NOT NULL,
 			LikeCount INTEGER DEFAULT 0,
 			CommentCount INTEGER DEFAULT 0,
 			DateTime DATETIME DEFAULT CURRENT_TIMESTAMP,

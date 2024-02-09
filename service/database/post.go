@@ -23,6 +23,39 @@ func (db *appdbimpl) GetPosts(myUID uint64, userID uint64) ([]Post, error) {
 	return posts, nil
 }
 
+func (db *appdbimpl) PostPost(UID uint64, photo []byte, description string) (uint64, error) {
+	// Post a new post
+	res, err := db.c.Exec("INSERT INTO post VALUES (?, ?, ?)", UID, photo, description)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get a new post ID
+	ID, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return uint64(ID), nil
+}
+
+func (db *appdbimpl) DeletePost(UID uint64, postID uint64) (bool, error) {
+	// Check if there is an existent post
+	var ID uint64
+	err := db.c.QueryRow("SELECT ID FROM posts WHERE ID = ? AND ProfileID = ?", postID, UID).Scan(&postID, &ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, err
+		}
+	}
+
+	// Delete post
+	_, err = db.c.Exec("DELETE FROM posts WHERE ID = ? AND ProfileID = ?", postID, UID)
+	if err != nil {
+		return true, err
+	}
+	return false, nil
+}
+
 func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, error) {
 	// Store likes
 	query := `SELECT OwnerID 
@@ -156,15 +189,3 @@ func (db *appdbimpl) DeleteComment(UID uint64, commentID uint64) (bool, error) {
 	}
 	return false, nil
 }
-
-/** func (db *appdbimpl) getPostOwner(postID uint64) (uint64, error) {
-	var owner User
-
-	err := db.c.QueryRow("SELECT profileID FROM posts WHERE ID = ?", postID).Scan(&owner.ID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return owner.ID, err
-		}
-	}
-	return owner.ID, nil
-} */

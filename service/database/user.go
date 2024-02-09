@@ -40,19 +40,6 @@ func (db *appdbimpl) SetUsername(UID uint64, nname string) error {
 	return nil
 }
 
-func (db *appdbimpl) IsAvailable(newname string) (bool, error) {
-	var username string
-
-	// Return true if the username is not taken, false otherwise
-	err := db.c.QueryRow("SELECT Username FROM profiles WHERE Username = ?", newname).Scan(&username)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return true, err
-		}
-	}
-	return false, nil
-}
-
 func (db *appdbimpl) GetProfile(myUID uint64, userID uint64) (User, error) {
 	var user User
 	valid, err := db.IsValid(userID)
@@ -236,4 +223,17 @@ func (db *appdbimpl) DeleteBan(UID uint64, bannedUID uint64) (bool, error) {
 		return true, err
 	}
 	return true, nil
+}
+
+func (db *appdbimpl) IsAvailable(newname string) (bool, error) {
+	var username string
+
+	// Return true if the username is not taken, false otherwise
+	err := db.c.QueryRow("SELECT Username FROM profiles WHERE Username = ?", newname).Scan(&username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return true, err
+		}
+	}
+	return false, nil
 }

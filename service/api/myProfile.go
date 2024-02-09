@@ -30,6 +30,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 	if !isLegal {
+		ctx.Logger.WithError(err).Error("UserName is illegal")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -52,6 +53,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(userID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode userID")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -67,7 +69,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("getMyStream not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -104,6 +106,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(APIPosts)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode APIPosts")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -120,7 +123,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("setMyUserName not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -128,6 +131,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	// Get the new username from the requestBody
 	nname, err := utils.GetMyUsername(r)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to GetMyUserName")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -140,6 +144,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 	if !isLegal {
+		ctx.Logger.WithError(err).Error("nname is illegal")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -152,6 +157,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 	if !available {
+		ctx.Logger.WithError(err).Error("nname is not available")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -167,6 +173,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(UID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode UID")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

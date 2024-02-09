@@ -16,11 +16,12 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Get RequestUserID from the Header
 	myUID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("getUserProfile not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -31,6 +32,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Get DBUser
 	dbProfile, err := rt.db.GetProfile(myUID, uint64(userID))
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to GetProfile")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -41,6 +43,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(userProfile)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode userProfile")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -51,11 +54,12 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Get RequestUserID from the Header
 	myUID, authorization, err := SecurityHandler(r, rt)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("getFullProfile not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -64,6 +68,7 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 	var userProfile User
 	err = json.NewDecoder(r.Body).Decode(&userProfile)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to decode userProfile")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -71,6 +76,7 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Get userPosts
 	DBPosts, err := rt.db.GetPosts(myUID, userProfile.ID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to GetPosts")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -84,6 +90,7 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Get userFollows
 	followings, followers, err := rt.db.GetFollows(myUID, userProfile.ID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode GetFollows")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -92,16 +99,19 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(APIPosts)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode APIPosts")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	err = json.NewEncoder(w).Encode(followings)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode followings")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	err = json.NewEncoder(w).Encode(followers)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode followers")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -117,7 +127,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("followUser not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -129,10 +139,12 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	// Put like
 	followID, exist, err := rt.db.PutFollow(UID, uint64(followedUID))
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to PutFollow")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	if exist {
+		ctx.Logger.WithError(err).Error("Followed does not exist")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -142,6 +154,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(followID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode followID")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -157,7 +170,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("unfollowUser not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -174,11 +187,12 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	// Delete follow
 	authorization, err = rt.db.DeleteFollow(UID, followedUID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to DeleteFollow")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("DeleteFollow not authorized")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -196,7 +210,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("banUser not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -208,10 +222,12 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	// Put like
 	banID, exist, err := rt.db.PutBan(UID, uint64(bannedUID))
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to PutBan")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	if exist {
+		ctx.Logger.WithError(err).Error("Banned does not exist")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -221,6 +237,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(banID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode banID")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -235,7 +252,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("unbanUser not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -252,10 +269,12 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	// Delete follow
 	authorization, err = rt.db.DeleteBan(UID, bannedUID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to DeleteBan")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("DeleteBan not authorized")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -273,7 +292,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("uploadPhoto not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -325,6 +344,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(postID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode postID")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -339,7 +359,7 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 	if !authorization {
-		ctx.Logger.WithError(err).Error("Operation not authorized")
+		ctx.Logger.WithError(err).Error("deletePhoto not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -356,10 +376,12 @@ func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	// Delete post
 	authorization, err = rt.db.DeletePost(UID, postID)
 	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to DeletePost")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	if !authorization {
+		ctx.Logger.WithError(err).Error("DeletePost not authorized")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

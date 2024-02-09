@@ -87,7 +87,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			Username TEXT UNIQUE,
 			FollowingCount INTEGER DEFAULT 0,
 			FollowerCount INTEGER DEFAULT 0,
-			PostCount INTEGER DEFAULT 0,
+			PostCount INTEGER DEFAULT 0
 		)`
 
 		posts := `CREATE TABLE IF NOT EXISTS posts (

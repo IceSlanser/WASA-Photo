@@ -89,7 +89,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	// Get list of DBPosts
 	DBPosts, err := rt.db.GetStream(UID, TimeRange.StartTime, TimeRange.EndTime)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Error during func GetPosts")
+		ctx.Logger.WithError(err).Error("Error during func GetStream")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -150,12 +150,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	// Check if the input username is already taken
-	available, err := rt.db.IsAvailable(nname)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Error during func IsAvailable")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	available := rt.db.IsAvailable(nname)
 	if !available {
 		ctx.Logger.WithError(err).Error("nname is not available")
 		w.WriteHeader(http.StatusBadRequest)
@@ -182,10 +177,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 func SecurityHandler(r *http.Request, rt *_router) (uint64, bool, error) {
 	authentication := r.Header.Get("Authorization")
 
-	available, err := rt.db.IsAvailable(authentication)
-	if err != nil {
-		return 0, false, err
-	}
+	available := rt.db.IsAvailable(authentication)
 	if available {
 		return 0, false, nil
 	}

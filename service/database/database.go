@@ -41,7 +41,7 @@ import (
 type AppDatabase interface {
 	LoginUser(string) (uint64, bool, error)
 	SetUsername(uint64, string) error
-	IsAvailable(string) (bool, error)
+	IsAvailable(string) bool
 
 	GetProfile(uint64, uint64) (User, error)
 	GetPosts(uint64, uint64) ([]Post, error)
@@ -102,7 +102,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			FOREIGN KEY (ProfileID) REFERENCES profiles(ID)
 		)`
 
-		follows := `CREATE TABLE IF NOT EXISTS followers (
+		follows := `CREATE TABLE IF NOT EXISTS follows (
 			ID INTEGER PRIMARY KEY,
 			FollowerUID INTEGER,
 			FollowedUID INTEGER,

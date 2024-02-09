@@ -79,6 +79,13 @@ func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, error) {
 }
 
 func (db *appdbimpl) PutLike(UID uint64, postID uint64) (uint64, bool, error) {
+	valid, err := db.IsValidPost(postID)
+	if err != nil {
+		return 0, false, err
+	}
+	if !valid {
+		return 0, false, err
+	}
 
 	// Try to insert a like
 	var like Like
@@ -145,6 +152,14 @@ func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, error)
 }
 
 func (db *appdbimpl) PostComment(UID uint64, postID uint64, text string) (uint64, error) {
+	valid, err := db.IsValidPost(postID)
+	if err != nil {
+		return 0, err
+	}
+	if !valid {
+		return 0, err
+	}
+
 	// Post new comment
 	res, err := db.c.Exec("INSERT INTO comments VALUES (?, ?, ?)", postID, UID, text)
 	if err != nil {
@@ -188,4 +203,15 @@ func (db *appdbimpl) DeleteComment(UID uint64, commentID uint64) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func (db *appdbimpl) IsValidPost(ID uint64) (bool, error) {
+	var foo uint64
+	err := db.c.QueryRow("SELECT ID FROM posts WHERE ID = ?", ID).Scan(&foo)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, err
+		}
+	}
+	return true, nil
 }

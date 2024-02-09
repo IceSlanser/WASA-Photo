@@ -132,9 +132,9 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Get likeID from the router
-	likeStr := ps.ByName("likeID")
-	likeID, err := strconv.ParseUint(likeStr, 10, 64)
+	// Get postID from the router
+	postStr := ps.ByName("postID")
+	postID, err := strconv.ParseUint(postStr, 10, 64)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to parse request body")
 		w.WriteHeader(http.StatusBadRequest)
@@ -142,7 +142,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Delete like
-	authorization, err = rt.db.DeleteLike(UID, likeID)
+	authorization, err = rt.db.DeleteLike(UID, postID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to DeleteLike")
 		w.WriteHeader(http.StatusNotFound)

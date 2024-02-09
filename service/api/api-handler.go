@@ -20,14 +20,14 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/users/:UID/ban", rt.wrap(rt.banUser))
 	rt.router.DELETE("/users/:UID/ban", rt.wrap(rt.unbanUser))
 	rt.router.POST("/post", rt.wrap(rt.uploadPhoto))
-	rt.router.DELETE("/post/:postId", rt.wrap(rt.deletePhoto))
+	rt.router.DELETE("/post/:postID", rt.wrap(rt.deletePhoto))
 
 	// ManagePost
-	rt.router.POST("/post/:postId", rt.wrap(rt.getFullPost))
-	rt.router.POST("/post/:postId/likes", rt.wrap(rt.likePhoto))
-	rt.router.DELETE("/post/:postId/likes", rt.wrap(rt.unlikePhoto))
-	rt.router.POST("/post/:postId/comments", rt.wrap(rt.commentPhoto))
-	rt.router.DELETE("/post/:postId/comments/:commentUID", rt.wrap(rt.uncommentPhoto))
+	rt.router.POST("/post/:postID", rt.wrap(rt.getFullPost))
+	rt.router.POST("/post/:postID/likes", rt.wrap(rt.likePhoto))
+	rt.router.DELETE("/post/:postID/likes", rt.wrap(rt.unlikePhoto))
+	rt.router.POST("/post/:postID/comments", rt.wrap(rt.commentPhoto))
+	rt.router.DELETE("/post/:postID/comments/:commentUID", rt.wrap(rt.uncommentPhoto))
 
 	return rt.router
 }

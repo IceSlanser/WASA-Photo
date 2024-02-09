@@ -6,29 +6,27 @@ import (
 )
 
 func (db *appdbimpl) LoginUser(name string) (uint64, bool, error) {
-	var u User
-	u.Username = name
+	var ID uint64
 
 	// Try to insert the user into the database
-	res, err := db.c.Exec("INSERT INTO profiles(Username) VALUES (?)", u.Username)
+	res, err := db.c.Exec("INSERT INTO profiles(Username) VALUES (?)", name)
 	if err != nil {
-		err := db.c.QueryRow("SELECT ID, Username FROM profiles WHERE Username = ?", u.Username).Scan(&u.ID)
+		err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ?", name).Scan(&ID)
 		if err != nil {
 			// There is already an existent user with the input username
 			if err == sql.ErrNoRows {
-				return u.ID, false, err
+				return 0, true, err
 			}
 		}
-		return u.ID, false, nil
+		return ID, true, nil
 	}
 
 	// A new user has been created
-	ID, err := res.LastInsertId()
+	UID, err := res.LastInsertId()
 	if err != nil {
-		return u.ID, false, err
+		return 0, false, err
 	}
-	u.ID = uint64(ID)
-	return u.ID, true, nil
+	return uint64(UID), false, nil
 }
 
 func (db *appdbimpl) SetUsername(UID uint64, nname string) error {
@@ -42,7 +40,7 @@ func (db *appdbimpl) SetUsername(UID uint64, nname string) error {
 
 func (db *appdbimpl) GetProfile(myUID uint64, userID uint64) (User, error) {
 	var user User
-	valid, err := db.IsValid(userID)
+	valid, err := db.IsValidProfile(userID)
 	if err != nil {
 		return User{}, err
 	}
@@ -59,17 +57,6 @@ func (db *appdbimpl) GetProfile(myUID uint64, userID uint64) (User, error) {
 	}
 
 	return user, nil
-}
-
-func (db *appdbimpl) IsValid(ID uint64) (bool, error) {
-	var foo uint64
-	err := db.c.QueryRow("SELECT ID FROM profiles WHERE ID = ?", ID).Scan(&foo)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, err
-		}
-	}
-	return true, nil
 }
 
 func (db *appdbimpl) GetStream(UID uint64, startTime time.Time, endTime time.Time) ([]Post, error) {
@@ -144,6 +131,14 @@ func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64
 }
 
 func (db *appdbimpl) PutFollow(followedUID uint64, UID uint64) (uint64, bool, error) {
+	valid, err := db.IsValidProfile(followedUID)
+	if err != nil {
+		return 0, false, err
+	}
+	if !valid {
+		return 0, false, err
+	}
+
 	var followID uint64
 	// Try to insert the follow into the database
 	res, err := db.c.Exec("INSERT INTO follows(FollowerUID, FollowedUID) VALUES (?, ?)", UID, followedUID)
@@ -163,7 +158,7 @@ func (db *appdbimpl) PutFollow(followedUID uint64, UID uint64) (uint64, bool, er
 	if err != nil {
 		return 0, false, err
 	}
-	return uint64(ID), false, nil
+	return uint64(ID), true, nil
 }
 
 func (db *appdbimpl) DeleteFollow(UID uint64, followedUID uint64) (bool, error) {
@@ -185,6 +180,14 @@ func (db *appdbimpl) DeleteFollow(UID uint64, followedUID uint64) (bool, error) 
 }
 
 func (db *appdbimpl) PutBan(bannedUID uint64, UID uint64) (uint64, bool, error) {
+	valid, err := db.IsValidProfile(bannedUID)
+	if err != nil {
+		return 0, false, err
+	}
+	if !valid {
+		return 0, false, err
+	}
+
 	var banID uint64
 	// Try to insert the follow into the database
 	res, err := db.c.Exec("INSERT INTO bans(BannerUID, BannedUID) VALUES (?, ?)", UID, bannedUID)
@@ -225,15 +228,26 @@ func (db *appdbimpl) DeleteBan(UID uint64, bannedUID uint64) (bool, error) {
 	return true, nil
 }
 
-func (db *appdbimpl) IsAvailable(newname string) (bool, error) {
+func (db *appdbimpl) IsAvailable(newname string) bool {
 	var username string
 
 	// Return true if the username is not taken, false otherwise
 	err := db.c.QueryRow("SELECT Username FROM profiles WHERE Username = ?", newname).Scan(&username)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return true, err
+			return true
 		}
 	}
-	return false, nil
+	return false
+}
+
+func (db *appdbimpl) IsValidProfile(ID uint64) (bool, error) {
+	var foo uint64
+	err := db.c.QueryRow("SELECT ID FROM profiles WHERE ID = ?", ID).Scan(&foo)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, err
+		}
+	}
+	return true, nil
 }

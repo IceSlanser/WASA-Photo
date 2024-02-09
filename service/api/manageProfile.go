@@ -2,10 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/IceSlanserUni/WASAPhoto/service/utils"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	"github.com/IceSlanserUni/WASAPhoto/service/utils"
 
 	"github.com/IceSlanserUni/WASAPhoto/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
@@ -133,7 +134,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	// Get followedUID from the router
-	followedStr := ps.ByName("FollowedUID")
+	followedStr := ps.ByName("UID")
 	followedUID, _ := strconv.Atoi(followedStr)
 
 	// Put like
@@ -143,7 +144,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	if exist {
+	if !exist {
 		ctx.Logger.WithError(err).Error("Followed does not exist")
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -176,7 +177,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// Get followedUID from the router
-	followedStr := ps.ByName("FollowedUID")
+	followedStr := ps.ByName("UID")
 	followedUID, err := strconv.ParseUint(followedStr, 10, 64)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to parse request body")
@@ -216,7 +217,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// Get bannedUID from the router
-	bannedStr := ps.ByName("BannedUID")
+	bannedStr := ps.ByName("UID")
 	bannedUID, _ := strconv.Atoi(bannedStr)
 
 	// Put like
@@ -258,7 +259,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Get followedUID from the router
-	bannedStr := ps.ByName("BannedUID")
+	bannedStr := ps.ByName("UID")
 	bannedUID, err := strconv.ParseUint(bannedStr, 10, 64)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to parse request body")

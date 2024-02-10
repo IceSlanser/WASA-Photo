@@ -158,6 +158,19 @@ func (db *appdbimpl) PutFollow(followedUID uint64, UID uint64) (uint64, bool, er
 	if err != nil {
 		return 0, false, err
 	}
+
+	// Update FollowingCount for the follower
+	_, err = db.c.Exec("UPDATE profiles SET FollowingCount = FollowingCount + 1 WHERE ID = ?", UID)
+	if err != nil {
+		return 0, false, err
+	}
+
+	// Update FollowerCount for the followed user
+	_, err = db.c.Exec("UPDATE profiles SET FollowerCount = FollowerCount + 1 WHERE ID = ?", followedUID)
+	if err != nil {
+		return 0, false, err
+	}
+
 	return uint64(ID), true, nil
 }
 
@@ -176,6 +189,19 @@ func (db *appdbimpl) DeleteFollow(UID uint64, followedUID uint64) (bool, error) 
 	if err != nil {
 		return true, err
 	}
+
+	// Update FollowingCount for the follower
+	_, err = db.c.Exec("UPDATE profiles SET FollowingCount = FollowingCount - 1 WHERE ID = ?", UID)
+	if err != nil {
+		return true, err
+	}
+
+	// Update FollowerCount for the followed user
+	_, err = db.c.Exec("UPDATE profiles SET FollowerCount = FollowerCount - 1 WHERE ID = ?", followedUID)
+	if err != nil {
+		return true, err
+	}
+
 	return true, nil
 }
 

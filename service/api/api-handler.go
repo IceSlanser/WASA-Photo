@@ -8,13 +8,12 @@ import (
 func (rt *_router) Handler() http.Handler {
 
 	// MyProfile
-	rt.router.POST("/session", rt.wrap(rt.doLogin))
-	rt.router.GET("/stream", rt.wrap(rt.getMyStream))
-	rt.router.PUT("/profile/setUserName", rt.wrap(rt.setMyUserName))
+	rt.router.POST("/session", rt.wrap(rt.doLogin))                  // V
+	rt.router.GET("/stream", rt.wrap(rt.getMyStream))                // Controlla post
+	rt.router.PUT("/profile/setUserName", rt.wrap(rt.setMyUserName)) // V
 
 	// ManageProfile
-	rt.router.GET("/users/:UID/profile", rt.wrap(rt.getUserProfile))
-	//rt.router.GET("/users/:UID/profile", rt.wrap(rt.getFullProfile))
+	rt.router.GET("/users/:UID/profile", rt.wrap(rt.getUserProfile)) // Controlla dopo numero
 	rt.router.PUT("/users/:UID/follow", rt.wrap(rt.followUser))
 	rt.router.DELETE("/users/:UID/follow", rt.wrap(rt.unfollowUser))
 	rt.router.PUT("/users/:UID/ban", rt.wrap(rt.banUser))

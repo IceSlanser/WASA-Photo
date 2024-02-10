@@ -35,6 +35,13 @@ func (db *appdbimpl) PostPost(UID uint64, photo []byte, description string) (uin
 	if err != nil {
 		return 0, err
 	}
+
+	// Update PostCount
+	_, err = db.c.Exec("UPDATE profiles SET PostCount = PostCount + 1 WHERE ID = ?", UID)
+	if err != nil {
+		return 0, err
+	}
+
 	return uint64(ID), nil
 }
 
@@ -53,7 +60,14 @@ func (db *appdbimpl) DeletePost(UID uint64, postID uint64) (bool, error) {
 	if err != nil {
 		return true, err
 	}
-	return false, nil
+
+	// Update PostCount
+	_, err = db.c.Exec("UPDATE profiles SET PostCount = PostCount - 1 WHERE ID = ?", UID)
+	if err != nil {
+		return true, err
+	}
+
+	return true, nil
 }
 
 func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, error) {
@@ -109,6 +123,13 @@ func (db *appdbimpl) PutLike(UID uint64, postID uint64) (uint64, bool, error) {
 		return like.ID, false, err
 	}
 	like.ID = uint64(ID)
+
+	// Update LikeCount
+	_, err = db.c.Exec("UPDATE posts SET LikeCount = LikeCount + 1 WHERE ID = ?", postID)
+	if err != nil {
+		return like.ID, true, err
+	}
+
 	return like.ID, false, nil
 }
 
@@ -126,6 +147,13 @@ func (db *appdbimpl) DeleteLike(UID uint64, postID uint64) (bool, error) {
 	if err != nil {
 		return true, err
 	}
+
+	// Update LikeCount
+	_, err = db.c.Exec("UPDATE posts SET LikeCount = LikeCount - 1 WHERE ID = ?", postID)
+	if err != nil {
+		return true, err
+	}
+
 	return true, nil
 }
 
@@ -171,6 +199,13 @@ func (db *appdbimpl) PostComment(UID uint64, postID uint64, text string) (uint64
 	if err != nil {
 		return 0, err
 	}
+
+	// Update CommentCount
+	_, err = db.c.Exec("UPDATE posts SET CommentCount = CommentCount + 1 WHERE ID = ?", postID)
+	if err != nil {
+		return uint64(ID), err
+	}
+
 	return uint64(ID), nil
 }
 
@@ -202,7 +237,14 @@ func (db *appdbimpl) DeleteComment(UID uint64, commentID uint64) (bool, error) {
 		}
 		return true, nil
 	}
-	return false, nil
+
+	// Update CommentCount
+	_, err = db.c.Exec("UPDATE posts SET CommentCount = CommentCount - 1 WHERE ID = ?", postID)
+	if err != nil {
+		return true, err
+	}
+
+	return true, nil
 }
 
 func (db *appdbimpl) IsValidPost(ID uint64) (bool, error) {

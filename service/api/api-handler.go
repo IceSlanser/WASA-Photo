@@ -25,7 +25,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/post/:postID", rt.wrap(rt.getFullPost)) //Controlla like comment
 	rt.router.PUT("/post/:postID/likes", rt.wrap(rt.likePhoto))
 	rt.router.DELETE("/post/:postID/likes", rt.wrap(rt.unlikePhoto))
-	rt.router.PUT("/post/:postID/comments", rt.wrap(rt.commentPhoto))
+	rt.router.POST("/post/:postID/comments", rt.wrap(rt.commentPhoto))
 	rt.router.DELETE("/post/:postID/comments/:commentUID", rt.wrap(rt.uncommentPhoto))
 
 	return rt.router

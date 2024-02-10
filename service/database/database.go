@@ -60,7 +60,7 @@ type AppDatabase interface {
 
 	DeletePost(uint64, uint64) (bool, error)
 	DeleteLike(uint64, uint64) (bool, error)
-	DeleteComment(uint64, uint64) (bool, error)
+	DeleteComment(uint64, uint64, uint64) (bool, error)
 	DeleteFollow(uint64, uint64) (bool, error)
 	DeleteBan(uint64, uint64) (bool, error)
 	Ping() error

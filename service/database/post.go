@@ -239,12 +239,11 @@ func (db *appdbimpl) PostComment(UID uint64, postID uint64, text string) (uint64
 	return uint64(ID), nil
 }
 
-func (db *appdbimpl) DeleteComment(UID uint64, commentID uint64) (bool, error) {
+func (db *appdbimpl) DeleteComment(UID uint64, postID uint64, commentID uint64) (bool, error) {
 	// Check if there is an existent comment
 	var ownerID uint64
-	var postID uint64
 	var userID uint64
-	err := db.c.QueryRow("SELECT PostID, OwnerID FROM comments WHERE ID = ?", commentID).Scan(&postID, &ownerID)
+	err := db.c.QueryRow("SELECT OwnerID FROM comments WHERE ID = ?", commentID).Scan(&ownerID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, err

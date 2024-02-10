@@ -235,6 +235,15 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
+	// Get postID from the router
+	postStr := ps.ByName("postID")
+	postID, err := strconv.ParseUint(postStr, 10, 64)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to parse request body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	// Get commentID from the router
 	commentStr := ps.ByName("commentID")
 	commentID, err := strconv.ParseUint(commentStr, 10, 64)
@@ -245,7 +254,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	// Delete comment
-	authorization, err = rt.db.DeleteComment(UID, commentID)
+	authorization, err = rt.db.DeleteComment(UID, postID, commentID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to DeleteComment")
 		w.WriteHeader(http.StatusNotFound)

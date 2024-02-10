@@ -70,6 +70,22 @@ func (db *appdbimpl) DeletePost(UID uint64, postID uint64) (bool, error) {
 	return true, nil
 }
 
+func (db *appdbimpl) GetPhoto(UID uint64, postID uint64) ([]byte, error) {
+	// Store photo
+	var file []byte
+	query := `SELECT File 
+				FROM posts
+				WHERE ID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
+	err := db.c.QueryRow(query, postID, UID).Scan(&file)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	return file, nil
+}
+
 func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, error) {
 	// Store likes
 	query := `SELECT OwnerID 

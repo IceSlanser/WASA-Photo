@@ -46,6 +46,7 @@ type AppDatabase interface {
 	GetProfile(uint64, uint64) (User, error)
 	GetPosts(uint64, uint64) ([]Post, error)
 	GetStream(uint64, time.Time, time.Time) ([]Post, error)
+	GetPhoto(uint64, uint64) ([]byte, error)
 	GetFollows(uint64, uint64) ([]uint64, []uint64, error)
 	GetComments(uint64, uint64) ([]Comment, error)
 	GetLikes(uint64, uint64) ([]uint64, error)

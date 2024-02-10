@@ -32,6 +32,14 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	// Get photo
+	photo, err := rt.db.GetPhoto(myUID, postID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to GetPhoto")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	// Get postComments
 	DBComments, err := rt.db.GetComments(myUID, postID)
 	if err != nil {
@@ -39,7 +47,7 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	// Convert DBPosts to APIPosts
+	// Convert DBPosts to APIComments
 	var APIComments []Comment
 	for _, DBComment := range DBComments {
 		APIComment := NewComment(DBComment)
@@ -56,15 +64,27 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(APIComments)
+	err = json.NewEncoder(w).Encode(postID)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode APIComments")
+		ctx.Logger.WithError(err).Error("Failed to encode postID")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(photo)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode photo")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	err = json.NewEncoder(w).Encode(likeOwners)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode likeOwners")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(APIComments)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode APIComments")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

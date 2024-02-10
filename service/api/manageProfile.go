@@ -12,7 +12,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// Get request's userProfile
+// getUserProfile Get request's userProfile
 func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get RequestUserID from the Header
 	myUID, authorization, err := SecurityHandler(r, rt)
@@ -50,7 +50,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
-// Get request's userFullProfile
+// getFullProfile Get request's userFullProfile
 func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get RequestUserID from the Header
 	myUID, authorization, err := SecurityHandler(r, rt)
@@ -65,9 +65,17 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
+	// fullProfile struct
+	var fullProfile struct {
+		UserProfile User     `json:"user_profile"`
+		Posts       []Post   `json:"posts"`
+		Followings  []uint64 `json:"followings"`
+		Followers   []uint64 `json:"followers"`
+	}
+
 	// Get userProfile
 	var userProfile User
-	err = json.NewDecoder(r.Body).Decode(&userProfile)
+	err = json.NewDecoder(r.Body).Decode(&fullProfile)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to decode userProfile")
 		w.WriteHeader(http.StatusBadRequest)
@@ -75,50 +83,38 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	// Get userPosts
-	DBPosts, err := rt.db.GetPosts(myUID, userProfile.ID)
+	DBPosts, err := rt.db.GetPosts(myUID, fullProfile.UserProfile.ID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetPosts")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	// Convert DBPosts to APIPosts
-	var APIPosts []Post
 	for _, DBPost := range DBPosts {
 		APIPost := NewPost(DBPost)
-		APIPosts = append(APIPosts, APIPost)
+		fullProfile.Posts = append(fullProfile.Posts, APIPost)
 	}
 
 	// Get userFollows
-	followings, followers, err := rt.db.GetFollows(myUID, userProfile.ID)
+	fullProfile.Followings, fullProfile.Followers, err = rt.db.GetFollows(myUID, userProfile.ID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode GetFollows")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
+	// Responses
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(APIPosts)
+	err = json.NewEncoder(w).Encode(fullProfile)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode APIPosts")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(followings)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode followings")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(followers)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode followers")
+		ctx.Logger.WithError(err).Error("Failed to encode fullProfile")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
-// Follow a certain user
+// followUser Follow a certain user
 func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -159,7 +155,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 
 	// Responses
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "text/plain")
 	err = json.NewEncoder(w).Encode(followID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode followID")
@@ -168,7 +164,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 }
 
-// Unfollow a certain user
+// unfollowUser Unfollow a certain user
 func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -209,6 +205,7 @@ func (rt *_router) unfollowUser(w http.ResponseWriter, r *http.Request, ps httpr
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// banUser ban a user
 func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -249,7 +246,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	// Responses
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "text/plain")
 	err = json.NewEncoder(w).Encode(banID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode banID")
@@ -258,6 +255,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 }
 
+// unbanUser Unban a user
 func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -298,6 +296,7 @@ func (rt *_router) unbanUser(w http.ResponseWriter, r *http.Request, ps httprout
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// uploadPhoto post a new Photo
 func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -356,7 +355,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Responses
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "text/plain")
 	err = json.NewEncoder(w).Encode(postID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode postID")
@@ -365,6 +364,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 }
 
+// deletePhoto delete a Photo
 func (rt *_router) deletePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)

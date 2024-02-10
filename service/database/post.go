@@ -86,7 +86,7 @@ func (db *appdbimpl) GetPhoto(UID uint64, postID uint64) ([]byte, error) {
 	return file, nil
 }
 
-func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, error) {
+func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, uint64, error) {
 	// Store likes
 	query := `SELECT OwnerID 
 				FROM likes
@@ -97,15 +97,22 @@ func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, error) {
 		var ownerID uint64
 		err = rows.Scan(&ownerID)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		likeOwners = append(likeOwners, ownerID)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return likeOwners, nil
+	// Get LikeCount
+	var likeCount uint64
+	err = db.c.QueryRow("SELECT LikeCount FROM posts WHERE ID = ?", postID).Scan(&likeCount)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return likeOwners, likeCount, nil
 }
 
 func (db *appdbimpl) PutLike(UID uint64, postID uint64) (uint64, bool, error) {
@@ -173,7 +180,7 @@ func (db *appdbimpl) DeleteLike(UID uint64, postID uint64) (bool, error) {
 	return true, nil
 }
 
-func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, error) {
+func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, uint64, error) {
 	// Store comments
 	query := `SELECT * 
 				FROM comments 
@@ -184,15 +191,22 @@ func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, error)
 		var comment Comment
 		err = rows.Scan(&comment.ID, &comment.PostID, &comment.OwnerID, &comment.Text, &comment.DateTime)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		comments = append(comments, comment)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return comments, nil
+	// Get CommentCount
+	var CommentCount uint64
+	err = db.c.QueryRow("SELECT CommentCount FROM posts WHERE ID = ?", postID).Scan(&CommentCount)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return comments, CommentCount, nil
 }
 
 func (db *appdbimpl) PostComment(UID uint64, postID uint64, text string) (uint64, error) {

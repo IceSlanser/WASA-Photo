@@ -10,7 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// If the username does not exist, it will create a new profile, and an identifier is returned.
+//  doLogin If the username does not exist, it will create a new profile, and an identifier is returned.
 // If the username exists, the profile identifier is returned.
 func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get the username from the requestBody
@@ -48,7 +48,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	} else {
 		w.WriteHeader(http.StatusCreated)
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "text/plain")
 	err = json.NewEncoder(w).Encode(userID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode userID")
@@ -57,7 +57,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 }
 
-// The stream is composed by photos from “following” (other users that the user follows).
+// getMyStream The stream is composed by photos from “following” (other users that the user follows).
 func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -118,7 +118,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 
 }
 
-// Set a new username for the current user.
+// setMyUserName Set a new username for the current user.
 func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -170,7 +170,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "text/plain")
 	err = json.NewEncoder(w).Encode(UID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode UID")
@@ -179,6 +179,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 }
 
+// SecurityHandler Get UID from the Header
 func SecurityHandler(r *http.Request, rt *_router) (uint64, bool, error) {
 	authentication := r.Header.Get("Authorization")
 

@@ -9,7 +9,7 @@ func (rt *_router) Handler() http.Handler {
 
 	// MyProfile
 	rt.router.POST("/session", rt.wrap(rt.doLogin))                  // V
-	rt.router.GET("/stream", rt.wrap(rt.getMyStream))                // Controlla post
+	rt.router.GET("/stream", rt.wrap(rt.getMyStream))                // V
 	rt.router.PUT("/profile/setUserName", rt.wrap(rt.setMyUserName)) // V
 
 	// ManageProfile
@@ -22,10 +22,10 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.DELETE("/post/:postID", rt.wrap(rt.deletePhoto))       // V
 
 	// ManagePost
-	rt.router.GET("/post/:postID", rt.wrap(rt.getFullPost))
-	rt.router.POST("/post/:postID/likes", rt.wrap(rt.likePhoto))
+	rt.router.GET("/post/:postID", rt.wrap(rt.getFullPost)) //Controlla like comment
+	rt.router.PUT("/post/:postID/likes", rt.wrap(rt.likePhoto))
 	rt.router.DELETE("/post/:postID/likes", rt.wrap(rt.unlikePhoto))
-	rt.router.POST("/post/:postID/comments", rt.wrap(rt.commentPhoto))
+	rt.router.PUT("/post/:postID/comments", rt.wrap(rt.commentPhoto))
 	rt.router.DELETE("/post/:postID/comments/:commentUID", rt.wrap(rt.uncommentPhoto))
 
 	return rt.router

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/IceSlanserUni/WASAPhoto/service/database"
 	"net/http"
 	"strconv"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// getFullPost Get all related to a post
 func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get RequestUserID from the Header
 	myUID, authorization, err := SecurityHandler(r, rt)
@@ -23,9 +25,18 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	var FullPost struct {
+		PostID       uint64    `json:"post_ID"`
+		File         []byte    `json:"file"`
+		LikeCount    uint64    `json:"like_count"`
+		LikeOwners   []uint64  `json:"like_owners"`
+		CommentCount uint64    `json:"comment_count"`
+		Comments     []Comment `json:"comments"`
+	}
+
 	// Get user's post
 	postStr := ps.ByName("postID")
-	postID, err := strconv.ParseUint(postStr, 10, 64)
+	FullPost.PostID, err = strconv.ParseUint(postStr, 10, 64)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to decode postID")
 		w.WriteHeader(http.StatusBadRequest)
@@ -33,7 +44,7 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Get photo
-	photo, err := rt.db.GetPhoto(myUID, postID)
+	FullPost.File, err = rt.db.GetPhoto(myUID, FullPost.PostID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetPhoto")
 		w.WriteHeader(http.StatusNotFound)
@@ -41,21 +52,21 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Get postComments
-	DBComments, err := rt.db.GetComments(myUID, postID)
+	var DBComments []database.Comment
+	DBComments, FullPost.CommentCount, err = rt.db.GetComments(myUID, FullPost.PostID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetComments")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	// Convert DBPosts to APIComments
-	var APIComments []Comment
 	for _, DBComment := range DBComments {
 		APIComment := NewComment(DBComment)
-		APIComments = append(APIComments, APIComment)
+		FullPost.Comments = append(FullPost.Comments, APIComment)
 	}
 
 	// Get likeOwners
-	likeOwners, err := rt.db.GetLikes(myUID, postID)
+	FullPost.LikeOwners, FullPost.LikeCount, err = rt.db.GetLikes(myUID, FullPost.PostID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetLikes")
 		w.WriteHeader(http.StatusNotFound)
@@ -64,32 +75,15 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(postID)
+	err = json.NewEncoder(w).Encode(FullPost)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode postID")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(photo)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode photo")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(likeOwners)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode likeOwners")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = json.NewEncoder(w).Encode(APIComments)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode APIComments")
+		ctx.Logger.WithError(err).Error("Failed to encode FullPost")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
+// likePhoto put a like to a post
 func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -128,7 +122,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 	// Responses
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "text/plain")
 	err = json.NewEncoder(w).Encode(likeID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode likeID")
@@ -138,6 +132,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 }
 
+// unlikePhoto delete a like from a post
 func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -178,6 +173,7 @@ func (rt *_router) unlikePhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// commentPhoto comment a post
 func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)
@@ -219,7 +215,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 
 	// Responses
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "text/plain")
 	err = json.NewEncoder(w).Encode(commentID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode commentID")
@@ -229,6 +225,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 
 }
 
+// uncommentPhoto delete a comment from a post
 func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header
 	UID, authorization, err := SecurityHandler(r, rt)

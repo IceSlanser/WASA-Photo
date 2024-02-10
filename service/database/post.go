@@ -219,7 +219,7 @@ func (db *appdbimpl) PostComment(UID uint64, postID uint64, text string) (uint64
 	}
 
 	// Post new comment
-	res, err := db.c.Exec("INSERT INTO comments VALUES (?, ?, ?)", postID, UID, text)
+	res, err := db.c.Exec("INSERT INTO comments(PostID, OwnerID, Text) VALUES (?, ?, ?)", postID, UID, text)
 	if err != nil {
 		return 0, err
 	}

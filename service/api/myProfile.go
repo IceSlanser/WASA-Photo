@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/IceSlanserUni/WASAPhoto/service/api/reqcontext"
@@ -41,15 +40,14 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		ctx.Logger.WithError(err).Error("Error during func LoginUser")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-	} else {
-		if exist {
-			w.WriteHeader(http.StatusOK)
-		} else {
-			w.WriteHeader(http.StatusCreated)
-		}
 	}
 
 	// Responses
+	if exist {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(userID)
 	if err != nil {
@@ -150,7 +148,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	// Check if the input username is already taken
-	available := rt.db.IsAvailable(nname)
+	_, available := rt.db.IsAvailable(nname)
 	if !available {
 		ctx.Logger.WithError(err).Error("nname is not available")
 		w.WriteHeader(http.StatusBadRequest)
@@ -177,11 +175,10 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 func SecurityHandler(r *http.Request, rt *_router) (uint64, bool, error) {
 	authentication := r.Header.Get("Authorization")
 
-	available := rt.db.IsAvailable(authentication)
+	UID, available := rt.db.IsAvailable(authentication)
 	if available {
 		return 0, false, nil
 	}
-	res, _ := strconv.Atoi(authentication)
 
-	return uint64(res), true, nil
+	return UID, true, nil
 }

@@ -41,7 +41,7 @@ import (
 type AppDatabase interface {
 	LoginUser(string) (uint64, bool, error)
 	SetUsername(uint64, string) error
-	IsAvailable(string) bool
+	IsAvailable(string) (uint64, bool)
 
 	GetProfile(uint64, uint64) (User, error)
 	GetPosts(uint64, uint64) ([]Post, error)

@@ -228,17 +228,17 @@ func (db *appdbimpl) DeleteBan(UID uint64, bannedUID uint64) (bool, error) {
 	return true, nil
 }
 
-func (db *appdbimpl) IsAvailable(newname string) bool {
-	var username string
+func (db *appdbimpl) IsAvailable(newname string) (uint64, bool) {
+	var UID uint64
 
 	// Return true if the username is not taken, false otherwise
-	err := db.c.QueryRow("SELECT Username FROM profiles WHERE Username = ?", newname).Scan(&username)
+	err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ?", newname).Scan(&UID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return true
+			return 0, true
 		}
 	}
-	return false
+	return UID, false
 }
 
 func (db *appdbimpl) IsValidProfile(ID uint64) (bool, error) {

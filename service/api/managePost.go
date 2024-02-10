@@ -197,13 +197,8 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 		return
 	}
 
-	// Get text from the router
-	text := ps.ByName("text")
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to parse request body")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	// Get the comment from the form
+	text := r.FormValue("description")
 
 	// Post Comment
 	commentID, err := rt.db.PostComment(UID, postID, text)

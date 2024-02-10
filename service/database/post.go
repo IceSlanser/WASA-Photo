@@ -25,7 +25,7 @@ func (db *appdbimpl) GetPosts(myUID uint64, userID uint64) ([]Post, error) {
 
 func (db *appdbimpl) PostPost(UID uint64, photo []byte, description string) (uint64, error) {
 	// Post a new post
-	res, err := db.c.Exec("INSERT INTO posts VALUES (?, ?, ?)", UID, photo, description)
+	res, err := db.c.Exec("INSERT INTO posts (ProfileID, File, Description) VALUES (?, ?, ?)", UID, photo, description)
 	if err != nil {
 		return 0, err
 	}

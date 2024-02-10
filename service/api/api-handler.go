@@ -22,11 +22,11 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.DELETE("/post/:postID", rt.wrap(rt.deletePhoto))       // V
 
 	// ManagePost
-	rt.router.GET("/post/:postID", rt.wrap(rt.getFullPost)) //Controlla like comment
-	rt.router.PUT("/post/:postID/likes", rt.wrap(rt.likePhoto))
-	rt.router.DELETE("/post/:postID/likes", rt.wrap(rt.unlikePhoto))
-	rt.router.POST("/post/:postID/comments", rt.wrap(rt.commentPhoto))
-	rt.router.DELETE("/post/:postID/comments/:commentUID", rt.wrap(rt.uncommentPhoto))
+	rt.router.GET("/post/:postID", rt.wrap(rt.getFullPost))                           //Controlla like comment
+	rt.router.PUT("/post/:postID/likes", rt.wrap(rt.likePhoto))                       // V
+	rt.router.DELETE("/post/:postID/likes", rt.wrap(rt.unlikePhoto))                  // V
+	rt.router.POST("/post/:postID/comments", rt.wrap(rt.commentPhoto))                // V
+	rt.router.DELETE("/post/:postID/comments/:commentID", rt.wrap(rt.uncommentPhoto)) // V
 
 	return rt.router
 }

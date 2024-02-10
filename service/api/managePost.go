@@ -198,7 +198,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// Get the comment from the form
-	text := r.FormValue("description")
+	text := r.FormValue("text")
 
 	// Post Comment
 	commentID, err := rt.db.PostComment(UID, postID, text)

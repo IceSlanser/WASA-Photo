@@ -24,16 +24,16 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Get user's post
-	var post Post
-	err = json.NewDecoder(r.Body).Decode(&post)
+	postStr := ps.ByName("postID")
+	postID, err := strconv.ParseUint(postStr, 10, 64)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to decode post")
+		ctx.Logger.WithError(err).Error("Failed to decode postID")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	// Get postComments
-	DBComments, err := rt.db.GetComments(myUID, post.ID)
+	DBComments, err := rt.db.GetComments(myUID, postID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetComments")
 		w.WriteHeader(http.StatusNotFound)
@@ -47,7 +47,7 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Get likeOwners
-	likeOwners, err := rt.db.GetLikes(myUID, post.ID)
+	likeOwners, err := rt.db.GetLikes(myUID, postID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetLikes")
 		w.WriteHeader(http.StatusNotFound)

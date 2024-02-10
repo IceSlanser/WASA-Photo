@@ -72,14 +72,21 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	// TimeRange set by user
 	var TimeRange struct {
 		StartTime time.Time `json:"start_time"`
 		EndTime   time.Time `json:"end_time"`
 	}
-
 	err = json.NewDecoder(r.Body).Decode(&TimeRange)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to parse request body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// StartTime should be before EndTime
+	if TimeRange.StartTime.After(TimeRange.EndTime) {
+		ctx.Logger.WithError(err).Error("StartTime should be before EndTime")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

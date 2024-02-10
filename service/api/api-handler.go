@@ -18,11 +18,11 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.DELETE("/users/:UID/follow", rt.wrap(rt.unfollowUser)) // V
 	rt.router.PUT("/users/:UID/ban", rt.wrap(rt.banUser))            // V
 	rt.router.DELETE("/users/:UID/ban", rt.wrap(rt.unbanUser))       // V
-	rt.router.POST("/post", rt.wrap(rt.uploadPhoto))
-	rt.router.DELETE("/post/:postID", rt.wrap(rt.deletePhoto))
+	rt.router.POST("/post", rt.wrap(rt.uploadPhoto))                 // V
+	rt.router.DELETE("/post/:postID", rt.wrap(rt.deletePhoto))       // V
 
 	// ManagePost
-	rt.router.POST("/post/:postID", rt.wrap(rt.getFullPost))
+	rt.router.GET("/post/:postID", rt.wrap(rt.getFullPost))
 	rt.router.POST("/post/:postID/likes", rt.wrap(rt.likePhoto))
 	rt.router.DELETE("/post/:postID/likes", rt.wrap(rt.unlikePhoto))
 	rt.router.POST("/post/:postID/comments", rt.wrap(rt.commentPhoto))

@@ -137,6 +137,13 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	followedStr := ps.ByName("UID")
 	followedUID, _ := strconv.Atoi(followedStr)
 
+	// A user can not follow himself
+	if UID == uint64(followedUID) {
+		ctx.Logger.WithError(err).Error("A user can not follow himself")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	// Put like
 	followID, exist, err := rt.db.PutFollow(UID, uint64(followedUID))
 	if err != nil {
@@ -219,6 +226,13 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	// Get bannedUID from the router
 	bannedStr := ps.ByName("UID")
 	bannedUID, _ := strconv.Atoi(bannedStr)
+
+	// A user can not ban himself
+	if UID == uint64(bannedUID) {
+		ctx.Logger.WithError(err).Error("A user can not ban himself")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	// Put like
 	banID, exist, err := rt.db.PutBan(UID, uint64(bannedUID))

@@ -130,7 +130,7 @@ func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64
 	return followings, followers, nil
 }
 
-func (db *appdbimpl) PutFollow(followedUID uint64, UID uint64) (uint64, bool, error) {
+func (db *appdbimpl) PutFollow(UID uint64, followedUID uint64) (uint64, bool, error) {
 	valid, err := db.IsValidProfile(followedUID)
 	if err != nil {
 		return 0, false, err
@@ -205,7 +205,7 @@ func (db *appdbimpl) DeleteFollow(UID uint64, followedUID uint64) (bool, error) 
 	return true, nil
 }
 
-func (db *appdbimpl) PutBan(bannedUID uint64, UID uint64) (uint64, bool, error) {
+func (db *appdbimpl) PutBan(UID uint64, bannedUID uint64) (uint64, bool, error) {
 	valid, err := db.IsValidProfile(bannedUID)
 	if err != nil {
 		return 0, false, err

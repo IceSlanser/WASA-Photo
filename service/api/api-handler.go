@@ -13,11 +13,11 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/profile/setUserName", rt.wrap(rt.setMyUserName)) // V
 
 	// ManageProfile
-	rt.router.GET("/users/:UID/profile", rt.wrap(rt.getUserProfile)) // Controlla dopo numero
-	rt.router.PUT("/users/:UID/follow", rt.wrap(rt.followUser))
-	rt.router.DELETE("/users/:UID/follow", rt.wrap(rt.unfollowUser))
-	rt.router.PUT("/users/:UID/ban", rt.wrap(rt.banUser))
-	rt.router.DELETE("/users/:UID/ban", rt.wrap(rt.unbanUser))
+	rt.router.GET("/users/:UID/profile", rt.wrap(rt.getUserProfile)) // V
+	rt.router.PUT("/users/:UID/follow", rt.wrap(rt.followUser))      // V
+	rt.router.DELETE("/users/:UID/follow", rt.wrap(rt.unfollowUser)) // V
+	rt.router.PUT("/users/:UID/ban", rt.wrap(rt.banUser))            // V
+	rt.router.DELETE("/users/:UID/ban", rt.wrap(rt.unbanUser))       // V
 	rt.router.POST("/post", rt.wrap(rt.uploadPhoto))
 	rt.router.DELETE("/post/:postID", rt.wrap(rt.deletePhoto))
 

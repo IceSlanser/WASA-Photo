@@ -137,9 +137,9 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	followedStr := ps.ByName("UID")
 	followedUID, _ := strconv.Atoi(followedStr)
 
-	// A user can not follow himself
+	// A user cannot follow himself
 	if UID == uint64(followedUID) {
-		ctx.Logger.WithError(err).Error("A user can not follow himself")
+		ctx.Logger.WithError(err).Error("A user cannot follow himself")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -227,9 +227,9 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	bannedStr := ps.ByName("UID")
 	bannedUID, _ := strconv.Atoi(bannedStr)
 
-	// A user can not ban himself
+	// A user cannot ban himself
 	if UID == uint64(bannedUID) {
-		ctx.Logger.WithError(err).Error("A user can not ban himself")
+		ctx.Logger.WithError(err).Error("A user cannot ban himself")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -350,7 +350,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	postID, err := rt.db.PostPost(UID, photoFile, description)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to post a new photo")
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 

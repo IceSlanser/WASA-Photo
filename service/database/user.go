@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -14,7 +15,7 @@ func (db *appdbimpl) LoginUser(name string) (uint64, bool, error) {
 		err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ?", name).Scan(&ID)
 		if err != nil {
 			// There is already an existent user with the input username
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				return 0, true, err
 			}
 		}
@@ -51,7 +52,7 @@ func (db *appdbimpl) GetProfile(myUID uint64, userID uint64) (User, error) {
 	err = db.c.QueryRow("SELECT * FROM profiles WHERE ID = ? AND ID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", userID, myUID).Scan(&user.ID, &user.Username,
 		&user.FollowingCount, &user.FollowersCount, &user.PostCount)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return User{}, err
 		}
 	}
@@ -146,7 +147,7 @@ func (db *appdbimpl) PutFollow(UID uint64, followedUID uint64) (uint64, bool, er
 		err = db.c.QueryRow("SELECT ID FROM follows WHERE FollowerUID = ? AND FollowedUID = ?", UID, followedUID).Scan(&followID)
 		if err != nil {
 			// There is already an existent follow
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				return 0, false, err
 			}
 		}
@@ -179,7 +180,7 @@ func (db *appdbimpl) DeleteFollow(UID uint64, followedUID uint64) (bool, error) 
 	var followID uint64
 	err := db.c.QueryRow("SELECT ID FROM follows WHERE FollowerUID = ? AND FollowedUID = ?", UID, followedUID).Scan(&followID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, err
 		}
 	}
@@ -221,7 +222,7 @@ func (db *appdbimpl) PutBan(UID uint64, bannedUID uint64) (uint64, bool, error) 
 		err = db.c.QueryRow("SELECT ID FROM bans WHERE BannerUID = ? AND BannedUID = ?", UID, bannedUID).Scan(&banID)
 		if err != nil {
 			// There is already an existent follow
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				return 0, false, err
 			}
 		}
@@ -241,7 +242,7 @@ func (db *appdbimpl) DeleteBan(UID uint64, bannedUID uint64) (bool, error) {
 	var banID uint64
 	err := db.c.QueryRow("SELECT ID FROM bans WHERE BannerUID = ? AND BannedUID = ?", UID, bannedUID).Scan(&banID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, err
 		}
 	}
@@ -260,7 +261,7 @@ func (db *appdbimpl) IsAvailable(newname string) (uint64, bool) {
 	// Return true if the username is not taken, false otherwise
 	err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ?", newname).Scan(&UID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return 0, true
 		}
 	}
@@ -271,7 +272,7 @@ func (db *appdbimpl) IsValidProfile(ID uint64) (bool, error) {
 	var foo uint64
 	err := db.c.QueryRow("SELECT ID FROM profiles WHERE ID = ?", ID).Scan(&foo)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, err
 		}
 	}

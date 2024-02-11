@@ -27,63 +27,27 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
+	// userProfile struct
+	var userProfile struct {
+		Profile    User     `json:"user_profile"`
+		Posts      []Post   `json:"posts"`
+		Followings []uint64 `json:"followings"`
+		Followers  []uint64 `json:"followers"`
+	}
+
+	// Get Profile
 	userIDStr := ps.ByName("UID")
 	userID, _ := strconv.Atoi(userIDStr)
-
-	// Get DBUser
 	dbProfile, err := rt.db.GetProfile(myUID, uint64(userID))
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetProfile")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-
-	// Convert DBUser into APIUser
-	userProfile := NewUser(dbProfile)
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(userProfile)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode userProfile")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-}
-
-// getFullProfile Get request's userFullProfile
-func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Get RequestUserID from the Header
-	myUID, authorization, err := SecurityHandler(r, rt)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if !authorization {
-		ctx.Logger.WithError(err).Error("getFullProfile not authorized")
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	// fullProfile struct
-	var fullProfile struct {
-		UserProfile User     `json:"user_profile"`
-		Posts       []Post   `json:"posts"`
-		Followings  []uint64 `json:"followings"`
-		Followers   []uint64 `json:"followers"`
-	}
-
-	// Get userProfile
-	var userProfile User
-	err = json.NewDecoder(r.Body).Decode(&fullProfile)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to decode userProfile")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	userProfile.Profile = NewUser(dbProfile)
 
 	// Get userPosts
-	DBPosts, err := rt.db.GetPosts(myUID, fullProfile.UserProfile.ID)
+	DBPosts, err := rt.db.GetPosts(myUID, userProfile.Profile.ID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetPosts")
 		w.WriteHeader(http.StatusNotFound)
@@ -92,11 +56,11 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Convert DBPosts to APIPosts
 	for _, DBPost := range DBPosts {
 		APIPost := NewPost(DBPost)
-		fullProfile.Posts = append(fullProfile.Posts, APIPost)
+		userProfile.Posts = append(userProfile.Posts, APIPost)
 	}
 
 	// Get userFollows
-	fullProfile.Followings, fullProfile.Followers, err = rt.db.GetFollows(myUID, userProfile.ID)
+	userProfile.Followings, userProfile.Followers, err = rt.db.GetFollows(myUID, userProfile.Profile.ID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode GetFollows")
 		w.WriteHeader(http.StatusNotFound)
@@ -106,9 +70,9 @@ func (rt *_router) getFullProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Responses
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(fullProfile)
+	err = json.NewEncoder(w).Encode(userProfile)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode fullProfile")
+		ctx.Logger.WithError(err).Error("Failed to encode userProfile")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -327,7 +291,6 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
 	photoFile, err = ioutil.ReadAll(file)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to read form file")

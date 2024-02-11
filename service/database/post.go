@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 )
 
 func (db *appdbimpl) GetPosts(myUID uint64, userID uint64) ([]Post, error) {
@@ -50,7 +51,7 @@ func (db *appdbimpl) DeletePost(UID uint64, postID uint64) (bool, error) {
 	var ID uint64
 	err := db.c.QueryRow("SELECT ID FROM posts WHERE ID = ? AND ProfileID = ?", postID, UID).Scan(&postID, &ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, err
 		}
 	}
@@ -78,7 +79,7 @@ func (db *appdbimpl) GetPhoto(UID uint64, postID uint64) ([]byte, error) {
 				WHERE ID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
 	err := db.c.QueryRow(query, postID, UID).Scan(&file)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
 	}
@@ -133,7 +134,7 @@ func (db *appdbimpl) PutLike(UID uint64, postID uint64) (uint64, bool, error) {
 			postID, UID).Scan(&like.ID, &like.PostID, &like.OwnerID)
 		// There is already an existent like
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				return 0, false, err
 			}
 		}
@@ -161,7 +162,7 @@ func (db *appdbimpl) DeleteLike(UID uint64, postID uint64) (bool, error) {
 	var likeID uint64
 	err := db.c.QueryRow("SELECT ID FROM likes WHERE PostID = ? AND OwnerID = ?", postID, UID).Scan(&likeID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, err
 		}
 	}
@@ -245,7 +246,7 @@ func (db *appdbimpl) DeleteComment(UID uint64, postID uint64, commentID uint64) 
 	var userID uint64
 	err := db.c.QueryRow("SELECT OwnerID FROM comments WHERE ID = ?", commentID).Scan(&ownerID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, err
 		}
 	}
@@ -253,7 +254,7 @@ func (db *appdbimpl) DeleteComment(UID uint64, postID uint64, commentID uint64) 
 	// Find the post owner
 	err = db.c.QueryRow("SELECT ProfileID FROM posts WHERE ID = ?", postID).Scan(&userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, err
 		}
 	}
@@ -280,7 +281,7 @@ func (db *appdbimpl) IsValidPost(ID uint64) (bool, error) {
 	var foo uint64
 	err := db.c.QueryRow("SELECT ID FROM posts WHERE ID = ?", ID).Scan(&foo)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, err
 		}
 	}

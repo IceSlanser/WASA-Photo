@@ -17,7 +17,7 @@ func (db *appdbimpl) GetPosts(myUID uint64, userID uint64) ([]Post, error) {
 		}
 		posts = append(posts, post)
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +102,7 @@ func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, uint64, er
 		}
 		likeOwners = append(likeOwners, ownerID)
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, 0, err
 	}
 
@@ -196,7 +196,7 @@ func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, uint64
 		}
 		comments = append(comments, comment)
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, 0, err
 	}
 

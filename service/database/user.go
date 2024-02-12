@@ -12,7 +12,7 @@ func (db *appdbimpl) LoginUser(name string) (User, bool, error) {
 	// Try to insert the user into the database
 	res, err := db.c.Exec("INSERT INTO profiles(Username) VALUES (?)", name)
 	if err != nil {
-		err := db.c.QueryRow("SELECT * FROM profiles WHERE Username = ?", name).Scan(&profile)
+		err = db.c.QueryRow("SELECT * FROM profiles WHERE Username = ?", name).Scan(&profile.ID, &profile.Username, &profile.FollowingCount, &profile.FollowersCount, &profile.PostCount)
 		if err != nil {
 			// There is already an existent user with the input username
 			if errors.Is(err, sql.ErrNoRows) {
@@ -84,7 +84,7 @@ func (db *appdbimpl) GetStream(UID uint64, startTime time.Time, endTime time.Tim
 		posts = append(posts, post)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
@@ -106,7 +106,7 @@ func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64
 		}
 		followings = append(followings, followingUID)
 	}
-	if err := followingRows.Err(); err != nil {
+	if err = followingRows.Err(); err != nil {
 		return nil, nil, err
 	}
 
@@ -124,7 +124,7 @@ func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64
 		}
 		followers = append(followers, followerUID)
 	}
-	if err := followerRows.Err(); err != nil {
+	if err = followerRows.Err(); err != nil {
 		return nil, nil, err
 	}
 
@@ -255,11 +255,11 @@ func (db *appdbimpl) DeleteBan(UID uint64, bannedUID uint64) (bool, error) {
 	return true, nil
 }
 
-func (db *appdbimpl) IsAvailable(newname string) (uint64, bool) {
+func (db *appdbimpl) IsAvailable(newName string) (uint64, bool) {
 	var UID uint64
 
 	// Return true if the username is not taken, false otherwise
-	err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ?", newname).Scan(&UID)
+	err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ?", newName).Scan(&UID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, true

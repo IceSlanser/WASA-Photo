@@ -135,7 +135,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	// Get the new username from the requestBody
-	nname, err := utils.GetMyUsername(r)
+	newName, err := utils.GetMyUsername(r)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetMyUserName")
 		w.WriteHeader(http.StatusBadRequest)
@@ -143,28 +143,28 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	// Check if the input username is legal
-	isLegal, err := utils.IsLegal(nname)
+	isLegal, err := utils.IsLegal(newName)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Error during func IsLegal")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if !isLegal {
-		ctx.Logger.WithError(err).Error("nname is illegal")
+		ctx.Logger.WithError(err).Error("newName is illegal")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	// Check if the input username is already taken
-	_, available := rt.db.IsAvailable(nname)
+	_, available := rt.db.IsAvailable(newName)
 	if !available {
-		ctx.Logger.WithError(err).Error("nname is not available")
+		ctx.Logger.WithError(err).Error("newName is not available")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	// Update the Username
-	err = rt.db.SetUsername(UID, nname)
+	err = rt.db.SetUsername(UID, newName)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Error during func SetUsername")
 		w.WriteHeader(http.StatusInternalServerError)

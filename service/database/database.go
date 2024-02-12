@@ -99,7 +99,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			Description TEXT NOT NULL,
 			LikeCount INTEGER DEFAULT 0,
 			CommentCount INTEGER DEFAULT 0,
-			DateTime DATETIME DEFAULT datetime('now', 'localtime'),
+			DateTime DATETIME DEFAULT CURRENT_TIMESTAMP,
 
 			FOREIGN KEY (ProfileID) REFERENCES profiles(ID)
 		)`

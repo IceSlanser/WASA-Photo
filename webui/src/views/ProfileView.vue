@@ -7,30 +7,30 @@ export default {
     return {
       error: null,
       userProfile: {
-        Profile: {
+        profile: {
           ID: localStorage.getItem("ID"),
           username: localStorage.getItem("username"),
-          FollowingCount: 0,
-          FollowerCount: 0,
-          PostCount: 0
+          following_count: 0,
+          follower_count: 0,
+          post_count: 0
         },
-        Posts: [
+        posts: [
           {
             ID: 0,
-            ProfileID: 0,
-            File: [],
-            Description: "",
-            LikeCount: 0,
-            CommentCount: 0,
-            DateTime: Date
+            profile_ID: 0,
+            file: [],
+            description: "",
+            like_count: 0,
+            comment_count: 0,
+            date_time: Date
           }
         ],
-        Followings: [
+        followings: [
           {
             ID: 0
           }
         ],
-        Followers: [
+        followers: [
           {
             ID: 0
           }
@@ -48,15 +48,16 @@ export default {
     },
     async getMyProfile() {
       try {
-        let response = await this.$axios.get(`/users/${this.userProfile.Profile.ID}/profile`, {
+        let response = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
           headers: {
             Authorization: localStorage.getItem("username")
           }
         })
         this.userProfile = response.data
+        console
 
         localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-        this.$router.push({path: `/users/${this.userProfile.Profile.ID}/profile`})
+        this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.err = "Failed to request user's profile.";

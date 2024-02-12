@@ -44,19 +44,20 @@ type AppDatabase interface {
 	IsAvailable(string) (uint64, bool)
 
 	GetProfile(uint64, uint64) (User, error)
-	GetPosts(uint64, uint64) ([]Post, error)
+	GetUserPosts(uint64, uint64) ([]Post, error)
+	GetPostInfo(uint64, uint64) (Post, error)
 	GetStream(uint64, time.Time, time.Time) ([]Post, error)
 	GetPhoto(uint64, uint64) ([]byte, error)
 	GetFollows(uint64, uint64) ([]uint64, []uint64, error)
-	GetComments(uint64, uint64) ([]Comment, uint64, error)
-	GetLikes(uint64, uint64) ([]uint64, uint64, error)
+	GetComments(uint64, uint64) ([]Comment, error)
+	GetLikes(uint64, uint64) ([]uint64, error)
 
 	PostComment(uint64, uint64, string) (uint64, error)
 	PostPost(uint64, []byte, string) (uint64, error)
 
-	PutLike(uint64, uint64) (uint64, bool, error)
-	PutFollow(uint64, uint64) (uint64, bool, error)
-	PutBan(uint64, uint64) (uint64, bool, error)
+	PutLike(uint64, uint64) (bool, error)
+	PutFollow(uint64, uint64) (bool, error)
+	PutBan(uint64, uint64) (bool, error)
 
 	DeletePost(uint64, uint64) (bool, error)
 	DeleteLike(uint64, uint64) (bool, error)

@@ -41,7 +41,6 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	user := NewUser(DBUser)
 
 	// Responses
 	if exist {
@@ -50,7 +49,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		w.WriteHeader(http.StatusCreated)
 	}
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(user)
+	err = json.NewEncoder(w).Encode(DBUser.ID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode userID")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -170,14 +169,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/plain")
-	err = json.NewEncoder(w).Encode(UID)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode UID")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // SecurityHandler Get UID from the Header

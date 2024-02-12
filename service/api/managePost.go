@@ -26,34 +26,32 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	var FullPost struct {
-		PostID       uint64    `json:"post_ID"`
-		File         []byte    `json:"file"`
-		LikeCount    uint64    `json:"like_count"`
-		LikeOwners   []uint64  `json:"like_owners"`
-		CommentCount uint64    `json:"comment_count"`
-		Comments     []Comment `json:"comments"`
+		Post       Post      `json:"post"`
+		LikeOwners []uint64  `json:"like_owners"`
+		Comments   []Comment `json:"comments"`
 	}
 
 	// Get user's post
 	postStr := ps.ByName("postID")
-	FullPost.PostID, err = strconv.ParseUint(postStr, 10, 64)
+	postID, err := strconv.ParseUint(postStr, 10, 64)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to decode postID")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// Get photo
-	FullPost.File, err = rt.db.GetPhoto(myUID, FullPost.PostID)
+	// Get post
+	DBPost, err := rt.db.GetPostInfo(myUID, postID)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to GetPhoto")
+		ctx.Logger.WithError(err).Error("Failed to GetComments")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	FullPost.Post = NewPost(DBPost)
 
 	// Get postComments
 	var DBComments []database.Comment
-	DBComments, FullPost.CommentCount, err = rt.db.GetComments(myUID, FullPost.PostID)
+	DBComments, err = rt.db.GetComments(myUID, postID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetComments")
 		w.WriteHeader(http.StatusNotFound)
@@ -66,7 +64,7 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Get likeOwners
-	FullPost.LikeOwners, FullPost.LikeCount, err = rt.db.GetLikes(myUID, FullPost.PostID)
+	FullPost.LikeOwners, err = rt.db.GetLikes(myUID, postID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetLikes")
 		w.WriteHeader(http.StatusNotFound)
@@ -108,7 +106,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Put like
-	likeID, exist, err := rt.db.PutLike(UID, postID)
+	exist, err := rt.db.PutLike(UID, postID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to PutLike")
 		w.WriteHeader(http.StatusNotFound)
@@ -121,15 +119,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	// Responses
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/plain")
-	err = json.NewEncoder(w).Encode(likeID)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode likeID")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // unlikePhoto delete a like from a post

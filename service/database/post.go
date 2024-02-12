@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-func (db *appdbimpl) GetPosts(myUID uint64, userID uint64) ([]Post, error) {
+func (db *appdbimpl) GetUserPosts(myUID uint64, userID uint64) ([]Post, error) {
 	// Store posts
 	rows, err := db.c.Query("SELECT * FROM posts WHERE ProfileID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", userID, myUID)
 	var posts []Post
@@ -22,6 +22,18 @@ func (db *appdbimpl) GetPosts(myUID uint64, userID uint64) ([]Post, error) {
 	}
 
 	return posts, nil
+}
+
+func (db *appdbimpl) GetPostInfo(myUID uint64, postID uint64) (Post, error) {
+	// Store posts
+	rows, err := db.c.Query("SELECT * FROM posts WHERE ID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", postID, myUID)
+	var post Post
+	err = rows.Scan(&post.ID, &post.ProfileID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
+	if err != nil {
+		return Post{}, err
+	}
+
+	return post, nil
 }
 
 func (db *appdbimpl) PostPost(UID uint64, photo []byte, description string) (uint64, error) {
@@ -87,7 +99,7 @@ func (db *appdbimpl) GetPhoto(UID uint64, postID uint64) ([]byte, error) {
 	return file, nil
 }
 
-func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, uint64, error) {
+func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, error) {
 	// Store likes
 	query := `SELECT OwnerID 
 				FROM likes
@@ -98,63 +110,49 @@ func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, uint64, er
 		var ownerID uint64
 		err = rows.Scan(&ownerID)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 		likeOwners = append(likeOwners, ownerID)
 	}
 	if err = rows.Err(); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	// Get LikeCount
-	var likeCount uint64
-	err = db.c.QueryRow("SELECT LikeCount FROM posts WHERE ID = ?", postID).Scan(&likeCount)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return likeOwners, likeCount, nil
+	return likeOwners, nil
 }
 
-func (db *appdbimpl) PutLike(UID uint64, postID uint64) (uint64, bool, error) {
+func (db *appdbimpl) PutLike(UID uint64, postID uint64) (bool, error) {
 	valid, err := db.IsValidPost(postID)
 	if err != nil {
-		return 0, false, err
+		return false, err
 	}
 	if !valid {
-		return 0, false, err
+		return false, err
 	}
 
 	// Try to insert a like
-	var like Like
-	res, err := db.c.Exec("INSERT INTO likes(PostID, OwnerID) VALUES (?, ?)",
+	var likeID uint64
+	_, err = db.c.Exec("INSERT INTO likes(PostID, OwnerID) VALUES (?, ?)",
 		postID, UID)
 	if err != nil {
-		err = db.c.QueryRow("SELECT * FROM likes WHERE PostID = ? AND OwnerID = ?",
-			postID, UID).Scan(&like.ID, &like.PostID, &like.OwnerID)
+		err = db.c.QueryRow("SELECT ID FROM likes WHERE PostID = ? AND OwnerID = ?",
+			postID, UID).Scan(&likeID)
 		// There is already an existent like
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				return 0, false, err
+				return false, err
 			}
 		}
-		return like.ID, true, nil
+		return true, nil
 	}
-
-	// Get the new like ID
-	ID, err := res.LastInsertId()
-	if err != nil {
-		return like.ID, false, err
-	}
-	like.ID = uint64(ID)
 
 	// Update LikeCount
 	_, err = db.c.Exec("UPDATE posts SET LikeCount = LikeCount + 1 WHERE ID = ?", postID)
 	if err != nil {
-		return like.ID, true, err
+		return true, err
 	}
 
-	return like.ID, false, nil
+	return false, nil
 }
 
 func (db *appdbimpl) DeleteLike(UID uint64, postID uint64) (bool, error) {
@@ -181,7 +179,7 @@ func (db *appdbimpl) DeleteLike(UID uint64, postID uint64) (bool, error) {
 	return true, nil
 }
 
-func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, uint64, error) {
+func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, error) {
 	// Store comments
 	query := `SELECT * 
 				FROM comments 
@@ -192,22 +190,15 @@ func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, uint64
 		var comment Comment
 		err = rows.Scan(&comment.ID, &comment.PostID, &comment.OwnerID, &comment.Text, &comment.DateTime)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 		comments = append(comments, comment)
 	}
 	if err = rows.Err(); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	// Get CommentCount
-	var CommentCount uint64
-	err = db.c.QueryRow("SELECT CommentCount FROM posts WHERE ID = ?", postID).Scan(&CommentCount)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return comments, CommentCount, nil
+	return comments, nil
 }
 
 func (db *appdbimpl) PostComment(UID uint64, postID uint64, text string) (uint64, error) {

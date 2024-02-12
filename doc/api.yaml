@@ -35,13 +35,14 @@ paths:
           description: Log-in successfully
           content:
             application/json:
-              schema: {$ref: "#/components/schemas/Profile"}
-
+              schema: {$ref: "#/components/schemas/ID"}
         '201':
           description: Profile created
           content:
             application/json:
-              schema: {$ref: "#/components/schemas/Profile"}
+              schema: {$ref: "#/components/schemas/ID"}
+        '400': { $ref: "#/components/responses/400BadRequest" }
+        '500': { $ref: "#/components/responses/500InternalServerError" }
 
 
   /stream:
@@ -61,7 +62,6 @@ paths:
               schema: {$ref: "#/components/schemas/Stream"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
-        '404': {$ref: "#/components/responses/404NotFound"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
 
   /users/{UID}/profile:
@@ -100,11 +100,8 @@ paths:
             schema: {$ref: "#/components/schemas/Username"}
         required: true
       responses:
-        '200':
-          description: Username successfully changed
-          content:
-            application/json:
-              schema: {$ref: "#/components/schemas/Profile/properties/Username"}
+        '204':
+          description: Name successfully changed
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
@@ -120,15 +117,10 @@ paths:
       summary: Follow an user
       description: Follow an user if it's not followed yet.
       responses:
-        '200':
+        '204':
           description: User successfully followed
-          content:
-            application/json:
-              schema: {$ref: "#/components/schemas/Follow"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
-        '404': {$ref: "#/components/responses/404NotFound"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
     delete:
       security:
         - bearerAuth: []
@@ -142,7 +134,6 @@ paths:
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
 
   /users/{UID}/ban:
     parameters:
@@ -155,15 +146,11 @@ paths:
       summary: Ban an user
       description: Ban an user if it's not banned yet.
       responses:
-        '200':
+        '204':
           description: User successfully banned
-          content:
-            application/json:
-              schema: {$ref: "#/components/schemas/Ban"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
     delete:
       security:
         - bearerAuth: []
@@ -177,7 +164,6 @@ paths:
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
 
   /posts:
     post:
@@ -203,7 +189,7 @@ paths:
           description: Photo successfully uploaded
           content:
             application/json:
-              schema: {$ref: "#/components/schemas/Post"}
+              schema: {$ref: "#/components/schemas/ID"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -212,6 +198,24 @@ paths:
   /posts/{postID}:
     parameters:
       - $ref: "#/components/parameters/PostID"
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags: [ "ManageProfile" ]
+      operationId: getFullPost
+      summary: Get Post info
+      description: Get post's info with it's like and comments
+      responses:
+        '200':
+          description: Post successfully found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Post" }
+        '400': { $ref: "#/components/responses/400BadRequest" }
+        '401': { $ref: "#/components/responses/401UnauthorizedError" }
+        '404': { $ref: "#/components/responses/404NotFound" }
+        '500': { $ref: "#/components/responses/500InternalServerError" }
+
     delete:
       security:
         - bearerAuth: []
@@ -228,7 +232,6 @@ paths:
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
 
   /posts/{postID}/likes:
     parameters:
@@ -241,15 +244,11 @@ paths:
       summary: Like a Photo
       description: Like a post if it's not liked yet.
       responses:
-        '201':
+        '204':
           description: Photo successfully liked
-          content:
-            application/json:
-              schema: {$ref: "#/components/schemas/Like"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
 
     delete:
       security:
@@ -264,7 +263,6 @@ paths:
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
 
   /posts/{postID}/comments:
     parameters:
@@ -287,7 +285,7 @@ paths:
           description: Comment successfully created
           content:
             application/json:
-              schema: {$ref: "#/components/schemas/Comment"}
+              schema: {$ref: "#/components/schemas/ID"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
@@ -313,7 +311,6 @@ paths:
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}
-        '500': {$ref: "#/components/responses/500InternalServerError"}
 
 
 
@@ -338,19 +335,19 @@ components:
     UserID:
       name: UID
       description: User identifier
-      schema: {$ref: "#/components/schemas/Profile/properties/ID"}
+      schema: {$ref: "#/components/schemas/ID"}
       in: path
       required: true
     PostID:
       name: postID
       description: Post identifier
-      schema: {$ref: "#/components/schemas/Post/properties/ID"}
+      schema: {$ref: "#/components/schemas/ID"}
       in: path
       required: true
     CommentID:
       name: commentID
       description: Comment identifier
-      schema: {$ref: "#/components/schemas/Comment/properties/ID"}
+      schema: {$ref: "#/components/schemas/ID"}
       in: path
       required: true
 
@@ -375,6 +372,15 @@ components:
         FollowingCount: {$ref: "#/components/schemas/Count"}
         PostsCount: {$ref: "#/components/schemas/Count"}
 
+    UserProfile:
+      description: A profile with relative information schema
+      type: object
+      properties:
+        Profile: {$ref: "#/components/schemas/Profile"}
+        Posts: {$ref: "#/components/schemas/ListOfPosts"}
+        Followings: {$ref: "#/components/schemas/ListOfID"}
+        Followers: {$ref: "#/components/schemas/ListOfID"}
+
     Post:
       description: Post schema
       type: object
@@ -389,40 +395,6 @@ components:
         LikesCount: {$ref: "#/components/schemas/Count"}
         CommentsCount: {$ref: "#/components/schemas/Count"}
         DateTime: {$ref: "#/components/schemas/DateTime"}
-
-    Comment:
-      description: Comment schema
-      type: object
-      properties:
-        ID: {$ref: "#/components/schemas/ID"}
-        PostID: {$ref: "#/components/schemas/Post/properties/ID"}
-        OwnerID: {$ref: "#/components/schemas/Profile/properties/ID"}
-        Text: {$ref: "#/components/schemas/Text"}
-        DateTime: {$ref: "#/components/schemas/DateTime"}
-
-    Like:
-      description: Like schema
-      type: object
-      properties:
-        ID: {$ref: "#/components/schemas/ID"}
-        PostID: {$ref: "#/components/schemas/Post/properties/ID"}
-        OwnerID: {$ref: "#/components/schemas/Profile/properties/ID"}
-
-    Follow:
-      description: Follow schema
-      type: object
-      properties:
-        ID: {$ref: "#/components/schemas/ID"}
-        FollowerUID: {$ref: "#/components/schemas/Profile/properties/ID"}
-        FollowedUID: {$ref: "#/components/schemas/Profile/properties/ID"}
-
-    Ban:
-      description: Ban schema
-      type: object
-      properties:
-        ID: {$ref: "#/components/schemas/ID"}
-        BannerUID: { $ref: "#/components/schemas/Profile/properties/ID" }
-        BannedUID: { $ref: "#/components/schemas/Profile/properties/ID" }
 
     ID:
       description: ID
@@ -463,9 +435,17 @@ components:
       example: 2023-11-06T14:38:28Z
 
     ListOfPosts:
-      description: List of posts
+      description: List of posts schema
       type: array
       items: {$ref: "#/components/schemas/Post"}
+      minItems: 0
+      maxItems: 9999
+      uniqueItems: true
+
+    ListOfID:
+      description: List of ID schema
+      type: array
+      items: { $ref: "#/components/schemas/ID" }
       minItems: 0
       maxItems: 9999
       uniqueItems: true

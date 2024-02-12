@@ -47,7 +47,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	userProfile.Profile = NewUser(dbProfile)
 
 	// Get userPosts
-	DBPosts, err := rt.db.GetPosts(myUID, userProfile.Profile.ID)
+	DBPosts, err := rt.db.GetUserPosts(myUID, userProfile.Profile.ID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetPosts")
 		w.WriteHeader(http.StatusNotFound)
@@ -105,7 +105,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	// Put like
-	followID, exist, err := rt.db.PutFollow(UID, uint64(followedUID))
+	exist, err := rt.db.PutFollow(UID, uint64(followedUID))
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to PutFollow")
 		w.WriteHeader(http.StatusNotFound)
@@ -118,14 +118,8 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 	}
 
 	// Responses
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/plain")
-	err = json.NewEncoder(w).Encode(followID)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode followID")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	w.WriteHeader(http.StatusNoContent)
+
 }
 
 // unfollowUser Unfollow a certain user
@@ -196,7 +190,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// Put like
-	banID, exist, err := rt.db.PutBan(UID, uint64(bannedUID))
+	exist, err := rt.db.PutBan(UID, uint64(bannedUID))
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to PutBan")
 		w.WriteHeader(http.StatusNotFound)
@@ -209,14 +203,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// Responses
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/plain")
-	err = json.NewEncoder(w).Encode(banID)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode banID")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // unbanUser Unban a user

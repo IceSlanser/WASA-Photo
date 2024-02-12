@@ -131,48 +131,42 @@ func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64
 	return followings, followers, nil
 }
 
-func (db *appdbimpl) PutFollow(UID uint64, followedUID uint64) (uint64, bool, error) {
+func (db *appdbimpl) PutFollow(UID uint64, followedUID uint64) (bool, error) {
 	valid, err := db.IsValidProfile(followedUID)
 	if err != nil {
-		return 0, false, err
+		return false, err
 	}
 	if !valid {
-		return 0, false, err
+		return false, err
 	}
 
 	var followID uint64
 	// Try to insert the follow into the database
-	res, err := db.c.Exec("INSERT INTO follows(FollowerUID, FollowedUID) VALUES (?, ?)", UID, followedUID)
+	_, err = db.c.Exec("INSERT INTO follows(FollowerUID, FollowedUID) VALUES (?, ?)", UID, followedUID)
 	if err != nil {
 		err = db.c.QueryRow("SELECT ID FROM follows WHERE FollowerUID = ? AND FollowedUID = ?", UID, followedUID).Scan(&followID)
 		if err != nil {
 			// There is already an existent follow
 			if errors.Is(err, sql.ErrNoRows) {
-				return 0, false, err
+				return false, err
 			}
 		}
-		return followID, true, nil
-	}
-
-	// A new follow has been added
-	ID, err := res.LastInsertId()
-	if err != nil {
-		return 0, false, err
+		return true, nil
 	}
 
 	// Update FollowingCount for the follower
 	_, err = db.c.Exec("UPDATE profiles SET FollowingCount = FollowingCount + 1 WHERE ID = ?", UID)
 	if err != nil {
-		return 0, false, err
+		return false, err
 	}
 
 	// Update FollowerCount for the followed user
 	_, err = db.c.Exec("UPDATE profiles SET FollowerCount = FollowerCount + 1 WHERE ID = ?", followedUID)
 	if err != nil {
-		return 0, false, err
+		return false, err
 	}
 
-	return uint64(ID), true, nil
+	return true, nil
 }
 
 func (db *appdbimpl) DeleteFollow(UID uint64, followedUID uint64) (bool, error) {
@@ -206,35 +200,29 @@ func (db *appdbimpl) DeleteFollow(UID uint64, followedUID uint64) (bool, error) 
 	return true, nil
 }
 
-func (db *appdbimpl) PutBan(UID uint64, bannedUID uint64) (uint64, bool, error) {
+func (db *appdbimpl) PutBan(UID uint64, bannedUID uint64) (bool, error) {
 	valid, err := db.IsValidProfile(bannedUID)
 	if err != nil {
-		return 0, false, err
+		return false, err
 	}
 	if !valid {
-		return 0, false, err
+		return false, err
 	}
 
 	var banID uint64
 	// Try to insert the follow into the database
-	res, err := db.c.Exec("INSERT INTO bans(BannerUID, BannedUID) VALUES (?, ?)", UID, bannedUID)
+	_, err = db.c.Exec("INSERT INTO bans(BannerUID, BannedUID) VALUES (?, ?)", UID, bannedUID)
 	if err != nil {
 		err = db.c.QueryRow("SELECT ID FROM bans WHERE BannerUID = ? AND BannedUID = ?", UID, bannedUID).Scan(&banID)
 		if err != nil {
 			// There is already an existent follow
 			if errors.Is(err, sql.ErrNoRows) {
-				return 0, false, err
+				return false, err
 			}
 		}
-		return banID, true, nil
+		return true, nil
 	}
-
-	// A new follow has been added
-	ID, err := res.LastInsertId()
-	if err != nil {
-		return 0, false, err
-	}
-	return uint64(ID), false, nil
+	return false, nil
 }
 
 func (db *appdbimpl) DeleteBan(UID uint64, bannedUID uint64) (bool, error) {

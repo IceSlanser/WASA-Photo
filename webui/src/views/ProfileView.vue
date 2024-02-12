@@ -3,9 +3,9 @@ import {RouterLink} from "vue-router";
 
 export default {
   components: {RouterLink},
-	data: function() {
-		return {
-			error: null,
+  data: function() {
+    return {
+      error: null,
       userProfile: {
         Profile: {
           ID: localStorage.getItem("ID"),
@@ -36,9 +36,9 @@ export default {
           }
         ]
       }
-		}
-	},
-	methods: {
+    }
+  },
+  methods: {
     async doLogout() {
       localStorage.clear()
       this.$router.push({ path : '/'})
@@ -70,7 +70,7 @@ export default {
 
       }
     }
-	},
+  },
 }
 </script>
 
@@ -116,29 +116,29 @@ export default {
     </div>
   </div>
 
-	<div>
-		<div
-			class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-			<h1 class="h2">Home page</h1>
-			<div class="btn-toolbar mb-2 mb-md-0">
-				<div class="btn-group me-2">
-					<button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">
-						Refresh
-					</button>
-					<button type="button" class="btn btn-sm btn-outline-secondary" @click="exportList">
-						Export
-					</button>
-				</div>
-				<div class="btn-group me-2">
-					<button type="button" class="btn btn-sm btn-outline-primary" @click="newItem">
-						New
-					</button>
-				</div>
-			</div>
-		</div>
+  <div>
+    <div
+        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+      <h1 class="h2">Profile page</h1>
+      <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">
+            Refresh
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="exportList">
+            Export
+          </button>
+        </div>
+        <div class="btn-group me-2">
+          <button type="button" class="btn btn-sm btn-outline-primary" @click="newItem">
+            New
+          </button>
+        </div>
+      </div>
+    </div>
 
-		<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
-	</div>
+    <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
+  </div>
 
 </template>
 

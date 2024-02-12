@@ -7,11 +7,11 @@ import (
 )
 
 type User struct {
-	ID             uint64 `json:"Id"`
-	Username       string `json:"Username"`
-	FollowingCount uint64 `json:"Following_count"`
-	FollowersCount uint64 `json:"Followers_count"`
-	PostCount      uint64 `json:"Post_count"`
+	ID             uint64 `json:"ID"`
+	Username       string `json:"username"`
+	FollowingCount uint64 `json:"following_count"`
+	FollowersCount uint64 `json:"followers_count"`
+	PostCount      uint64 `json:"post_count"`
 }
 
 type Post struct {

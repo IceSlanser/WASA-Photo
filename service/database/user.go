@@ -31,9 +31,9 @@ func (db *appdbimpl) LoginUser(name string) (User, bool, error) {
 	return profile, false, nil
 }
 
-func (db *appdbimpl) SetUsername(UID uint64, nname string) error {
+func (db *appdbimpl) SetUsername(UID uint64, newName string) error {
 	// Update your username with a new one
-	_, err := db.c.Exec("UPDATE profiles SET Username = ? WHERE ID = ?", nname, UID)
+	_, err := db.c.Exec("UPDATE profiles SET Username = ? WHERE ID = ?", newName, UID)
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 	// userProfile struct
 	var userProfile struct {
-		Profile    User     `json:"user_profile"`
+		Profile    User     `json:"profile"`
 		Posts      []Post   `json:"posts"`
 		Followings []uint64 `json:"followings"`
 		Followers  []uint64 `json:"followers"`

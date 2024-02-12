@@ -35,13 +35,13 @@ paths:
           description: Log-in successfully
           content:
             application/json:
-              schema: {$ref: "#/components/schemas/Profile/properties/ID"}
+              schema: {$ref: "#/components/schemas/Profile"}
 
         '201':
           description: Profile created
           content:
             application/json:
-              schema: {$ref: "#/components/schemas/Profile/properties/ID"}
+              schema: {$ref: "#/components/schemas/Profile"}
 
 
   /stream:

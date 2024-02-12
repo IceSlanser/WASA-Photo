@@ -39,7 +39,7 @@ import (
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
-	LoginUser(string) (uint64, bool, error)
+	LoginUser(string) (User, bool, error)
 	SetUsername(uint64, string) error
 	IsAvailable(string) (uint64, bool)
 

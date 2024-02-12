@@ -9,34 +9,27 @@ export default {
   },
   methods: {
     async doLogin() {
-      if (this.username == "") {
+      if (this.username === "") {
         this.errormsg = "Username cannot be empty.";
       } else {
         try {
-          let response = await this.$axios.post("/session", { username: this.username })
+          let response = await this.$axios.put("/session", { username: this.username })
           this.profile = response.data
-          localStorage.setItem("ID", this.profile.ID);
+          localStorage.setItem("ID", this.ID);
           this.$router.push({ path: '/session' })
         } catch (e) {
           if (e.response && e.response.status === 400) {
-            this.errormsg = "Form error, please check all fields and try again. If you think that this is an error, write an e-mail to us.";
-            this.detailedmsg = null;
+            this.err = "Username should has a length between 3 - 16";
           } else if (e.response && e.response.status === 500) {
-            this.errormsg = "An internal error occurred. We will be notified. Please try again later.";
-            this.detailedmsg = e.toString();
+            this.err = "An internal error occurred, please try again later.";
           } else {
-            this.errormsg = e.toString();
-            this.detailedmsg = null;
+            this.err = e.toString();
           }
         }
       }
 
     }
-  },
-  mounted() {
-
   }
-
 }
 </script>
 
@@ -47,13 +40,13 @@ export default {
   </div>
   <div class="input-group mb-3">
     <input type="text" id="username" v-model="username" class="form-control"
-           placeholder="Insert a username to log in WASAPhoto." aria-label="Recipient's username"
+           placeholder="Please, insert your username." aria-label="Recipient's username"
            aria-describedby="basic-addon2">
     <div class="input-group-append">
       <button class="btn btn-success" type="button" @click="doLogin">Login</button>
     </div>
   </div>
-  <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
+  <ErrorMsg v-if="err" :msg="err"></ErrorMsg>
 </template>
 
 <style>

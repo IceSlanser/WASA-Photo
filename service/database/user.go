@@ -6,28 +6,29 @@ import (
 	"time"
 )
 
-func (db *appdbimpl) LoginUser(name string) (uint64, bool, error) {
-	var ID uint64
-
+func (db *appdbimpl) LoginUser(name string) (User, bool, error) {
+	var profile User
+	profile.Username = name
 	// Try to insert the user into the database
 	res, err := db.c.Exec("INSERT INTO profiles(Username) VALUES (?)", name)
 	if err != nil {
-		err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ?", name).Scan(&ID)
+		err := db.c.QueryRow("SELECT * FROM profiles WHERE Username = ?", name).Scan(&profile)
 		if err != nil {
 			// There is already an existent user with the input username
 			if errors.Is(err, sql.ErrNoRows) {
-				return 0, true, err
+				return User{}, true, err
 			}
 		}
-		return ID, true, nil
+		return profile, true, nil
 	}
 
 	// A new user has been created
 	UID, err := res.LastInsertId()
 	if err != nil {
-		return 0, false, err
+		return profile, false, err
 	}
-	return uint64(UID), false, nil
+	profile.ID = uint64(UID)
+	return profile, false, nil
 }
 
 func (db *appdbimpl) SetUsername(UID uint64, nname string) error {
@@ -71,7 +72,6 @@ func (db *appdbimpl) GetStream(UID uint64, startTime time.Time, endTime time.Tim
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
 	// Store posts
 	var posts []Post

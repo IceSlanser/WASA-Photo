@@ -2,12 +2,12 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"time"
 
 	"github.com/IceSlanserUni/WASAPhoto/service/api/reqcontext"
 	"github.com/IceSlanserUni/WASAPhoto/service/utils"
-	"github.com/julienschmidt/httprouter"
 )
 
 //  doLogin If the username does not exist, it will create a new profile, and an identifier is returned.
@@ -35,12 +35,13 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// User Login
-	userID, exist, err := rt.db.LoginUser(username)
+	DBUser, exist, err := rt.db.LoginUser(username)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Error during func LoginUser")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	user := NewUser(DBUser)
 
 	// Responses
 	if exist {
@@ -48,8 +49,8 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	} else {
 		w.WriteHeader(http.StatusCreated)
 	}
-	w.Header().Set("Content-Type", "text/plain")
-	err = json.NewEncoder(w).Encode(userID)
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(user)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode userID")
 		w.WriteHeader(http.StatusInternalServerError)

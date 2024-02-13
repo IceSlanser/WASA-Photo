@@ -10,7 +10,7 @@ type User struct {
 	ID             uint64 `json:"ID"`
 	Username       string `json:"username"`
 	FollowingCount uint64 `json:"following_count"`
-	FollowersCount uint64 `json:"follower_count"`
+	FollowerCount  uint64 `json:"follower_count"`
 	PostCount      uint64 `json:"post_count"`
 }
 
@@ -37,7 +37,7 @@ func NewUser(user database.User) User {
 		ID:             user.ID,
 		Username:       user.Username,
 		FollowingCount: user.FollowingCount,
-		FollowersCount: user.FollowersCount,
+		FollowerCount:  user.FollowerCount,
 		PostCount:      user.PostCount,
 	}
 }

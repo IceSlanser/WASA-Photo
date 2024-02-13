@@ -77,42 +77,35 @@ export default {
 <template>
 
   <div>
-
-    <div class="col-md-9 col-lg-11 d-flex align-items-center">
+    <div style="display: flex; justify-content: center;">
       <h2 class="h2">Home</h2>
     </div>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
 
     <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
   </div>
 
-
-  <div class="input-group-append">
-    <button class="btn btn-outline-success px-6 py-1" @click="uploadPhoto">Upload</button>
-  </div>
-
-
-
   <div class="container-fluid">
     <div class="row">
-      <nav id="sidebarMenu" class="col-md-3 col-lg-1 d-md-block bg-light sidebar collapse">
+      <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
         <div class="position-sticky pt-3 sidebar-sticky d-flex flex-column">
           <ul class="nav flex-column">
             <li class="nav-item">
-              <RouterLink to="/stream" class="nav-link">
+              <RouterLink to="/stream" class="nav-link" style="font-size: 20px;">
                 <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#home"/></svg>
                 Home
               </RouterLink>
             </li>
             <li class="nav-item">
-              <RouterLink :to="'/users/' + userProfile.profile.ID + '/profile'" class="nav-link" @click="getMyProfile">
+              <RouterLink :to="'/users/' + userProfile.profile.ID + '/profile'" class="nav-link" style="font-size: 20px;" @click="getMyProfile">
                 <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#file-text"/></svg>
                 Profile
               </RouterLink>
             </li>
           </ul>
           <div class="mt-auto mb-3">
-            <RouterLink to="/" class="nav-link" @click="doLogout">
-              <svg fill="#000000" width="24px" height="24px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M2.293,11.293l4-4A1,1,0,1,1,7.707,8.707L5.414,11H17a1,1,0,0,1,0,2H5.414l2.293,2.293a1,1,0,1,1-1.414,1.414l-4-4a1,1,0,0,1,0-1.414ZM20,4V20a1,1,0,0,0,2,0V4a1,1,0,0,0-2,0Z"/></svg>
+            <RouterLink to="/" class="nav-link" style="font-size: 20px;" @click="doLogout">
+              <svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M2.293,11.293l4-4A1,1,0,1,1,7.707,8.707L5.414,11H17a1,1,0,0,1,0,2H5.414l2.293,2.293a1,1,0,1,1-1.414,1.414l-4-4a1,1,0,0,1,0-1.414ZM20,4V20a1,1,0,0,0,2,0V4a1,1,0,0,0-2,0Z"/></svg>
               Logout
             </RouterLink>
           </div>

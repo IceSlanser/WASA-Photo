@@ -8,7 +8,7 @@ type User struct {
 	ID             uint64 `json:"ID"`
 	Username       string `json:"username"`
 	FollowingCount uint64 `json:"following_count"`
-	FollowerCount  uint64 `json:"followers_count"`
+	FollowerCount  uint64 `json:"follower_count"`
 	PostCount      uint64 `json:"post_count"`
 }
 

@@ -397,7 +397,7 @@ components:
         DateTime: {$ref: "#/components/schemas/DateTime"}
 
     ID:
-      description: ID
+      description: ID schema
       type: integer
       minimum: 1
       example: 1993737

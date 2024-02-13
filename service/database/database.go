@@ -99,7 +99,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			Description TEXT NOT NULL,
 			LikeCount INTEGER DEFAULT 0,
 			CommentCount INTEGER DEFAULT 0,
-			DateTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+			DateTime DATETIME DEFAULT (datetime('now', 'localtime')),
 
 			FOREIGN KEY (ProfileID) REFERENCES profiles(ID)
 		)`
@@ -139,7 +139,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			PostID INTEGER NOT NULL,
 			OwnerID INTEGER NOT NULL,
 			Text TEXT NOT NULL,
-			DateTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+			DateTime DATETIME DEFAULT (datetime('now', 'localtime')),
 
 			FOREIGN KEY (PostID) REFERENCES posts(ID) ON DELETE CASCADE,
 			FOREIGN KEY (OwnerID) REFERENCES profiles(ID) ON DELETE CASCADE

@@ -4,13 +4,13 @@ export default {
     return {
       error: null,
       username: "",
-      ID: 0
+      ID: 0,
     }
   },
   methods: {
     async doLogin() {
       if (this.username === "") {
-        this.errormsg = "Username cannot be empty.";
+        this.error = "Username cannot be empty.";
       } else {
         try {
           let response = await this.$axios.put("/session", { username: this.username })
@@ -35,9 +35,9 @@ export default {
 <template>
   <div
       class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 ">
-    <h1 class="h2">Welcome to WASAPhoto</h1>
+    <h1 class="h2">Welcome to WASAPhoto {{this.username}}</h1>
   </div>
-  <div class="input-group mb-3">
+  <div class="input-group mb-2">
     <input type="text" id="username" v-model="username" class="form-control"
            placeholder="Please, insert your username." aria-label="Recipient's username"
            aria-describedby="basic-addon2">
@@ -45,7 +45,7 @@ export default {
       <button class="btn btn-outline-success" type="button" @click="doLogin">Login</button>
     </div>
   </div>
-  <ErrorMsg v-if="err" :msg="err"></ErrorMsg>
+  <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
 </template>
 
 <style>

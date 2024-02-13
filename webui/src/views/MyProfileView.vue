@@ -6,45 +6,13 @@ export default {
   data: function() {
     return {
       error: null,
-      userProfile: {
-        profile: {
-          ID: localStorage.getItem("ID"),
-          username: localStorage.getItem("username"),
-          following_count: 0,
-          follower_count: 0,
-          post_count: 0
-        },
-        posts: [
-          {
-            ID: 0,
-            profile_ID: 0,
-            file: [],
-            description: "",
-            like_count: 0,
-            comment_count: 0,
-            date_time: Date
-          }
-        ],
-        followings: [
-          {
-            ID: 0
-          }
-        ],
-        followers: [
-          {
-            ID: 0
-          }
-        ]
-      }
+      userProfile: JSON.parse(localStorage.getItem("userProfile"))
     }
   },
-	methods: {
+  methods: {
     async doLogout() {
       localStorage.clear()
       this.$router.push({ path : '/'})
-    },
-    async uploadPhoto() {
-
     },
     async getMyProfile() {
       try {
@@ -69,28 +37,26 @@ export default {
 
       }
     }
-	},
+  },
 }
-
 </script>
 
 <template>
 
   <div>
-
-    <div class="col-md-9 col-lg-11 d-flex align-items-center">
-      <h2 class="h2">Home</h2>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+      <h2 class="h2">Profile </h2>
     </div>
 
     <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
   </div>
 
+  <div>
+    <h1>{{ userProfile.profile.username }}</h1>
+    <p>Followers: {{ userProfile.profile.follower_count }}</p>
+    <p>Following: {{ userProfile.profile.following_count }}</p>
 
-  <div class="input-group-append">
-    <button class="btn btn-outline-success px-6 py-1" @click="uploadPhoto">Upload</button>
   </div>
-
-
 
   <div class="container-fluid">
     <div class="row">

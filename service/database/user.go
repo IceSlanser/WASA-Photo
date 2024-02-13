@@ -12,7 +12,7 @@ func (db *appdbimpl) LoginUser(name string) (User, bool, error) {
 	// Try to insert the user into the database
 	res, err := db.c.Exec("INSERT INTO profiles(Username) VALUES (?)", name)
 	if err != nil {
-		err = db.c.QueryRow("SELECT * FROM profiles WHERE Username = ?", name).Scan(&profile.ID, &profile.Username, &profile.FollowingCount, &profile.FollowersCount, &profile.PostCount)
+		err = db.c.QueryRow("SELECT * FROM profiles WHERE Username = ?", name).Scan(&profile.ID, &profile.Username, &profile.FollowingCount, &profile.FollowerCount, &profile.PostCount)
 		if err != nil {
 			// There is already an existent user with the input username
 			if errors.Is(err, sql.ErrNoRows) {
@@ -51,7 +51,7 @@ func (db *appdbimpl) GetProfile(myUID uint64, userID uint64) (User, error) {
 	}
 
 	err = db.c.QueryRow("SELECT * FROM profiles WHERE ID = ? AND ID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", userID, myUID).Scan(&user.ID, &user.Username,
-		&user.FollowingCount, &user.FollowersCount, &user.PostCount)
+		&user.FollowingCount, &user.FollowerCount, &user.PostCount)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return User{}, err

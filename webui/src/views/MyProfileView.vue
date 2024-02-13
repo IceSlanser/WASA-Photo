@@ -7,6 +7,7 @@ export default {
     return {
       error: null,
       userProfile: JSON.parse(localStorage.getItem("userProfile")),
+      username: localStorage.getItem("username"),
       newUsername: "",
       showUsernameInput: false
     }
@@ -38,13 +39,6 @@ export default {
         }
       }
     },
-    async toggleUsernameInput() {
-      this.showUsernameInput = !this.showUsernameInput;
-      if (!this.showUsernameInput) {
-        localStorage.removeItem(this.newUsername)
-        this.newUsername = ""
-      }
-    },
     async setMyUserName() {
       if (this.username === "") {
         this.error = "Username cannot be empty.";
@@ -55,6 +49,7 @@ export default {
               Authorization: localStorage.getItem("username")
             }
           })
+          localStorage.setItem("username", this.newUsername);
           this.userProfile.profile.username = this.newUsername;
           localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
           this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
@@ -69,6 +64,14 @@ export default {
             this.err = e.toString();
           }
         }
+      }
+    },
+
+    async toggleUsernameInput() {
+      this.showUsernameInput = !this.showUsernameInput;
+      if (!this.showUsernameInput) {
+        localStorage.removeItem(this.newUsername)
+        this.newUsername = ""
       }
     },
   }

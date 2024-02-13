@@ -66,7 +66,6 @@ export default {
         } else {
           this.err = e.toString();
         }
-
       }
     }
 	},

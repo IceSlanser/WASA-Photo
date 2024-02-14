@@ -29,9 +29,10 @@ type Like struct {
 }
 
 type Comment struct {
-	ID       uint64    `json:"ID"`
-	PostID   uint64    `json:"post_ID"`
-	OwnerID  uint64    `json:"owner_ID"`
-	Text     string    `json:"text"`
-	DateTime time.Time `json:"date_time"`
+	ID            uint64    `json:"ID"`
+	PostID        uint64    `json:"post_ID"`
+	OwnerID       uint64    `json:"owner_ID"`
+	OwnerUsername string    `json:"owner_username"`
+	Text          string    `json:"text"`
+	DateTime      time.Time `json:"date_time"`
 }

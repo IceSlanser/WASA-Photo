@@ -26,9 +26,9 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	var FullPost struct {
-		Post       Post      `json:"post"`
-		LikeOwners []uint64  `json:"like_owners"`
-		Comments   []Comment `json:"comments"`
+		Post         Post          `json:"post"`
+		LikeOwners   []string      `json:"like_owners"`
+		FullComments []FullComment `json:"full_comments"`
 	}
 
 	// Get user's post
@@ -59,8 +59,12 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 	// Convert DBPosts to APIComments
 	for _, DBComment := range DBComments {
-		APIComment := NewComment(DBComment)
-		FullPost.Comments = append(FullPost.Comments, APIComment)
+		var fullComment FullComment
+		var temp database.User
+		fullComment.Comment = NewComment(DBComment)
+		temp, err = rt.db.GetProfile(myUID, fullComment.Comment.OwnerID)
+		fullComment.Username = temp.Username
+		FullPost.FullComments = append(FullPost.FullComments, fullComment)
 	}
 
 	// Get likeOwners

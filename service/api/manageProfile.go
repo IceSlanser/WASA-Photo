@@ -262,10 +262,10 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Limit From data to 10MB
-	err = r.ParseMultipartForm(10 << 20)
+	// Limit From data to 1MB
+	err = r.ParseMultipartForm(1 << 20)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to parse form")
+		ctx.Logger.WithError(err).Error("File too big, max 1MB")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

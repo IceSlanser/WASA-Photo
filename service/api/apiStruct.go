@@ -32,6 +32,11 @@ type Comment struct {
 	DateTime time.Time `json:"date_time"`
 }
 
+type FullComment struct {
+	Username string  `json:"username"`
+	Comment  Comment `json:"comment"`
+}
+
 func NewUser(user database.User) User {
 	return User{
 		ID:             user.ID,

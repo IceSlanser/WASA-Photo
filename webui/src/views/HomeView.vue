@@ -17,12 +17,8 @@ export default {
         posts: [
           {
             ID: 0,
-            profile_ID: 0,
-            file: [],
-            description: "",
             like_count: 0,
             comment_count: 0,
-            date_time: Date
           }
         ],
         followings: [
@@ -43,10 +39,8 @@ export default {
       localStorage.clear()
       this.$router.push({ path : '/'})
     },
-    async uploadPhoto() {
-
-    },
     async getMyProfile() {
+      this.error = null
       try {
         let response = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
           headers: {
@@ -58,13 +52,13 @@ export default {
         this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.err = "Failed to request user's profile.";
+          this.error = "Failed to request user's profile.";
         } else if (e.response && e.response.status === 404) {
-          this.err = "User not found.";
+          this.error = "User not found.";
         } else if (e.response && e.response.status === 500) {
-          this.err = "An internal error occurred, please try again later.";
+          this.error = "An internal error occurred, please try again later.";
         } else {
-          this.err = e.toString();
+          this.error = e.toString();
         }
       }
     }

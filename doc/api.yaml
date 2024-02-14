@@ -79,7 +79,7 @@ paths:
           description: User profile successfully found
           content:
             application/json:
-              schema: {$ref: "#/components/schemas/Profile"}
+              schema: {$ref: "#/components/schemas/UserProfile"}
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '404': {$ref: "#/components/responses/404NotFound"}

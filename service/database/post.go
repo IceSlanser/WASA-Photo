@@ -98,20 +98,22 @@ func (db *appdbimpl) GetPhoto(UID uint64, postID uint64) ([]byte, error) {
 	return file, nil
 }
 
-func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]uint64, error) {
+func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]string, error) {
 	// Store likes
 	query := `SELECT OwnerID 
 				FROM likes
 				WHERE PostID = ? AND OwnerID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
 	rows, err := db.c.Query(query, postID, myUID)
-	var likeOwners []uint64
+	var likeOwners []string
 	for rows.Next() {
 		var ownerID uint64
+		var ownerUsername string
 		err = rows.Scan(&ownerID)
 		if err != nil {
 			return nil, err
 		}
-		likeOwners = append(likeOwners, ownerID)
+		err = db.c.QueryRow("SELECT Username FROM profiles WHERE ID = ?", ownerID).Scan(&ownerUsername)
+		likeOwners = append(likeOwners, ownerUsername)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err

@@ -12,6 +12,7 @@ export default {
       if (this.username === "") {
         this.error = "Username cannot be empty.";
       } else {
+        this.error = null
         try {
           let response = await this.$axios.put("/session", { username: this.username })
           localStorage.setItem("ID", response.data);
@@ -19,11 +20,11 @@ export default {
           this.$router.push({ path: '/stream' })
         } catch (e) {
           if (e.response && e.response.status === 400) {
-            this.err = "Username should has a length between 3 - 16";
+            this.error = "Username should has a length between 3 - 16";
           } else if (e.response && e.response.status === 500) {
-            this.err = "An internal error occurred, please try again later.";
+            this.error = "An internal error occurred, please try again later.";
           } else {
-            this.err = e.toString();
+            this.error = e.toString();
           }
         }
       }

@@ -19,6 +19,7 @@ export default {
             ID: 0,
             like_count: 0,
             comment_count: 0,
+            showCommentInput: false
           }
         ],
         followings: [
@@ -91,7 +92,7 @@ export default {
             </li>
             <li class="nav-item">
               <RouterLink :to="'/users/' + userProfile.profile.ID + '/profile'" class="nav-link" style="font-size: 20px;" @click="getMyProfile">
-                <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#file-text"/></svg>
+                <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#user"/></svg>
                 Profile
               </RouterLink>
             </li>

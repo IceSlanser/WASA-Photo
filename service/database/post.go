@@ -113,6 +113,11 @@ func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]string, error) {
 			return nil, err
 		}
 		err = db.c.QueryRow("SELECT Username FROM profiles WHERE ID = ?", ownerID).Scan(&ownerUsername)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, err
+			}
+		}
 		likeOwners = append(likeOwners, ownerUsername)
 	}
 	if err = rows.Err(); err != nil {

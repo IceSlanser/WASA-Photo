@@ -61,6 +61,17 @@ func (db *appdbimpl) GetProfile(myUID uint64, userID uint64) (User, error) {
 	return user, nil
 }
 
+func (db *appdbimpl) GetUID(myUID uint64, username string) (uint64, error) {
+	var UID uint64
+	err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ? AND ID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", username, myUID).Scan(&UID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, err
+		}
+	}
+	return UID, nil
+}
+
 func (db *appdbimpl) GetStream(UID uint64, startTime time.Time, endTime time.Time) ([]Post, error) {
 	query := `SELECT posts.*
 				FROM posts

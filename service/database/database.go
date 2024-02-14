@@ -51,6 +51,7 @@ type AppDatabase interface {
 	GetFollows(uint64, uint64) ([]uint64, []uint64, error)
 	GetComments(uint64, uint64) ([]Comment, error)
 	GetLikes(uint64, uint64) ([]string, error)
+	GetUID(uint64, string) (uint64, error)
 
 	PostComment(uint64, uint64, string) (uint64, error)
 	PostPost(uint64, []byte, string) (uint64, error)

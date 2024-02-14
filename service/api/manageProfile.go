@@ -78,6 +78,41 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	}
 }
 
+// searchUser find a user's ID
+func (rt *_router) searchUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	// Get MyUserID from the Header
+	myUID, authorization, err := SecurityHandler(r, rt)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("SecurityHandler has gone wrong")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !authorization {
+		ctx.Logger.WithError(err).Error("followUser not authorized")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// Get UID
+	username := r.URL.Query().Get("username")
+	UID, err := rt.db.GetUID(myUID, username)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to getUID")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Responses
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/plain")
+	err = json.NewEncoder(w).Encode(UID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode UID")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 // followUser Follow a certain user
 func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get UserID from the Header

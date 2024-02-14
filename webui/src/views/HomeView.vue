@@ -6,10 +6,14 @@ export default {
   data: function() {
     return {
       error: null,
+      myID: localStorage.getItem("ID"),
+      myUsername: localStorage.getItem("username"),
+      newUsername: "",
+      isThisMyProfile: true,
       userProfile: {
         profile: {
-          ID: localStorage.getItem("ID"),
-          username: localStorage.getItem("username"),
+          ID: 0,
+          username: "",
           following_count: 0,
           follower_count: 0,
           post_count: 0
@@ -32,7 +36,8 @@ export default {
             ID: 0
           }
         ]
-      }
+      },
+      showSearchInput: false
     }
   },
 	methods: {
@@ -40,17 +45,18 @@ export default {
       localStorage.clear()
       this.$router.push({ path : '/'})
     },
-    async getMyProfile() {
+    async getProfile() {
       this.error = null
       try {
-        let response = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
+        let response = await this.$axios.get(`/users/${this.myID}/profile`, {
           headers: {
             Authorization: localStorage.getItem("username")
           }
         })
         this.userProfile = response.data
         localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-        this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
+        localStorage.setItem("isThisMyProfile", this.isThisMyProfile);
+        this.$router.push({path: `/users/${this.myID}/profile`})
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request user's profile.";
@@ -62,8 +68,18 @@ export default {
           this.error = e.toString();
         }
       }
-    }
+    },
+
+    async toggleSearchInput() {
+      this.showSearchInput = !this.showSearchInput;
+      if (!this.showSearchInput) {
+        localStorage.removeItem(this.newUsername)
+        this.newUsername = ""
+      }
+    },
 	},
+
+
 }
 
 </script>
@@ -91,15 +107,34 @@ export default {
               </RouterLink>
             </li>
             <li class="nav-item">
-              <RouterLink :to="'/users/' + userProfile.profile.ID + '/profile'" class="nav-link" style="font-size: 20px;" @click="getMyProfile">
+              <RouterLink :to="'/users/' + userProfile.profile.ID + '/profile'" class="nav-link" style="font-size: 20px;" @click="getProfile">
                 <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#user"/></svg>
                 Profile
               </RouterLink>
             </li>
+            <li class="nav-item mx-1">
+              <button type="button" class="btn btn-sm" style="font-size: 20px;" @click="toggleSearchInput">
+                <svg class="feather mx-1">
+                  <use href="/feather-sprite-v4.29.0.svg#search"/>
+                </svg>
+                <span style="font-weight: 500;">Search</span>
+              </button>
+              <div class="d-flex ">
+                <input v-if="showSearchInput" type="text" id="Searched Username" v-model="newUsername"
+                       class="form-control form-control-sm"
+                       placeholder="Who are you searching?" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2">
+                  Search
+                </button>
+              </div>
+            </li>
           </ul>
-          <div class="mt-auto mb-3">
+
+          <div class="mt-auto mb-3 mx-1">
             <RouterLink to="/" class="nav-link" style="font-size: 20px;" @click="doLogout">
-              <svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M2.293,11.293l4-4A1,1,0,1,1,7.707,8.707L5.414,11H17a1,1,0,0,1,0,2H5.414l2.293,2.293a1,1,0,1,1-1.414,1.414l-4-4a1,1,0,0,1,0-1.414ZM20,4V20a1,1,0,0,0,2,0V4a1,1,0,0,0-2,0Z"/></svg>
+              <svg class="feather mx-1">
+                <use href="/feather-sprite-v4.29.0.svg#log-out"/>
+              </svg>
               Logout
             </RouterLink>
           </div>

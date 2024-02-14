@@ -7,8 +7,11 @@ export default {
   data: function () {
     return {
       error: null,
+      myID: localStorage.getItem("ID"),
+      myUsername: localStorage.getItem("username"),
       userProfile: JSON.parse(localStorage.getItem("userProfile")),
-      username: localStorage.getItem("username"),
+      isThisMyProfile: localStorage.getItem("isThisMyProfile"),
+      profileOwner: "",
       newUsername: "",
       newPhoto: "",
       newText: "",
@@ -28,6 +31,7 @@ export default {
             username: "",
             comment: {
               ID: 0,
+              post_ID: 0,
               owner_ID: 0,
               owner_username: "",
               text: "",
@@ -36,6 +40,7 @@ export default {
         ],
       },
       showUsernameInput: false,
+      showSearchInput: false,
       showUploadInput: false,
       showCommentInput: false,
       showLikeWindow: false,
@@ -47,17 +52,18 @@ export default {
       localStorage.clear()
       this.$router.push({path: '/'})
     },
-    async getMyProfile() {
+
+    async getProfile() {
       this.error = null
       try {
-        let response = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
+        let response = await this.$axios.get(`/users/${this.myID}/profile`, {
           headers: {
             Authorization: localStorage.getItem("username")
           }
         })
         this.userProfile = response.data
         localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-        this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
+        this.$router.push({path: `/users/${this.myID}/profile`})
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request user's profile.";
@@ -88,7 +94,7 @@ export default {
             "Content-Type": "multipart/form-data"
           }
         })
-        await this.getMyProfile();
+        await this.getProfile();
         window.location.reload()
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -113,7 +119,7 @@ export default {
             Authorization: localStorage.getItem("username")
           }
         })
-        if (this.username) {
+        if (this.myUsername) {
           this.userProfile.posts = this.userProfile.posts.filter(post => post.ID !== postID);
           localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         }
@@ -132,7 +138,7 @@ export default {
     },
 
     async setMyUserName() {
-      if (this.username === "") {
+      if (this.myUsername === "") {
         this.error = "Username cannot be empty.";
       } else {
         this.error = null
@@ -143,7 +149,7 @@ export default {
             }
           })
           localStorage.setItem("username", this.newUsername);
-          this.userProfile.profile.username = this.newUsername;
+          this.userProfile.profile.username = this.myUsername;
           localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
           window.location.reload()
         } catch (e) {
@@ -171,7 +177,7 @@ export default {
         });
         this.fullPost = response.data;
         const likeOwnersArray = this.fullPost.like_owners || [];
-        let isLiked = likeOwnersArray.includes(this.username);
+        let isLiked = likeOwnersArray.includes(this.myUsername);
 
 
         if (isLiked) {
@@ -241,7 +247,7 @@ export default {
             Authorization: localStorage.getItem("username"),
           }
         })
-        await this.getMyProfile();
+        await this.getProfile();
         window.location.reload()
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -252,6 +258,34 @@ export default {
           this.error = "Data not found.";
         } else if (e.response && e.response.status === 500) {
           this.error = "An internal error occurred, please try again later.";
+        } else {
+          this.error = e.toString();
+        }
+      }
+    },
+
+    async deleteComment(postID, commentID) {
+      this.error = null
+      try {
+        await this.$axios.delete(`/posts/${postID}/comments/${commentID}`, {
+          headers: {
+            Authorization: localStorage.getItem("username")
+          }
+        })
+        if (this.myUsername) {
+          let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+          this.fullPost.full_comments = this.fullPost.full_comments.filter(comment => comment.post_ID !== comment.post_ID);
+          this.userProfile.posts[i].comment_count--;
+          localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+        }
+        window.location.reload()
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.error = "Failed to delete.";
+        } else if (e.response && e.response.status === 401) {
+          this.error = "deleteComment not authorized";
+        } else if (e.response && e.response.status === 404) {
+          this.error = "Comment not found";
         } else {
           this.error = e.toString();
         }
@@ -284,6 +318,48 @@ export default {
       }
     },
 
+    async searchUser() {
+      this.error = null
+      try {
+        let response = await this.$axios.get(`/users?username=${this.profileOwner}`, {
+          headers: {
+            Authorization: localStorage.getItem("username")
+          }
+        })
+        this.userProfile.profile.ID = response.data
+        try {
+          let res = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
+            headers: {
+              Authorization: localStorage.getItem("username")
+            }
+          })
+          this.userProfile = res.data
+          localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          this.$router.push({path: `/users/${this.myID}/profile`})
+        } catch (e) {
+          if (e.response && e.response.status === 400) {
+            this.error = "Failed to request user's profile.";
+          } else if (e.response && e.response.status === 404) {
+            this.error = "User not found.";
+          } else if (e.response && e.response.status === 500) {
+            this.error = "An internal error occurred, please try again later.";
+          } else {
+            this.error = e.toString();
+          }
+        }
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.error = "Failed to request user's profile.";
+        } else if (e.response && e.response.status === 404) {
+          this.error = "User not found.";
+        } else if (e.response && e.response.status === 500) {
+          this.error = "An internal error occurred, please try again later.";
+        } else {
+          this.error = e.toString();
+        }
+      }
+    },
+
     async closeLikeWindow() {
       this.showLikeWindow = false
     },
@@ -299,6 +375,15 @@ export default {
         this.newUsername = ""
       }
     },
+
+    async toggleSearchInput() {
+      this.showSearchInput = !this.showSearchInput;
+      if (!this.showSearchInput) {
+        localStorage.removeItem(this.newUsername)
+        this.newUsername = ""
+      }
+    },
+
     async togglePhotoInput() {
       this.showUploadInput = !this.showUploadInput;
       if (!this.showUploadInput) {
@@ -307,6 +392,7 @@ export default {
         this.newText = ""
       }
     },
+
     async toggleCommentInput(postID) {
       let i = this.userProfile.posts.findIndex(post => post.ID === postID);
       this.userProfile.posts[i].showCommentInput = !this.userProfile.posts[i].showCommentInput;
@@ -329,7 +415,8 @@ export default {
   </div>
   <div>
     <div style="display: flex; justify-content: center;">
-      <h2 class="h2">Profile</h2>
+      <h2 class="h2" v-if="this.isThisMyProfile">Profile</h2>
+      <h2 class="h2" v-else>Search</h2>
     </div>
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
 
@@ -355,9 +442,9 @@ export default {
     <div v-for="post in userProfile.posts" :key="post.ID" class="post-container">
       <img :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
-      <p><span style="font-weight: bold;">{{ username }}</span>: {{ post.description }}</p>
+      <p><span style="font-weight: bold;">{{ userProfile.profile.username }}</span>: {{ post.description }}</p>
       <button type="button" class="btn" @click="showLikes(post.ID)">
-        Likes: {{ post.like_count    }}
+        Likes: {{ post.like_count}}
       </button>
       <button type="button" class="btn mb-1" @click="toggleLike(post.ID)">
         <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
@@ -377,7 +464,7 @@ export default {
           </button>
         </div>
       </div>
-      <div class="delete-button-container">
+      <div class="delete-button-container" v-if="this.isThisMyProfile">
         <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
           <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
         </button>
@@ -401,6 +488,9 @@ export default {
       <ul>
         <li v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username">
           {{ fullComment.username + ": " + fullComment.comment.text }}
+          <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-button mb-2" @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
+            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
+          </button>
         </li>
       </ul>
       <button @click="this.closeCommentWindow()">Close</button>
@@ -422,16 +512,19 @@ export default {
               </RouterLink>
             </li>
             <li class="nav-item">
-              <RouterLink :to="'/users/' + userProfile.profile.ID + '/profile'" class="nav-link"
-                          style="font-size: 20px;" @click="getMyProfile">
+              <RouterLink :to="'/users/' + myID + '/profile'" class="nav-link"
+                          style="font-size: 20px;" @click="getProfile">
                 <svg class="feather">
                   <use href="/feather-sprite-v4.29.0.svg#user"/>
                 </svg>
                 Profile
               </RouterLink>
             </li>
-            <li class="nav-item">
-              <button type="button" class="btn btn-sm" style="font-size: 12px;" @click="togglePhotoInput">
+            <li class="nav-item mx-3" v-if="isThisMyProfile">
+              <button type="button" class="btn btn-sm" style="font-size: 15px;" @click="togglePhotoInput">
+                <svg class="feather mx-1">
+                  <use href="/feather-sprite-v4.29.0.svg#log-out"/>
+                </svg>
                 Upload
               </button>
               <div v-if="showUploadInput" style="margin-right: 10px;">
@@ -443,8 +536,11 @@ export default {
               <button v-if="showUploadInput" type="button" class="btn btn-sm btn-primary" @click="uploadPhoto">Upload
               </button>
             </li>
-            <li class="nav-item">
-              <button type="button" class="btn btn-sm" style="font-size: 12px;" @click="toggleUsernameInput">
+            <li class="nav-item mx-3" v-if="isThisMyProfile">
+              <button type="button" class="btn btn-sm" style="font-size: 15px;" @click="toggleUsernameInput">
+                <svg class="feather mx-1">
+                  <use href="/feather-sprite-v4.29.0.svg#edit-3"/>
+                </svg>
                 Change Username
               </button>
               <div class="d-flex ">
@@ -457,12 +553,29 @@ export default {
                 </button>
               </div>
             </li>
+            <li class="nav-item mx-1">
+                <button type="button" class="btn btn-sm" style="font-size: 20px;" @click="toggleSearchInput">
+                  <svg class="feather mx-1">
+                    <use href="/feather-sprite-v4.29.0.svg#search"/>
+                  </svg>
+                  <span style="font-weight: 500;">
+                    Search
+                  </span>
+                </button>
+              <div class="d-flex ">
+                <input v-if="showSearchInput" type="text" id="Searched Username" v-model="profileOwner"
+                       class="form-control form-control-sm"
+                       placeholder="Who are you searching for?" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2" @click="searchUser">
+                  Search
+                </button>
+              </div>
+            </li>
           </ul>
-          <div class="mt-auto mb-3">
+          <div class="mt-auto mb-3 mx-1">
             <RouterLink to="/" class="nav-link" style="font-size: 20px;" @click="doLogout">
-              <svg fill="#000000" width="20px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path
-                    d="M2.293,11.293l4-4A1,1,0,1,1,7.707,8.707L5.414,11H17a1,1,0,0,1,0,2H5.414l2.293,2.293a1,1,0,1,1-1.414,1.414l-4-4a1,1,0,0,1,0-1.414ZM20,4V20a1,1,0,0,0,2,0V4a1,1,0,0,0-2,0Z"/>
+              <svg class="feather mx-1">
+                <use href="/feather-sprite-v4.29.0.svg#log-out"/>
               </svg>
               Logout
             </RouterLink>

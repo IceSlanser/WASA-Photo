@@ -63,6 +63,7 @@ paths:
         '400': {$ref: "#/components/responses/400BadRequest"}
         '401': {$ref: "#/components/responses/401UnauthorizedError"}
         '500': {$ref: "#/components/responses/500InternalServerError"}
+  
 
   /users/{UID}/profile:
     parameters:

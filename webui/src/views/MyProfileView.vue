@@ -47,6 +47,13 @@ export default {
       showCommentWindow: false
     }
   },
+
+  computed: {
+    sortedPosts() {
+      return this.userProfile.posts.slice().sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
+    }
+  },
+
   methods: {
     async doLogout() {
       localStorage.clear()
@@ -66,7 +73,7 @@ export default {
         this.$router.push({path: `/users/${this.myID}/profile`})
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to request user's profile.";
+          this.error = "Failed to get user's profile.";
         } else if (e.response && e.response.status === 404) {
           this.error = "User not found.";
         } else if (e.response && e.response.status === 500) {
@@ -138,7 +145,7 @@ export default {
     },
 
     async setMyUserName() {
-      if (this.myUsername === "") {
+      if (this.newUsername === "") {
         this.error = "Username cannot be empty.";
       } else {
         this.error = null
@@ -149,7 +156,7 @@ export default {
             }
           })
           localStorage.setItem("username", this.newUsername);
-          this.userProfile.profile.username = this.myUsername;
+          this.userProfile.profile.username = this.newUsername;
           localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
           window.location.reload()
         } catch (e) {
@@ -251,6 +258,7 @@ export default {
         this.userProfile.posts[i].comment_count++;
         localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         window.location.reload()
+        await this.toggleCommentInput(postID)
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request new comment.";
@@ -441,8 +449,8 @@ export default {
   </div>
 
   <div class="post-grid">
-    <div v-for="post in userProfile.posts" :key="post.ID" class="post-container">
-      <img :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid">
+    <div v-for="post in sortedPosts" :key="post.ID" class="post-container">
+      <img :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid align-content-center">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
       <div class="d-flex justify-content-between">
         <p><span style="font-weight: bold;">{{ userProfile.profile.username }}</span>: {{ post.description }}</p>
@@ -604,14 +612,19 @@ export default {
   position: relative;
   border: 2px solid #ccc;
   margin-bottom: 20px;
-  padding: 10px;
   width: 100%;
   margin-top: 50px;
+  justify-content: center;
 }
 
 .post-image {
-  margin-bottom: 10px;
+  max-height: 900px;
+  max-width: 500px;
+  aspect-ratio: 1.91/1;
+  display: block;
+  margin: 0 auto;
 }
+
 
 .delete-button-container {
   position: absolute;
@@ -622,18 +635,6 @@ export default {
 .delete-button {
   font-size: 20px;
   color: red;
-}
-
-.heart-icon {
-  width: 15px;
-  height: 15px;
-  fill: red;
-}
-
-.keyboard-icon {
-  width: 20px;
-  height: 20px;
-  fill: black;
 }
 
 .liked-users-overlay {

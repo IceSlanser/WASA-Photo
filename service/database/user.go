@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"time"
 )
 
 func (db *appdbimpl) LoginUser(name string) (User, bool, error) {
@@ -72,13 +71,12 @@ func (db *appdbimpl) GetUID(myUID uint64, username string) (uint64, error) {
 	return UID, nil
 }
 
-func (db *appdbimpl) GetStream(UID uint64, startTime time.Time, endTime time.Time) ([]Post, error) {
+func (db *appdbimpl) GetStream(UID uint64) ([]Post, error) {
 	query := `SELECT posts.*
 				FROM posts
 				LEFT JOIN follows ON FollowedUID = ProfileID
-				WHERE ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?) AND follows.FollowerUID = ? AND DateTime BETWEEN ? AND ?
-			  	ORDER BY DateTime DESC`
-	rows, err := db.c.Query(query, UID, UID, startTime, endTime)
+				WHERE ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?) AND follows.FollowerUID = ?`
+	rows, err := db.c.Query(query, UID, UID)
 
 	if err != nil {
 		return nil, err

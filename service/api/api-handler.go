@@ -13,7 +13,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/profile/setUserName", rt.wrap(rt.setMyUserName)) // V
 
 	// ManageProfile
-	rt.router.GET("/users", rt.wrap(rt.searchUser))
+	rt.router.GET("/users", rt.wrap(rt.searchUser))                  // V
 	rt.router.GET("/users/:UID/profile", rt.wrap(rt.getUserProfile)) // V
 	rt.router.PUT("/users/:UID/follow", rt.wrap(rt.followUser))      // V
 	rt.router.DELETE("/users/:UID/follow", rt.wrap(rt.unfollowUser)) // V

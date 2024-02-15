@@ -34,7 +34,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 )
 
 // AppDatabase is the high level interface for the DB
@@ -46,7 +45,7 @@ type AppDatabase interface {
 	GetProfile(uint64, uint64) (User, error)
 	GetUserPosts(uint64, uint64) ([]Post, error)
 	GetPostInfo(uint64, uint64) (Post, error)
-	GetStream(uint64, time.Time, time.Time) ([]Post, error)
+	GetStream(uint64) ([]Post, error)
 	GetPhoto(uint64, uint64) ([]byte, error)
 	GetFollows(uint64, uint64) ([]uint64, []uint64, error)
 	GetComments(uint64, uint64) ([]Comment, error)

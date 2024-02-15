@@ -9,7 +9,6 @@ const router = createRouter({
 		{path: '/', component: LoginView},
 		{path: '/stream', component: HomeView},
 		{path: '/users/:UID/profile', component: myProfileView},
-		//{path: '/users/:UID/profile', component: GenericProfileView},
 	]
 })
 

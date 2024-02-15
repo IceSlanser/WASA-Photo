@@ -329,6 +329,11 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 
 	// Get the uploaded description
 	description := r.FormValue("description")
+	if len(description) > 35 {
+		ctx.Logger.WithError(err).Error("Description to long (max 35 character)")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	// Post photo
 	postID, err := rt.db.PostPost(UID, photoFile, description)

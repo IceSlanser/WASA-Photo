@@ -10,7 +10,6 @@ export default {
       myID: localStorage.getItem("ID"),
       myUsername: localStorage.getItem("username"),
       userProfile: JSON.parse(localStorage.getItem("userProfile")),
-      isThisMyProfile: localStorage.getItem("isThisMyProfile"),
       profileOwner: "",
       newUsername: "",
       newPhoto: "",
@@ -35,6 +34,7 @@ export default {
               owner_ID: 0,
               owner_username: "",
               text: "",
+              date_time: "",
             }
           }
         ],
@@ -240,6 +240,7 @@ export default {
 
     async commentPhoto(postID) {
       try {
+        let i = this.userProfile.posts.findIndex(post => post.ID === postID);
         let formData = new FormData();
         formData.append('text', this.newText)
         await this.$axios.post(`/posts/${postID}/comments`, formData, {
@@ -247,7 +248,8 @@ export default {
             Authorization: localStorage.getItem("username"),
           }
         })
-        await this.getProfile();
+        this.userProfile.posts[i].comment_count++;
+        localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         window.location.reload()
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -335,7 +337,7 @@ export default {
           })
           this.userProfile = res.data
           localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-          this.$router.push({path: `/users/${this.myID}/profile`})
+          this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
         } catch (e) {
           if (e.response && e.response.status === 400) {
             this.error = "Failed to request user's profile.";
@@ -415,7 +417,7 @@ export default {
   </div>
   <div>
     <div style="display: flex; justify-content: center;">
-      <h2 class="h2" v-if="this.isThisMyProfile">Profile</h2>
+      <h2 class="h2" v-if="this.myUsername === this.userProfile.profile.username">Profile</h2>
       <h2 class="h2" v-else>Search</h2>
     </div>
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
@@ -442,7 +444,11 @@ export default {
     <div v-for="post in userProfile.posts" :key="post.ID" class="post-container">
       <img :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
-      <p><span style="font-weight: bold;">{{ userProfile.profile.username }}</span>: {{ post.description }}</p>
+      <div class="d-flex justify-content-between">
+        <p><span style="font-weight: bold;">{{ userProfile.profile.username }}</span>: {{ post.description }}</p>
+        <p>{{post.date_time}}</p>
+      </div>
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
       <button type="button" class="btn" @click="showLikes(post.ID)">
         Likes: {{ post.like_count}}
       </button>
@@ -464,7 +470,7 @@ export default {
           </button>
         </div>
       </div>
-      <div class="delete-button-container" v-if="this.isThisMyProfile">
+      <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
         <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
           <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
         </button>
@@ -520,7 +526,7 @@ export default {
                 Profile
               </RouterLink>
             </li>
-            <li class="nav-item mx-3" v-if="isThisMyProfile">
+            <li class="nav-item mx-3" v-if="this.myUsername === this.userProfile.profile.username">
               <button type="button" class="btn btn-sm" style="font-size: 15px;" @click="togglePhotoInput">
                 <svg class="feather mx-1">
                   <use href="/feather-sprite-v4.29.0.svg#log-out"/>
@@ -536,7 +542,7 @@ export default {
               <button v-if="showUploadInput" type="button" class="btn btn-sm btn-primary" @click="uploadPhoto">Upload
               </button>
             </li>
-            <li class="nav-item mx-3" v-if="isThisMyProfile">
+            <li class="nav-item mx-3" v-if="this.myUsername === this.userProfile.profile.username">
               <button type="button" class="btn btn-sm" style="font-size: 15px;" @click="toggleUsernameInput">
                 <svg class="feather mx-1">
                   <use href="/feather-sprite-v4.29.0.svg#edit-3"/>

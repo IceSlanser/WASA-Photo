@@ -34,7 +34,7 @@ func IsLegal(s string) (bool, error) {
 func IsMediaFile(filename string) bool {
 	ext := filepath.Ext(filename)
 	switch ext {
-	case ".png", ".jpg", ".jpeg", "webp", ".mp3", ".mp4":
+	case ".png", ".jpg", ".jpeg", ".webp", ".mp3", ".mp4":
 		return true
 	}
 	return false

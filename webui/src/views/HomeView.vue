@@ -9,7 +9,7 @@ export default {
       myID: localStorage.getItem("ID"),
       myUsername: localStorage.getItem("username"),
       newUsername: "",
-      isThisMyProfile: true,
+      profileOwner: "",
       userProfile: {
         profile: {
           ID: 0,
@@ -55,8 +55,49 @@ export default {
         })
         this.userProfile = response.data
         localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-        localStorage.setItem("isThisMyProfile", this.isThisMyProfile);
         this.$router.push({path: `/users/${this.myID}/profile`})
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.error = "Failed to request user's profile.";
+        } else if (e.response && e.response.status === 404) {
+          this.error = "User not found.";
+        } else if (e.response && e.response.status === 500) {
+          this.error = "An internal error occurred, please try again later.";
+        } else {
+          this.error = e.toString();
+        }
+      }
+    },
+
+    async searchUser() {
+      this.error = null
+      try {
+        let response = await this.$axios.get(`/users?username=${this.profileOwner}`, {
+          headers: {
+            Authorization: localStorage.getItem("username")
+          }
+        })
+        this.userProfile.profile.ID = response.data
+        try {
+          let res = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
+            headers: {
+              Authorization: localStorage.getItem("username")
+            }
+          })
+          this.userProfile = res.data
+          localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
+        } catch (e) {
+          if (e.response && e.response.status === 400) {
+            this.error = "Failed to request user's profile.";
+          } else if (e.response && e.response.status === 404) {
+            this.error = "User not found.";
+          } else if (e.response && e.response.status === 500) {
+            this.error = "An internal error occurred, please try again later.";
+          } else {
+            this.error = e.toString();
+          }
+        }
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request user's profile.";
@@ -120,10 +161,10 @@ export default {
                 <span style="font-weight: 500;">Search</span>
               </button>
               <div class="d-flex ">
-                <input v-if="showSearchInput" type="text" id="Searched Username" v-model="newUsername"
+                <input v-if="showSearchInput" type="text" id="Searched Username" v-model="profileOwner"
                        class="form-control form-control-sm"
-                       placeholder="Who are you searching?" aria-label="Recipient's username" aria-describedby="basic-addon2">
-                <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2">
+                       placeholder="Who are you searching for?" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2" @click="searchUser">
                   Search
                 </button>
               </div>

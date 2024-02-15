@@ -37,6 +37,12 @@ type FullComment struct {
 	Comment  Comment `json:"comment"`
 }
 
+type FullPost struct {
+	Post         Post          `json:"post"`
+	LikeOwners   []string      `json:"like_owners"`
+	FullComments []FullComment `json:"full_comments"`
+}
+
 func NewUser(user database.User) User {
 	return User{
 		ID:             user.ID,

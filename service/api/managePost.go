@@ -25,11 +25,7 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	var FullPost struct {
-		Post         Post          `json:"post"`
-		LikeOwners   []string      `json:"like_owners"`
-		FullComments []FullComment `json:"full_comments"`
-	}
+	var fullPost FullPost
 
 	// Get user's post
 	postStr := ps.ByName("postID")
@@ -47,7 +43,7 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	FullPost.Post = NewPost(DBPost)
+	fullPost.Post = NewPost(DBPost)
 
 	// Get postComments
 	var DBComments []database.Comment
@@ -64,11 +60,11 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 		fullComment.Comment = NewComment(DBComment)
 		temp, err = rt.db.GetProfile(myUID, fullComment.Comment.OwnerID)
 		fullComment.Username = temp.Username
-		FullPost.FullComments = append(FullPost.FullComments, fullComment)
+		fullPost.FullComments = append(fullPost.FullComments, fullComment)
 	}
 
 	// Get likeOwners
-	FullPost.LikeOwners, err = rt.db.GetLikes(myUID, postID)
+	fullPost.LikeOwners, err = rt.db.GetLikes(myUID, postID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetLikes")
 		w.WriteHeader(http.StatusNotFound)
@@ -77,7 +73,7 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(FullPost)
+	err = json.NewEncoder(w).Encode(fullPost)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode FullPost")
 		w.WriteHeader(http.StatusInternalServerError)

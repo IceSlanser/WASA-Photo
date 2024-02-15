@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/IceSlanserUni/WASAPhoto/service/database"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"time"
@@ -99,19 +100,47 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	// Convert DBPosts to APIPosts
-	var APIPosts []Post
+	// Get list of fullPosts
+	var listOfFullPosts []FullPost
 	for _, DBPost := range DBPosts {
-		APIPost := NewPost(DBPost)
-		APIPosts = append(APIPosts, APIPost)
+		var fullPost FullPost
+		fullPost.Post = NewPost(DBPost)
+
+		// Get postComments
+		var DBComments []database.Comment
+		DBComments, err = rt.db.GetComments(UID, fullPost.Post.ID)
+		if err != nil {
+			ctx.Logger.WithError(err).Error("Failed to GetComments")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		// Convert DBPosts to APIComments
+		for _, DBComment := range DBComments {
+			var fullComment FullComment
+			var temp database.User
+			fullComment.Comment = NewComment(DBComment)
+			temp, err = rt.db.GetProfile(UID, fullComment.Comment.OwnerID)
+			fullComment.Username = temp.Username
+			fullPost.FullComments = append(fullPost.FullComments, fullComment)
+		}
+
+		// Get likeOwners
+		fullPost.LikeOwners, err = rt.db.GetLikes(UID, fullPost.Post.ID)
+		if err != nil {
+			ctx.Logger.WithError(err).Error("Failed to GetLikes")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		listOfFullPosts = append(listOfFullPosts, fullPost)
 	}
 
 	// Responses
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(APIPosts)
+	err = json.NewEncoder(w).Encode(listOfFullPosts)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode APIPosts")
+		ctx.Logger.WithError(err).Error("Failed to encode listOfFullPosts")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

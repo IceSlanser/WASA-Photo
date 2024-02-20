@@ -51,7 +51,12 @@ export default {
   computed: {
     sortedPosts() {
       return this.userProfile.posts.slice().sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
-    }
+    },
+
+    isFollowing() {
+      return this.userProfile.followers.includes(Number(this.myID));
+    },
+
   },
 
   methods: {
@@ -183,25 +188,52 @@ export default {
           }
         });
         this.fullPost = response.data;
-        const likeOwnersArray = this.fullPost.like_owners || [];
-        let isLiked = likeOwnersArray.includes(this.myUsername);
+        const listOfLikeOwners = this.fullPost.like_owners || [];
+        let isLiked = listOfLikeOwners.includes(this.myUsername);
 
 
         if (isLiked) {
-          await this.$axios.delete(`/posts/${postID}/likes`, {
-            headers: {
-              Authorization: localStorage.getItem("username")
+          try {
+            await this.$axios.delete(`/posts/${postID}/likes`, {
+              headers: {
+                Authorization: localStorage.getItem("username")
+              }
+            });
+            this.userProfile.posts[i].like_count--;
+
+          } catch (e) {
+            if (e.response && e.response.status === 400) {
+              this.error = "Failed to delete.";
+            } else if (e.response && e.response.status === 401) {
+              this.error = "toggleLike not authorized";
+            } else if (e.response && e.response.status === 404) {
+              this.error = "Post not found";
+            } else {
+              this.error = e.toString();
             }
-          });
-          this.userProfile.posts[i].like_count--;
+          }
 
         } else {
-          await this.$axios.put(`/posts/${postID}/likes`, {}, {
-            headers: {
-              Authorization: localStorage.getItem("username")
+          try {
+            await this.$axios.put(`/posts/${postID}/likes`, {}, {
+              headers: {
+                Authorization: localStorage.getItem("username")
+              }
+            });
+            this.userProfile.posts[i].like_count++;
+
+          } catch (e) {
+            if (e.response && e.response.status === 400) {
+              this.error = "Failed to put.";
+            } else if (e.response && e.response.status === 401) {
+              this.error = "toggleLike not authorized";
+            } else if (e.response && e.response.status === 404) {
+              this.error = "Post not found";
+            } else {
+              this.error = e.toString();
             }
-          });
-          this.userProfile.posts[i].like_count++;
+          }
+
         }
         localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
       } catch (e) {
@@ -345,6 +377,7 @@ export default {
           })
           this.userProfile = res.data
           localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          await this.toggleSearchInput()
           this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
         } catch (e) {
           if (e.response && e.response.status === 400) {
@@ -368,6 +401,58 @@ export default {
           this.error = e.toString();
         }
       }
+    },
+
+    async toggleFollow(UID) {
+      if (this.userProfile.followers === null) {
+        this.userProfile.followers = []
+      }
+      const isFollowed = this.userProfile.followers.includes(Number(this.myID))
+      
+      if (isFollowed) {
+        try {
+          await this.$axios.delete(`/users/${UID}/follow`, {
+            headers: {
+              Authorization: localStorage.getItem("username")
+            }
+          });
+          this.userProfile.profile.follower_count--;
+          this.userProfile.followers = this.userProfile.followers.filter(user => user !== Number(this.myID))
+
+        } catch (e) {
+          if (e.response && e.response.status === 400) {
+            this.error = "Failed to follow";
+          } else if (e.response && e.response.status === 401) {
+            this.error = "followUser not authorized";
+          } else {
+            this.error = e.toString();
+          }
+        }
+
+      } else {
+        try {
+          await this.$axios.put(`/users/${UID}/follow`, {}, {
+            headers: {
+              Authorization: localStorage.getItem("username")
+            }
+          });
+          this.userProfile.profile.follower_count++;
+          this.userProfile.followers.push(Number(this.myID))
+
+        } catch (e) {
+          if (e.response && e.response.status === 400) {
+            this.error = "Failed to delete.";
+          } else if (e.response && e.response.status === 401) {
+            this.error = "deleteComment not authorized";
+          } else if (e.response && e.response.status === 404) {
+            this.error = "Comment not found";
+          } else {
+            this.error = e.toString();
+          }
+        }
+      }
+      localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
+
     },
 
     async closeLikeWindow() {
@@ -411,7 +496,8 @@ export default {
         this.newText = ""
       }
       localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
-    }
+    },
+
   }
 }
 </script>
@@ -437,16 +523,22 @@ export default {
     <div class="d-flex align-items-center">
       <h1 style="white-space: nowrap;">{{ userProfile.profile.username }}</h1>
       <div class="col-lg-6 mx-5">
-        <div class="d-flex mt-3 justify-content-between">
+        <div class="d-flex mt-3 justify-content-between align-items-center">
           <h6 style="margin-right: 10px;">{{ userProfile.profile.follower_count }} Follower</h6>
           <h6 style="margin-right: 10px;">{{ userProfile.profile.following_count }} Following</h6>
           <h6>{{ userProfile.profile.post_count }} Post</h6>
+          <button type="button" class="btn" @click="toggleFollow(userProfile.profile.ID)">
+            <svg :class="{ 'feather': true, 'mb-2': true, 'is-following': isFollowing }">
+              <use :href="isFollowing ? '/feather-sprite-v4.29.0.svg#user-minus' : '/feather-sprite-v4.29.0.svg#user-check'"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
   </div>
+
 
   <div class="post-grid">
     <div v-for="post in sortedPosts" :key="post.ID" class="post-container">
@@ -618,8 +710,7 @@ export default {
 }
 
 .post-image {
-  max-height: 900px;
-  max-width: 500px;
+  object-fit: cover;
   aspect-ratio: 1.91/1;
   display: block;
   margin: 0 auto;
@@ -656,5 +747,9 @@ export default {
   border-style: solid;
   max-height: 80%;
   overflow-y: auto;
+}
+
+.followed .feather-user-minus {
+  color: red;
 }
 </style>

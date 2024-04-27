@@ -1,6 +1,5 @@
 <script>
 import {RouterLink} from "vue-router";
-import ErrorMsg from "../components/ErrorMsg.vue";
 
 export default {
   components: {RouterLink},
@@ -9,7 +8,25 @@ export default {
       error: null,
       myID: localStorage.getItem("ID"),
       myUsername: localStorage.getItem("username"),
-      userProfile: JSON.parse(localStorage.getItem("userProfile")),
+      userProfile: {
+        profile: {
+          ID: 0,
+          username: "",
+          following_count: 0,
+          follower_count: 0,
+          post_count: 0
+        },
+        posts: [
+          {
+            ID: 0,
+            like_count: 0,
+            comment_count: 0,
+            showCommentInput: false
+          }
+        ],
+        followings: [],
+        followers: []
+      },
       profileOwner: "",
       newUsername: "",
       newPhoto: "",
@@ -50,18 +67,28 @@ export default {
 
   computed: {
     sortedPosts() {
+      if (!this.userProfile.posts) {
+        this.userProfile.posts = []
+      }
       return this.userProfile.posts.slice().sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
     },
 
     isFollowing() {
+      if (!this.userProfile.followers) {
+        this.userProfile.followers = []
+      }
       return this.userProfile.followers.includes(Number(this.myID));
     },
 
   },
 
+  mounted() {
+    this.getProfile()
+  },
+
   methods: {
     async doLogout() {
-      localStorage.clear()
+      await localStorage.clear()
       this.$router.push({path: '/'})
     },
 
@@ -74,8 +101,15 @@ export default {
           }
         })
         this.userProfile = response.data
-        localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-        this.$router.push({path: `/users/${this.myID}/profile`})
+        if (this.userProfile.posts == null) {
+          this.userProfile.posts = []
+        }
+        if (this.userProfile.followings == null) {
+          this.userProfile.followings = []
+        }
+        if (this.userProfile.followers == null) {
+          this.userProfile.followers = []
+        }
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to get user's profile.";
@@ -110,7 +144,7 @@ export default {
         window.location.reload()
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to request new username.";
+          this.error = "Failed to upload a new photo.";
         } else if (e.response && e.response.status === 401) {
           this.error = "uploadPhoto not authorized.";
         } else if (e.response && e.response.status === 404) {
@@ -133,12 +167,12 @@ export default {
         })
         if (this.myUsername) {
           this.userProfile.posts = this.userProfile.posts.filter(post => post.ID !== postID);
-          localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         }
         window.location.reload()
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to request new username.";
+          this.error = "Failed to delete photo";
         } else if (e.response && e.response.status === 401) {
           this.error = "setMyUserName not authorized";
         } else if (e.response && e.response.status === 404) {
@@ -160,9 +194,9 @@ export default {
               Authorization: localStorage.getItem("username")
             }
           })
-          localStorage.setItem("username", this.newUsername);
+          await  localStorage.setItem("username", this.newUsername);
           this.userProfile.profile.username = this.newUsername;
-          localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
           window.location.reload()
         } catch (e) {
           if (e.response && e.response.status === 400) {
@@ -235,7 +269,7 @@ export default {
           }
 
         }
-        localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
+        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request post.";
@@ -260,7 +294,7 @@ export default {
           }
         });
         this.fullPost = response.data;
-        localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
+        await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
         this.showLikeWindow = true
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -288,7 +322,7 @@ export default {
           }
         })
         this.userProfile.posts[i].comment_count++;
-        localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         window.location.reload()
         await this.toggleCommentInput(postID)
       } catch (e) {
@@ -318,7 +352,7 @@ export default {
           let i = this.userProfile.posts.findIndex(post => post.ID === postID);
           this.fullPost.full_comments = this.fullPost.full_comments.filter(comment => comment.post_ID !== comment.post_ID);
           this.userProfile.posts[i].comment_count--;
-          localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         }
         window.location.reload()
       } catch (e) {
@@ -343,7 +377,7 @@ export default {
           }
         });
         this.fullPost = response.data;
-        localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
+        await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
         this.showCommentWindow = true
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -376,7 +410,7 @@ export default {
             }
           })
           this.userProfile = res.data
-          localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
           await this.toggleSearchInput()
           this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
         } catch (e) {
@@ -451,7 +485,7 @@ export default {
           }
         }
       }
-      localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
+      await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
 
     },
 
@@ -466,7 +500,7 @@ export default {
     async toggleUsernameInput() {
       this.showUsernameInput = !this.showUsernameInput;
       if (!this.showUsernameInput) {
-        localStorage.removeItem(this.newUsername)
+        await localStorage.removeItem(this.newUsername)
         this.newUsername = ""
       }
     },
@@ -474,7 +508,7 @@ export default {
     async toggleSearchInput() {
       this.showSearchInput = !this.showSearchInput;
       if (!this.showSearchInput) {
-        localStorage.removeItem(this.newUsername)
+        await localStorage.removeItem(this.newUsername)
         this.newUsername = ""
       }
     },
@@ -482,7 +516,7 @@ export default {
     async togglePhotoInput() {
       this.showUploadInput = !this.showUploadInput;
       if (!this.showUploadInput) {
-        localStorage.removeItem(this.newPhoto)
+        await localStorage.removeItem(this.newPhoto)
         this.newPhoto = ""
         this.newText = ""
       }
@@ -492,10 +526,10 @@ export default {
       let i = this.userProfile.posts.findIndex(post => post.ID === postID);
       this.userProfile.posts[i].showCommentInput = !this.userProfile.posts[i].showCommentInput;
       if (!this.userProfile.posts[i].showCommentInput) {
-        localStorage.removeItem((this.newText))
+        await localStorage.removeItem((this.newText))
         this.newText = ""
       }
-      localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
+      await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
     },
 
   }
@@ -510,7 +544,7 @@ export default {
     </div>
   </div>
   <div>
-    <div style="display: flex; justify-content: center;">
+    <div style="display: flex; justify-content: center;" v-if="this.userProfile.profile.username">
       <h2 class="h2" v-if="this.myUsername === this.userProfile.profile.username">Profile</h2>
       <h2 class="h2" v-else>Search</h2>
     </div>
@@ -521,7 +555,7 @@ export default {
 
   <div class="col-lg-7">
     <div class="d-flex align-items-center">
-      <h1 style="white-space: nowrap;">{{ userProfile.profile.username }}</h1>
+      <h1 v-if="this.userProfile" style="white-space: nowrap;">{{ userProfile.profile.username }}</h1>
       <div class="col-lg-6 mx-5">
         <div class="d-flex mt-3 justify-content-between align-items-center">
           <h6 style="margin-right: 10px;">{{ userProfile.profile.follower_count }} Follower</h6>
@@ -542,7 +576,7 @@ export default {
 
   <div class="post-grid">
     <div v-for="post in sortedPosts" :key="post.ID" class="post-container">
-      <img :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid align-content-center">
+      <img v-if="post.file" :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid align-content-center">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
       <div class="d-flex justify-content-between">
         <p><span style="font-weight: bold;">{{ userProfile.profile.username }}</span>: {{ post.description }}</p>

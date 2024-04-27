@@ -15,8 +15,8 @@ export default {
         this.error = null
         try {
           let response = await this.$axios.put("/session", { username: this.username })
-          localStorage.setItem("ID", response.data);
-          localStorage.setItem("username", this.username);
+          await localStorage.setItem("ID", response.data);
+          await localStorage.setItem("username", this.username);
           this.$router.push({ path: '/stream' })
         } catch (e) {
           if (e.response && e.response.status === 400) {
@@ -36,7 +36,8 @@ export default {
 <template>
   <div
       class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 ">
-    <h1 class="h2">Welcome to WASAPhoto {{this.username}}</h1>
+    <h1 class="h2" v-if="this.username">Welcome to WASAPhoto {{this.username}}</h1>
+    <h1 class="h2" v-else>Welcome to WASAPhoto </h1>
   </div>
   <div class="input-group mb-2">
     <input type="text" id="username" v-model="username" class="form-control"

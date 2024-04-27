@@ -74,7 +74,7 @@ export default {
 
 	methods: {
     async doLogout() {
-      localStorage.clear()
+      await localStorage.clear()
       this.$router.push({path: '/'})
     },
 
@@ -87,7 +87,10 @@ export default {
           }
         })
         this.stream = response.data
-        localStorage.setItem("stream", JSON.stringify(this.stream));
+        if (this.stream == null) {
+          this.stream = []
+        }
+        await localStorage.setItem("stream", JSON.stringify(this.stream));
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to get stream.";
@@ -102,27 +105,7 @@ export default {
     },
 
     async getProfile() {
-      this.error = null
-      try {
-        let response = await this.$axios.get(`/users/${this.myID}/profile`, {
-          headers: {
-            Authorization: localStorage.getItem("username")
-          }
-        })
-        this.userProfile = response.data
-        localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-        this.$router.push({path: `/users/${this.myID}/profile`})
-      } catch (e) {
-        if (e.response && e.response.status === 400) {
-          this.error = "Failed to get user's profile.";
-        } else if (e.response && e.response.status === 404) {
-          this.error = "User not found.";
-        } else if (e.response && e.response.status === 500) {
-          this.error = "An internal error occurred, please try again later.";
-        } else {
-          this.error = e.toString();
-        }
-      }
+      await this.$router.push({path: `/users/${this.myID}/profile`})
     },
 
     async searchUser() {
@@ -141,7 +124,7 @@ export default {
             }
           })
           this.userProfile = res.data
-          localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
           this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
         } catch (e) {
           if (e.response && e.response.status === 400) {
@@ -170,7 +153,7 @@ export default {
     async toggleSearchInput() {
       this.showSearchInput = !this.showSearchInput;
       if (!this.showSearchInput) {
-        localStorage.removeItem(this.newUsername)
+        await localStorage.removeItem(this.newUsername)
         this.newUsername = ""
       }
     },
@@ -203,7 +186,7 @@ export default {
               </RouterLink>
             </li>
             <li class="nav-item">
-              <RouterLink :to="'/users/' + userProfile.profile.ID + '/profile'" class="nav-link" style="font-size: 20px;" @click="getProfile">
+              <RouterLink :to="'/users/' + myID + '/profile'" class="nav-link" style="font-size: 20px;" @click="getProfile">
                 <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#user"/></svg>
                 Profile
               </RouterLink>

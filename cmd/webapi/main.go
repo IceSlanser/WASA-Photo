@@ -170,6 +170,9 @@ func run() error {
 		if err != nil {
 			logger.WithError(err).Warning("error during graceful shutdown of HTTP server")
 			err = apiserver.Close()
+			if err != nil {
+				return fmt.Errorf("could not stop server: %w", err)
+			}
 		}
 	}
 

@@ -9,7 +9,8 @@ import (
 	"net/http"
 )
 
-//  doLogin If the username does not exist, it will create a new profile, and an identifier is returned.
+//	doLogin If the username does not exist, it will create a new profile, and an identifier is returned.
+//
 // If the username exists, the profile identifier is returned.
 func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get the username from the requestBody
@@ -99,6 +100,11 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 			var temp database.User
 			fullComment.Comment = NewComment(DBComment)
 			temp, err = rt.db.GetProfile(UID, fullComment.Comment.OwnerID)
+			if err != nil {
+				ctx.Logger.WithError(err).Error("Failed to GetProfile")
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
 			fullComment.Username = temp.Username
 			fullPost.FullComments = append(fullPost.FullComments, fullComment)
 		}

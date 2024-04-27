@@ -59,6 +59,11 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 		var temp database.User
 		fullComment.Comment = NewComment(DBComment)
 		temp, err = rt.db.GetProfile(myUID, fullComment.Comment.OwnerID)
+		if err != nil {
+			ctx.Logger.WithError(err).Error("Failed to GetProfile")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		fullComment.Username = temp.Username
 		fullPost.FullComments = append(fullPost.FullComments, fullComment)
 	}

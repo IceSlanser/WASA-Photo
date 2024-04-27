@@ -106,6 +106,9 @@ func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64
 				FROM follows 
 				WHERE FollowerUID = ? AND FollowedUID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
 	followingRows, err := db.c.Query(query, userID, myUID)
+	if err != nil {
+		return nil, nil, err
+	}
 	var followings []uint64
 	for followingRows.Next() {
 		var followingUID uint64
@@ -124,6 +127,9 @@ func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64
 				FROM follows 
 				WHERE FollowedUID = ? AND FollowedUID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
 	followerRows, err := db.c.Query(query2, userID, myUID)
+	if err != nil {
+		return nil, nil, err
+	}
 	var followers []uint64
 	for followerRows.Next() {
 		var followerUID uint64

@@ -8,6 +8,9 @@ import (
 func (db *appdbimpl) GetUserPosts(myUID uint64, userID uint64) ([]Post, error) {
 	// Store posts
 	rows, err := db.c.Query("SELECT * FROM posts WHERE ProfileID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", userID, myUID)
+	if err != nil {
+		return nil, err
+	}
 	var posts []Post
 	for rows.Next() {
 		var post Post
@@ -104,6 +107,9 @@ func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]string, error) {
 				FROM likes
 				WHERE PostID = ? AND OwnerID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
 	rows, err := db.c.Query(query, postID, myUID)
+	if err != nil {
+		return nil, err
+	}
 	var likeOwners []string
 	for rows.Next() {
 		var ownerID uint64
@@ -191,6 +197,9 @@ func (db *appdbimpl) GetComments(myUID uint64, postID uint64) ([]Comment, error)
 				FROM comments 
 				WHERE PostID = ? AND OwnerID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)`
 	rows, err := db.c.Query(query, postID, myUID)
+	if err != nil {
+		return nil, err
+	}
 	var comments []Comment
 	for rows.Next() {
 		var comment Comment

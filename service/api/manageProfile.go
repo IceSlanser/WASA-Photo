@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/IceSlanserUni/WASAPhoto/service/utils"
-
 	"github.com/IceSlanserUni/WASAPhoto/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
 )
@@ -39,6 +37,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	userIDStr := ps.ByName("UID")
 	userID, _ := strconv.Atoi(userIDStr)
 	dbProfile, err := rt.db.GetProfile(myUID, uint64(userID))
+
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetProfile")
 		w.WriteHeader(http.StatusNotFound)
@@ -56,6 +55,12 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Convert DBPosts to APIPosts
 	for _, DBPost := range DBPosts {
 		APIPost := NewPost(DBPost)
+		APIPost.Username, err = rt.IDtoUsername(DBPost.ProfileID)
+		if err != nil {
+			ctx.Logger.WithError(err).Error("Failed to IDtoUsername")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		userProfile.Posts = append(userProfile.Posts, APIPost)
 	}
 
@@ -321,7 +326,7 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Check file extension
-	if !utils.IsMediaFile(handler.Filename) {
+	if !IsMediaFile(handler.Filename) {
 		ctx.Logger.WithError(err).Error("Uploading a non media-type file")
 		w.WriteHeader(http.StatusBadRequest)
 		return

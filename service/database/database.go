@@ -41,6 +41,7 @@ type AppDatabase interface {
 	LoginUser(string) (User, bool, error)
 	SetUsername(uint64, string) error
 	IsAvailable(string) (uint64, bool)
+	IDtoUsername(uint64) (string, error)
 
 	GetProfile(uint64, uint64) (User, error)
 	GetUserPosts(uint64, uint64) ([]Post, error)

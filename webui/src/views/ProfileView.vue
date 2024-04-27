@@ -30,7 +30,9 @@ export default {
       profileOwner: "",
       newUsername: "",
       newPhoto: "",
-      newText: "",
+      newDescription: "",
+      newSearch: "",
+      newComments: ["",],
       fullPost: {
         post: {
           ID: 0,
@@ -133,15 +135,16 @@ export default {
       try {
         let formData = new FormData();
         formData.append('file', this.newPhoto);
-        formData.append('description', this.newText)
+        formData.append('description', this.newDescription)
         await this.$axios.post("/posts", formData, {
           headers: {
             Authorization: localStorage.getItem("username"),
             "Content-Type": "multipart/form-data"
           }
         })
-        await this.getProfile();
-        window.location.reload()
+        this.togglePhotoInput()
+        this.newComments = ["",];
+        await this.getProfile()
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to upload a new photo.";
@@ -168,8 +171,8 @@ export default {
         if (this.myUsername) {
           this.userProfile.posts = this.userProfile.posts.filter(post => post.ID !== postID);
           await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          await this.getProfile()
         }
-        window.location.reload()
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to delete photo";
@@ -194,17 +197,17 @@ export default {
               Authorization: localStorage.getItem("username")
             }
           })
-          await  localStorage.setItem("username", this.newUsername);
           this.userProfile.profile.username = this.newUsername;
-          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-          window.location.reload()
+          await localStorage.setItem("username", this.newUsername);
+          await this.getProfile();
+          window.location.reload();
         } catch (e) {
           if (e.response && e.response.status === 400) {
-            this.error = "Failed to request new username.";
+            this.error = "This username is not available";
           } else if (e.response && e.response.status === 401) {
-            this.error = "setMyUserName not authorized";
+            this.error = "Operation not authorized";
           } else if (e.response && e.response.status === 500) {
-            this.error = "An internal error occurred, please try again later.";
+            this.error = "An internal error occurred, please try again later";
           } else {
             this.error = e.toString();
           }
@@ -315,7 +318,8 @@ export default {
       try {
         let i = this.userProfile.posts.findIndex(post => post.ID === postID);
         let formData = new FormData();
-        formData.append('text', this.newText)
+        let tmp = this.newComments.reverse();
+        formData.append('text', tmp[i])
         await this.$axios.post(`/posts/${postID}/comments`, formData, {
           headers: {
             Authorization: localStorage.getItem("username"),
@@ -323,7 +327,6 @@ export default {
         })
         this.userProfile.posts[i].comment_count++;
         await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-        window.location.reload()
         await this.toggleCommentInput(postID)
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -354,7 +357,6 @@ export default {
           this.userProfile.posts[i].comment_count--;
           await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         }
-        window.location.reload()
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to delete.";
@@ -518,7 +520,7 @@ export default {
       if (!this.showUploadInput) {
         await localStorage.removeItem(this.newPhoto)
         this.newPhoto = ""
-        this.newText = ""
+        this.newDescription = ""
       }
     },
 
@@ -526,8 +528,7 @@ export default {
       let i = this.userProfile.posts.findIndex(post => post.ID === postID);
       this.userProfile.posts[i].showCommentInput = !this.userProfile.posts[i].showCommentInput;
       if (!this.userProfile.posts[i].showCommentInput) {
-        await localStorage.removeItem((this.newText))
-        this.newText = ""
+        this.newComments[i] = ""
       }
       await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
     },
@@ -575,7 +576,7 @@ export default {
 
 
   <div class="post-grid">
-    <div v-for="post in sortedPosts" :key="post.ID" class="post-container">
+    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container">
       <img v-if="post.file" :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid align-content-center">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
       <div class="d-flex justify-content-between">
@@ -597,7 +598,7 @@ export default {
           <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
         </button>
         <div v-if="post.showCommentInput" style="margin-right: 10px;">
-          <input type="text" id="newDescription" v-model="newText" class="form-control form-control-sm"
+          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm"
                  placeholder="comment text" aria-label="Recipient's comment" aria-describedby="basic-addon2">
           <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.ID)">
             <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
@@ -669,7 +670,7 @@ export default {
               </button>
               <div v-if="showUploadInput" style="margin-right: 10px;">
                 <input type="file" id="newPhoto" @change="handleFileChange" class="form-control form-control-sm">
-                <input type="text" id="newDescription" v-model="newText" class="form-control form-control-sm"
+                <input type="text" id="newDescription" v-model="newDescription" class="form-control form-control-sm"
                        placeholder="Photo description" aria-label="Recipient's description"
                        aria-describedby="basic-addon2">
               </div>

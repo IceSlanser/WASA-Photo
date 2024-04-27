@@ -44,6 +44,12 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 	fullPost.Post = NewPost(DBPost)
+	fullPost.Post.Username, err = rt.IDtoUsername(DBPost.ProfileID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to IDtoUsername")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 
 	// Get postComments
 	var DBComments []database.Comment

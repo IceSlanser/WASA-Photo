@@ -86,7 +86,7 @@ func (db *appdbimpl) GetStream(UID uint64) ([]Post, error) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
-		err = rows.Scan(&post.ID, &post.ProfileID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
+		err = rows.Scan(&post.ID, &post.Profile_ID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
 		if err != nil {
 			return nil, err
 		}
@@ -280,4 +280,15 @@ func (db *appdbimpl) IsValidProfile(ID uint64) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func (db *appdbimpl) IDtoUsername(ID uint64) (string, error) {
+	var username string
+	err := db.c.QueryRow("SELECT Username FROM profiles WHERE ID = ?", ID).Scan(&username)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", err
+		}
+	}
+	return username, nil
 }

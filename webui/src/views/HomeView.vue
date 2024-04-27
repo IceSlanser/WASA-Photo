@@ -36,7 +36,7 @@ export default {
         {
           post: {
             ID: 0,
-            profile_ID: 0,
+            profile_username: "",
             file: "",
             description: "",
             like_count: 0,
@@ -66,6 +66,15 @@ export default {
       showCommentWindow: false,
       showLikeWindow: false,
     }
+  },
+
+  computed: {
+    sortedPosts() {
+      if (!this.stream) {
+        this.stream = []
+      }
+      return this.stream.slice().sort((a, b) => new Date(b.post.date_time) - new Date(a.post.date_time));
+    },
   },
 
   mounted() {
@@ -164,7 +173,6 @@ export default {
 </script>
 
 <template>
-
   <div>
     <div style="display: flex; justify-content: center;">
       <h2 class="h2">Home</h2>
@@ -172,6 +180,44 @@ export default {
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
 
     <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
+  </div>
+
+  <div class="post-grid">
+    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container">
+      <img v-if="post.post.file" :src="'data:image/jpeg;base64,' + post.post.file" alt="Post Image" class="post-image img-fluid align-content-center">
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
+      <div class="d-flex justify-content-between">
+        <p><span style="font-weight: bold;">{{ post.post.profile_ID }}</span>: {{ post.post.description }}</p>
+        <p>{{post.post.date_time}}</p>
+      </div>
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
+      <button type="button" class="btn" @click="showLikes(post.ID)">
+        Likes: {{ post.post.like_count}}
+      </button>
+      <button type="button" class="btn mb-1" @click="toggleLike(post.ID)">
+        <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
+      </button>
+      <div>
+        <button type="button" class="btn" @click="showComments(post.ID)">
+          Comments: {{ post.post.comment_count }}
+        </button>
+        <button type="button" class="btn mb-1" @click="toggleCommentInput(post.ID)">
+          <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
+        </button>
+        <div v-if="post.post.showCommentInput" style="margin-right: 10px;">
+          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm"
+                 placeholder="comment text" aria-label="Recipient's comment" aria-describedby="basic-addon2">
+          <button v-if="post.post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.ID)">
+            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
+        <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
+          <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="container-fluid">

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/IceSlanserUni/WASAPhoto/service/api/reqcontext"
 	"github.com/IceSlanserUni/WASAPhoto/service/database"
-	"github.com/IceSlanserUni/WASAPhoto/service/utils"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 )
@@ -14,7 +13,7 @@ import (
 // If the username exists, the profile identifier is returned.
 func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Get the username from the requestBody
-	username, err := utils.GetMyUsername(r)
+	username, err := GetMyUsername(r)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to parse request body")
 		w.WriteHeader(http.StatusBadRequest)
@@ -22,7 +21,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// Check if the input username is legal
-	isLegal, err := utils.IsLegal(username)
+	isLegal, err := IsLegal(username)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Error during func isLegal")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -85,6 +84,12 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	for _, DBPost := range DBPosts {
 		var fullPost FullPost
 		fullPost.Post = NewPost(DBPost)
+		fullPost.Post.Username, err = rt.IDtoUsername(DBPost.ProfileID)
+		if err != nil {
+			ctx.Logger.WithError(err).Error("Failed to IDtoUsername")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 
 		// Get postComments
 		var DBComments []database.Comment
@@ -148,7 +153,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	// Get the new username from the requestBody
-	newName, err := utils.GetMyUsername(r)
+	newName, err := GetMyUsername(r)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetMyUserName")
 		w.WriteHeader(http.StatusBadRequest)
@@ -156,7 +161,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	// Check if the input username is legal
-	isLegal, err := utils.IsLegal(newName)
+	isLegal, err := IsLegal(newName)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Error during func IsLegal")
 		w.WriteHeader(http.StatusInternalServerError)

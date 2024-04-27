@@ -1,4 +1,4 @@
-package utils
+package api
 
 import (
 	"encoding/json"
@@ -38,4 +38,12 @@ func IsMediaFile(filename string) bool {
 		return true
 	}
 	return false
+}
+
+func (rt *_router) IDtoUsername(ID uint64) (string, error) {
+	username, err := rt.db.IDtoUsername(ID)
+	if err != nil {
+		return "", err
+	}
+	return username, nil
 }

@@ -14,7 +14,7 @@ func (db *appdbimpl) GetUserPosts(myUID uint64, userID uint64) ([]Post, error) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
-		err = rows.Scan(&post.ID, &post.Profile_ID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
+		err = rows.Scan(&post.ID, &post.ProfileID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
 		if err != nil {
 			return nil, err
 		}
@@ -30,7 +30,7 @@ func (db *appdbimpl) GetUserPosts(myUID uint64, userID uint64) ([]Post, error) {
 func (db *appdbimpl) GetPostInfo(myUID uint64, postID uint64) (Post, error) {
 	// Store posts
 	var post Post
-	err := db.c.QueryRow("SELECT * FROM posts WHERE ID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", postID, myUID).Scan(&post.ID, &post.Profile_ID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
+	err := db.c.QueryRow("SELECT * FROM posts WHERE ID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", postID, myUID).Scan(&post.ID, &post.ProfileID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
 	if err != nil {
 		return Post{}, err
 	}

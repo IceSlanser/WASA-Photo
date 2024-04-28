@@ -31,6 +31,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 		Posts      []Post   `json:"posts"`
 		Followings []uint64 `json:"followings"`
 		Followers  []uint64 `json:"followers"`
+		BannedFrom []uint64 `json:"banned_from"`
 	}
 
 	// Get Profile
@@ -68,6 +69,14 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	userProfile.Followings, userProfile.Followers, err = rt.db.GetFollows(myUID, userProfile.Profile.ID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode GetFollows")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	// Get userBans
+	userProfile.BannedFrom, err = rt.db.GetBannedFrom(userProfile.Profile.ID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode getBans")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

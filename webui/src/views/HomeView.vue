@@ -29,14 +29,15 @@ export default {
           }
         ],
         followings: [],
-        followers: []
+        followers: [],
+        bannedFrom: [],
       },
 
       stream: [
         {
           post: {
             ID: 0,
-            profile_username: "",
+            username: "",
             file: "",
             description: "",
             like_count: 0,
@@ -62,9 +63,38 @@ export default {
           ]
         }
       ],
+
+      newComments: ["",],
+      fullPost: {
+        post: {
+          ID: 0,
+          like_count: 0,
+          comment_count: 0,
+        },
+        like_owners: [
+          {
+            username: "",
+          }
+        ],
+        full_comments: [
+          {
+            username: "",
+            comment: {
+              ID: 0,
+              post_ID: 0,
+              owner_ID: 0,
+              owner_username: "",
+              text: "",
+              date_time: "",
+            }
+          }
+        ],
+      },
+
       showSearchInput: false,
       showCommentWindow: false,
       showLikeWindow: false,
+      showLoading: false
     }
   },
 
@@ -89,6 +119,7 @@ export default {
 
     async getStream() {
       this.error = null
+      this.showLoading = true;
       try {
         let response = await this.$axios.get(`/stream`, {
           headers: {
@@ -96,10 +127,8 @@ export default {
           }
         })
         this.stream = response.data
-        if (this.stream == null) {
-          this.stream = []
-        }
         await localStorage.setItem("stream", JSON.stringify(this.stream));
+        this.showLoading = false;
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to get stream.";
@@ -167,6 +196,204 @@ export default {
       }
     },
 
+    async toggleLike(postID) {
+      this.error = null;
+      let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+      try {
+        let response = await this.$axios.get(`/posts/${postID}`, {
+          headers: {
+            Authorization: localStorage.getItem("username")
+          }
+        });
+        this.fullPost = response.data;
+        const listOfLikeOwners = this.fullPost.like_owners || [];
+        let isLiked = listOfLikeOwners.includes(this.myUsername);
+
+
+        if (isLiked) {
+          try {
+            await this.$axios.delete(`/posts/${postID}/likes`, {
+              headers: {
+                Authorization: localStorage.getItem("username")
+              }
+            });
+            this.userProfile.posts[i].like_count--;
+
+          } catch (e) {
+            if (e.response && e.response.status === 400) {
+              this.error = "Failed to delete.";
+            } else if (e.response && e.response.status === 401) {
+              this.error = "toggleLike not authorized";
+            } else if (e.response && e.response.status === 404) {
+              this.error = "Post not found";
+            } else {
+              this.error = e.toString();
+            }
+          }
+
+        } else {
+          try {
+            await this.$axios.put(`/posts/${postID}/likes`, {}, {
+              headers: {
+                Authorization: localStorage.getItem("username")
+              }
+            });
+            this.userProfile.posts[i].like_count++;
+
+          } catch (e) {
+            if (e.response && e.response.status === 400) {
+              this.error = "Failed to put.";
+            } else if (e.response && e.response.status === 401) {
+              this.error = "toggleLike not authorized";
+            } else if (e.response && e.response.status === 404) {
+              this.error = "Post not found";
+            } else {
+              this.error = e.toString();
+            }
+          }
+
+        }
+        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.error = "Failed to request post.";
+        } else if (e.response && e.response.status === 401) {
+          this.error = "toggleLike not authorized";
+        } else if (e.response && e.response.status === 404) {
+          this.error = "Post not found.";
+        } else if (e.response && e.response.status === 500) {
+          this.error = "Internal Server Error.";
+        } else {
+          this.error = e.toString();
+        }
+      }
+    },
+
+    async showLikes(postID) {
+      this.error = null;
+      try {
+        let response = await this.$axios.get(`/posts/${postID}`, {
+          headers: {
+            Authorization: localStorage.getItem("username")
+          }
+        });
+        this.fullPost = response.data;
+        await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
+        this.showLikeWindow = true
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.error = "Failed to request post.";
+        } else if (e.response && e.response.status === 401) {
+          this.error = "toggleLike not authorized";
+        } else if (e.response && e.response.status === 404) {
+          this.error = "Post not found.";
+        } else if (e.response && e.response.status === 500) {
+          this.error = "Internal Server Error.";
+        } else {
+          this.error = e.toString();
+        }
+      }
+    },
+
+    async commentPhoto(postID) {
+      try {
+        let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+        let formData = new FormData();
+        let tmp = this.newComments.reverse();
+        formData.append('text', tmp[i])
+        await this.$axios.post(`/posts/${postID}/comments`, formData, {
+          headers: {
+            Authorization: localStorage.getItem("username"),
+          }
+        })
+        this.userProfile.posts[i].comment_count++;
+        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+        await this.toggleCommentInput(postID)
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.error = "Failed to request new comment.";
+        } else if (e.response && e.response.status === 401) {
+          this.error = "commentPhoto not authorized.";
+        } else if (e.response && e.response.status === 404) {
+          this.error = "Data not found.";
+        } else if (e.response && e.response.status === 500) {
+          this.error = "An internal error occurred, please try again later.";
+        } else {
+          this.error = e.toString();
+        }
+      }
+    },
+
+    async deleteComment(postID, commentID) {
+      this.error = null
+      try {
+        await this.$axios.delete(`/posts/${postID}/comments/${commentID}`, {
+          headers: {
+            Authorization: localStorage.getItem("username")
+          }
+        })
+        if (this.myUsername) {
+          let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+          this.fullPost.full_comments = this.fullPost.full_comments.filter(comment => comment.post_ID !== comment.post_ID);
+          this.userProfile.posts[i].comment_count--;
+          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+        }
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.error = "Failed to delete.";
+        } else if (e.response && e.response.status === 401) {
+          this.error = "deleteComment not authorized";
+        } else if (e.response && e.response.status === 404) {
+          this.error = "Comment not found";
+        } else {
+          this.error = e.toString();
+        }
+      }
+    },
+
+    async showComments(postID) {
+      this.error = null;
+      try {
+        let response = await this.$axios.get(`/posts/${postID}`, {
+          headers: {
+            Authorization: localStorage.getItem("username")
+          }
+        });
+        this.fullPost = response.data;
+        await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
+        this.showCommentWindow = true
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.error = "Failed to request post.";
+        } else if (e.response && e.response.status === 401) {
+          this.error = "toggleLike not authorized";
+        } else if (e.response && e.response.status === 404) {
+          this.error = "Post not found.";
+        } else if (e.response && e.response.status === 500) {
+          this.error = "Internal Server Error.";
+        } else {
+          this.error = e.toString();
+        }
+      }
+    },
+
+    async toggleCommentInput(postID) {
+      let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+      this.userProfile.posts[i].showCommentInput = !this.userProfile.posts[i].showCommentInput;
+      if (!this.userProfile.posts[i].showCommentInput) {
+        this.newComments[i] = ""
+      }
+      await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
+    },
+
+    async closeLikeWindow() {
+      this.showLikeWindow = false
+    },
+
+    async closeCommentWindow() {
+      this.showCommentWindow = false
+    },
+
   }
 }
 
@@ -182,13 +409,20 @@ export default {
     <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
   </div>
 
-  <div class="post-grid">
-    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container">
-      <img v-if="post.post.file" :src="'data:image/jpeg;base64,' + post.post.file" alt="Post Image" class="post-image img-fluid align-content-center">
+
+  <div class="loading-container" v-if="showLoading">
+    <div class="loading">
+      <h1 class="h1">Loading...</h1>
+      <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#loader"/></svg>
+    </div >
+  </div>
+  <div class="post-grid" v-else>
+    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container" >
+        <img v-if="post.post.file" :src="'data:image/jpeg;base64,' + post.post.file" alt="Post Image" class="post-image img-fluid align-content-center">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
       <div class="d-flex justify-content-between">
-        <p><span style="font-weight: bold;">{{ post.post.profile_ID }}</span>: {{ post.post.description }}</p>
-        <p>{{post.post.date_time}}</p>
+        <p><span style="font-weight: bold;">{{ post.post.username }}</span>: {{ post.post.description }}</p>
+        <p>{{ post.post.date_time }}</p>
       </div>
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
       <button type="button" class="btn" @click="showLikes(post.ID)">
@@ -212,13 +446,34 @@ export default {
           </button>
         </div>
       </div>
-      <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
-        <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
-          <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
-        </button>
-      </div>
     </div>
   </div>
+
+  <div class="liked-users-overlay" v-if="this.showLikeWindow">
+    <div class="liked-users-modal">
+      <h2>Likes</h2>
+      <ul>
+        <li v-for="username in this.fullPost.like_owners" :key="username">{{ username }}</li>
+      </ul>
+      <button @click="this.closeLikeWindow()">Close</button>
+    </div>
+  </div>
+
+  <div class="liked-users-overlay" v-if="this.showCommentWindow">
+    <div class="liked-users-modal">
+      <h2>Comments</h2>
+      <ul>
+        <li v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username">
+          {{ fullComment.username + ": " + fullComment.comment.text }}
+          <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-button mb-2" @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
+            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
+          </button>
+        </li>
+      </ul>
+      <button @click="this.closeCommentWindow()">Close</button>
+    </div>
+  </div>
+
 
   <div class="container-fluid">
     <div class="row">
@@ -271,4 +526,38 @@ export default {
 </template>
 
 <style>
+.post-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(33.33% - 15px), 1fr));
+  grid-gap: 15px;
+}
+
+.post-container {
+  position: relative;
+  border: 2px solid #ccc;
+  margin-bottom: 20px;
+  width: 100%;
+  margin-top: 50px;
+  justify-content: center;
+}
+
+.post-image {
+  object-fit: cover;
+  aspect-ratio: 1.91/1;
+  display: block;
+  margin: 0 auto;
+  height: 275px;
+}
+
+.loading-container {
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%
+}
+
+.loading {
+  text-align: center;
+}
+
 </style>

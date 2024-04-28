@@ -25,8 +25,9 @@ export default {
           }
         ],
         followings: [],
-        followers: []
-      },
+        followers: [],
+        banned_from: [],
+      } ,
       profileOwner: "",
       newUsername: "",
       newPhoto: "",
@@ -63,7 +64,8 @@ export default {
       showUploadInput: false,
       showCommentInput: false,
       showLikeWindow: false,
-      showCommentWindow: false
+      showCommentWindow: false,
+      showLoading: false
     }
   },
 
@@ -82,6 +84,12 @@ export default {
       return this.userProfile.followers.includes(Number(this.myID));
     },
 
+    isBanned() {
+      if (!this.userProfile.banned_from) {
+        this.userProfile.banned_from = []
+      }
+      return this.userProfile.banned_from.includes(Number(this.myID));
+    },
   },
 
   mounted() {
@@ -96,6 +104,8 @@ export default {
 
     async getProfile() {
       this.error = null
+      this.showLoading = true;
+      console.log(this.userProfile.banned_from)
       try {
         let response = await this.$axios.get(`/users/${this.myID}/profile`, {
           headers: {
@@ -112,6 +122,8 @@ export default {
         if (this.userProfile.followers == null) {
           this.userProfile.followers = []
         }
+        this.showLoading = false;
+        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to get user's profile.";
@@ -123,6 +135,66 @@ export default {
           this.error = e.toString();
         }
       }
+      console.log(this.userProfile.banned_from)
+    },
+
+    async searchUser() {
+      this.showLoading = true;
+      this.error = null;
+      console.log(this.userProfile.banned_from)
+      try {
+        let response = await this.$axios.get(`/users?username=${this.profileOwner}`, {
+          headers: {
+            Authorization: localStorage.getItem("username")
+          }
+        })
+        this.userProfile.profile.ID = response.data
+        try {
+          let res = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
+            headers: {
+              Authorization: localStorage.getItem("username")
+            }
+          })
+          this.userProfile = res.data
+          if (this.userProfile.posts == null) {
+            this.userProfile.posts = []
+          }
+          if (this.userProfile.followings == null) {
+            this.userProfile.followings = []
+          }
+          if (this.userProfile.followers == null) {
+            this.userProfile.followers = []
+          }
+          if (this.userProfile.banned_from == null) {
+            this.userProfile.banned_from = []
+          }
+          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          await this.toggleSearchInput()
+          this.showLoading = false;
+          this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
+        } catch (e) {
+          if (e.response && e.response.status === 400) {
+            this.error = "Failed to request user's profile";
+          } else if (e.response && e.response.status === 404) {
+            this.error = "User not found";
+          } else if (e.response && e.response.status === 500) {
+            this.error = "An internal error occurred, please try again later";
+          } else {
+            this.error = e.toString();
+          }
+        }
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.error = "Failed to request user's profile.";
+        } else if (e.response && e.response.status === 404) {
+          this.error = "User not found.";
+        } else if (e.response && e.response.status === 500) {
+          this.error = "An internal error occurred, please try again later.";
+        } else {
+          this.error = e.toString();
+        }
+      }
+      console.log(this.userProfile.banned_from)
     },
 
     handleFileChange(event) {
@@ -131,6 +203,7 @@ export default {
 
       reader.readAsArrayBuffer(this.newPhoto);
     },
+
     async uploadPhoto() {
       try {
         let formData = new FormData();
@@ -142,7 +215,7 @@ export default {
             "Content-Type": "multipart/form-data"
           }
         })
-        this.togglePhotoInput()
+        await this.togglePhotoInput()
         this.newComments = ["",];
         await this.getProfile()
       } catch (e) {
@@ -396,49 +469,6 @@ export default {
       }
     },
 
-    async searchUser() {
-      this.error = null
-      try {
-        let response = await this.$axios.get(`/users?username=${this.profileOwner}`, {
-          headers: {
-            Authorization: localStorage.getItem("username")
-          }
-        })
-        this.userProfile.profile.ID = response.data
-        try {
-          let res = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
-            headers: {
-              Authorization: localStorage.getItem("username")
-            }
-          })
-          this.userProfile = res.data
-          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-          await this.toggleSearchInput()
-          this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
-        } catch (e) {
-          if (e.response && e.response.status === 400) {
-            this.error = "Failed to request user's profile.";
-          } else if (e.response && e.response.status === 404) {
-            this.error = "User not found.";
-          } else if (e.response && e.response.status === 500) {
-            this.error = "An internal error occurred, please try again later.";
-          } else {
-            this.error = e.toString();
-          }
-        }
-      } catch (e) {
-        if (e.response && e.response.status === 400) {
-          this.error = "Failed to request user's profile.";
-        } else if (e.response && e.response.status === 404) {
-          this.error = "User not found.";
-        } else if (e.response && e.response.status === 500) {
-          this.error = "An internal error occurred, please try again later.";
-        } else {
-          this.error = e.toString();
-        }
-      }
-    },
-
     async toggleFollow(UID) {
       if (this.userProfile.followers === null) {
         this.userProfile.followers = []
@@ -457,9 +487,9 @@ export default {
 
         } catch (e) {
           if (e.response && e.response.status === 400) {
-            this.error = "Failed to follow";
+            this.error = "Failed to unfollow";
           } else if (e.response && e.response.status === 401) {
-            this.error = "followUser not authorized";
+            this.error = "Operation not authorized";
           } else {
             this.error = e.toString();
           }
@@ -477,11 +507,11 @@ export default {
 
         } catch (e) {
           if (e.response && e.response.status === 400) {
-            this.error = "Failed to delete.";
+            this.error = "Failed to follow";
           } else if (e.response && e.response.status === 401) {
-            this.error = "deleteComment not authorized";
+            this.error = "Operation not authorized";
           } else if (e.response && e.response.status === 404) {
-            this.error = "Comment not found";
+            this.error = "User not found";
           } else {
             this.error = e.toString();
           }
@@ -490,6 +520,54 @@ export default {
       await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
 
     },
+
+    async toggleBan(UID) {
+      const isBanned = this.userProfile.banned_from.includes(Number(this.myID))
+
+      if (isBanned) {
+        try {
+          await this.$axios.delete(`/users/${UID}/ban`, {
+            headers: {
+              Authorization: localStorage.getItem("username")
+            }
+          });
+          this.userProfile.banned_from = this.userProfile.banned_from.filter(user => user !== Number(this.myID))
+
+        } catch (e) {
+          if (e.response && e.response.status === 400) {
+            this.error = "Failed to unban";
+          } else if (e.response && e.response.status === 401) {
+            this.error = "Operation not authorized";
+          } else {
+            this.error = e.toString();
+          }
+        }
+
+      } else {
+        try {
+          await this.$axios.put(`/users/${UID}/ban`, {}, {
+            headers: {
+              Authorization: localStorage.getItem("username")
+            }
+          });
+          this.userProfile.banned_from.push(Number(this.myID))
+
+        } catch (e) {
+          if (e.response && e.response.status === 400) {
+            this.error = "Failed to ban";
+          } else if (e.response && e.response.status === 401) {
+            this.error = "Operation not authorized";
+          } else if (e.response && e.response.status === 404) {
+            this.error = "User not found";
+          } else {
+            this.error = e.toString();
+          }
+        }
+      }
+      await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
+      console.log(this.userProfile.banned_from)
+    },
+
 
     async closeLikeWindow() {
       this.showLikeWindow = false
@@ -510,8 +588,8 @@ export default {
     async toggleSearchInput() {
       this.showSearchInput = !this.showSearchInput;
       if (!this.showSearchInput) {
-        await localStorage.removeItem(this.newUsername)
-        this.newUsername = ""
+        await localStorage.removeItem(this.profileOwner)
+        this.profileOwner = ""
       }
     },
 
@@ -562,9 +640,14 @@ export default {
           <h6 style="margin-right: 10px;">{{ userProfile.profile.follower_count }} Follower</h6>
           <h6 style="margin-right: 10px;">{{ userProfile.profile.following_count }} Following</h6>
           <h6>{{ userProfile.profile.post_count }} Post</h6>
-          <button type="button" class="btn" @click="toggleFollow(userProfile.profile.ID)">
+          <button type="button" class="btn" @click="toggleFollow(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
             <svg :class="{ 'feather': true, 'mb-2': true, 'is-following': isFollowing }">
-              <use :href="isFollowing ? '/feather-sprite-v4.29.0.svg#user-minus' : '/feather-sprite-v4.29.0.svg#user-check'"/>
+              <use :href="isFollowing ? '/feather-sprite-v4.29.0.svg#user-minus' : '/feather-sprite-v4.29.0.svg#user-plus'"/>
+            </svg>
+          </button>
+          <button type="button" class="btn" @click="toggleBan(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
+            <svg :class="{ 'feather': true, 'mb-2': true, 'is-following': isBanned }">
+              <use :href="isBanned ? '/feather-sprite-v4.29.0.svg#user-check' : '/feather-sprite-v4.29.0.svg#user-x'"/>
             </svg>
           </button>
         </div>
@@ -576,7 +659,13 @@ export default {
 
 
   <div class="post-grid">
-    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container">
+    <div class="loading-container" v-if="showLoading">
+      <div class="loading">
+        <h1 class="h1">Loading...</h1>
+        <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#loader"/></svg>
+      </div>
+    </div>
+    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container" v-else>
       <img v-if="post.file" :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid align-content-center">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
       <div class="d-flex justify-content-between">
@@ -749,6 +838,7 @@ export default {
   aspect-ratio: 1.91/1;
   display: block;
   margin: 0 auto;
+  height: 275px;
 }
 
 
@@ -787,4 +877,21 @@ export default {
 .followed .feather-user-minus {
   color: red;
 }
+
+.loading-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  background-color: rgba(255, 255, 255, 0.5); /* Semi-transparent background */
+}
+
+.loading {
+  text-align: center;
+}
+
 </style>

@@ -49,6 +49,7 @@ type AppDatabase interface {
 	GetStream(uint64) ([]Post, error)
 	GetPhoto(uint64, uint64) ([]byte, error)
 	GetFollows(uint64, uint64) ([]uint64, []uint64, error)
+	GetBannedFrom(uint64) ([]uint64, error)
 	GetComments(uint64, uint64) ([]Comment, error)
 	GetLikes(uint64, uint64) ([]string, error)
 	GetUID(uint64, string) (uint64, error)

@@ -86,7 +86,7 @@ func (db *appdbimpl) GetStream(UID uint64) ([]Post, error) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
-		err = rows.Scan(&post.ID, &post.Profile_ID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
+		err = rows.Scan(&post.ID, &post.ProfileID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
 		if err != nil {
 			return nil, err
 		}
@@ -144,6 +144,31 @@ func (db *appdbimpl) GetFollows(myUID uint64, userID uint64) ([]uint64, []uint64
 	}
 
 	return followings, followers, nil
+}
+
+func (db *appdbimpl) GetBannedFrom(userID uint64) ([]uint64, error) {
+	// Store followings
+	query := `SELECT BannerUID 
+				FROM bans 
+				WHERE BannedUID = ?`
+	banRows, err := db.c.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	var bans []uint64
+	for banRows.Next() {
+		var banUID uint64
+		err = banRows.Scan(&banUID)
+		if err != nil {
+			return nil, err
+		}
+		bans = append(bans, banUID)
+	}
+	if err = banRows.Err(); err != nil {
+		return nil, err
+	}
+
+	return bans, nil
 }
 
 func (db *appdbimpl) PutFollow(UID uint64, followedUID uint64) (bool, error) {
@@ -225,12 +250,12 @@ func (db *appdbimpl) PutBan(UID uint64, bannedUID uint64) (bool, error) {
 	}
 
 	var banID uint64
-	// Try to insert the follow into the database
+	// Try to insert the ban into the database
 	_, err = db.c.Exec("INSERT INTO bans(BannerUID, BannedUID) VALUES (?, ?)", UID, bannedUID)
 	if err != nil {
 		err = db.c.QueryRow("SELECT ID FROM bans WHERE BannerUID = ? AND BannedUID = ?", UID, bannedUID).Scan(&banID)
 		if err != nil {
-			// There is already an existent follow
+			// There is already an existent ban
 			if errors.Is(err, sql.ErrNoRows) {
 				return false, err
 			}

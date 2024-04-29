@@ -75,8 +75,9 @@ func (db *appdbimpl) GetStream(UID uint64) ([]Post, error) {
 	query := `SELECT posts.*
 				FROM posts
 				LEFT JOIN follows ON FollowedUID = ProfileID
-				WHERE ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?) AND follows.FollowerUID = ?`
-	rows, err := db.c.Query(query, UID, UID)
+				WHERE ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)
+				AND ProfileID NOT IN (SELECT BannedUID FROM bans WHERE BannerUID = ?) AND follows.FollowerUID = ?`
+	rows, err := db.c.Query(query, UID, UID, UID)
 
 	if err != nil {
 		return nil, err
@@ -87,6 +88,30 @@ func (db *appdbimpl) GetStream(UID uint64) ([]Post, error) {
 	for rows.Next() {
 		var post Post
 		err = rows.Scan(&post.ID, &post.ProfileID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// query my posts
+	query2 := `SELECT posts.*
+				FROM posts
+				WHERE ProfileID = ?`
+	rows2, err := db.c.Query(query2, UID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Store my posts
+	for rows2.Next() {
+		var post Post
+		err = rows2.Scan(&post.ID, &post.ProfileID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
 		if err != nil {
 			return nil, err
 		}

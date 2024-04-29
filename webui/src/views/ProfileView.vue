@@ -105,7 +105,6 @@ export default {
     async getProfile() {
       this.error = null
       this.showLoading = true;
-      console.log(this.userProfile.banned_from)
       try {
         let response = await this.$axios.get(`/users/${this.myID}/profile`, {
           headers: {
@@ -122,26 +121,28 @@ export default {
         if (this.userProfile.followers == null) {
           this.userProfile.followers = []
         }
+        if (this.userProfile.banned_from == null) {
+          this.userProfile.banned_from = []
+        }
         this.showLoading = false;
         await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
       } catch (e) {
+        this.showLoading = false;
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to get user's profile.";
+          this.error = "Failed to get user's profile";
         } else if (e.response && e.response.status === 404) {
-          this.error = "User not found.";
+          this.error = "User not found";
         } else if (e.response && e.response.status === 500) {
-          this.error = "An internal error occurred, please try again later.";
+          this.error = "An internal error occurred, please try again later";
         } else {
           this.error = e.toString();
         }
       }
-      console.log(this.userProfile.banned_from)
     },
 
     async searchUser() {
-      this.showLoading = true;
       this.error = null;
-      console.log(this.userProfile.banned_from)
+      this.showLoading = true;
       try {
         let response = await this.$axios.get(`/users?username=${this.profileOwner}`, {
           headers: {
@@ -173,6 +174,7 @@ export default {
           this.showLoading = false;
           this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
         } catch (e) {
+          this.showLoading = false;
           if (e.response && e.response.status === 400) {
             this.error = "Failed to request user's profile";
           } else if (e.response && e.response.status === 404) {
@@ -194,7 +196,6 @@ export default {
           this.error = e.toString();
         }
       }
-      console.log(this.userProfile.banned_from)
     },
 
     handleFileChange(event) {
@@ -216,17 +217,17 @@ export default {
           }
         })
         await this.togglePhotoInput()
-        this.newComments = ["",];
+        this.newDescription = "";
         await this.getProfile()
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to upload a new photo.";
+          this.error = "Description too long (max 35 characters)";
         } else if (e.response && e.response.status === 401) {
-          this.error = "uploadPhoto not authorized.";
+          this.error = "Operation not authorized";
         } else if (e.response && e.response.status === 404) {
-          this.error = "Data not found.";
+          this.error = "File not found";
         } else if (e.response && e.response.status === 500) {
-          this.error = "An internal error occurred, please try again later.";
+          this.error = "An internal error occurred, please try again later";
         } else {
           this.error = e.toString();
         }
@@ -250,7 +251,7 @@ export default {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to delete photo";
         } else if (e.response && e.response.status === 401) {
-          this.error = "setMyUserName not authorized";
+          this.error = "Operation not authorized";
         } else if (e.response && e.response.status === 404) {
           this.error = "Post not found";
         } else {
@@ -313,9 +314,9 @@ export default {
 
           } catch (e) {
             if (e.response && e.response.status === 400) {
-              this.error = "Failed to delete.";
+              this.error = "Failed to unlike";
             } else if (e.response && e.response.status === 401) {
-              this.error = "toggleLike not authorized";
+              this.error = "Operation not authorized";
             } else if (e.response && e.response.status === 404) {
               this.error = "Post not found";
             } else {
@@ -334,9 +335,9 @@ export default {
 
           } catch (e) {
             if (e.response && e.response.status === 400) {
-              this.error = "Failed to put.";
+              this.error = "Failed to like";
             } else if (e.response && e.response.status === 401) {
-              this.error = "toggleLike not authorized";
+              this.error = "Operation not authorized";
             } else if (e.response && e.response.status === 404) {
               this.error = "Post not found";
             } else {
@@ -348,13 +349,13 @@ export default {
         await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to request post.";
+          this.error = "Failed to request post";
         } else if (e.response && e.response.status === 401) {
-          this.error = "toggleLike not authorized";
+          this.error = "Operation not authorized";
         } else if (e.response && e.response.status === 404) {
-          this.error = "Post not found.";
+          this.error = "Post not found";
         } else if (e.response && e.response.status === 500) {
-          this.error = "Internal Server Error.";
+          this.error = "An internal error occurred, please try again later";
         } else {
           this.error = e.toString();
         }
@@ -374,13 +375,13 @@ export default {
         this.showLikeWindow = true
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to request post.";
+          this.error = "Failed to request post";
         } else if (e.response && e.response.status === 401) {
-          this.error = "toggleLike not authorized";
+          this.error = "Operation not authorized";
         } else if (e.response && e.response.status === 404) {
-          this.error = "Post not found.";
+          this.error = "Post not found";
         } else if (e.response && e.response.status === 500) {
-          this.error = "Internal Server Error.";
+          this.error = "An internal error occurred, please try again later";
         } else {
           this.error = e.toString();
         }
@@ -403,13 +404,13 @@ export default {
         await this.toggleCommentInput(postID)
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to request new comment.";
+          this.error = "Failed to comment";
         } else if (e.response && e.response.status === 401) {
-          this.error = "commentPhoto not authorized.";
+          this.error = "Operation not authorized";
         } else if (e.response && e.response.status === 404) {
-          this.error = "Data not found.";
+          this.error = "Post not found";
         } else if (e.response && e.response.status === 500) {
-          this.error = "An internal error occurred, please try again later.";
+          this.error = "An internal error occurred, please try again later";
         } else {
           this.error = e.toString();
         }
@@ -432,9 +433,9 @@ export default {
         }
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to delete.";
+          this.error = "Failed to delete comment";
         } else if (e.response && e.response.status === 401) {
-          this.error = "deleteComment not authorized";
+          this.error = "Operation not authorized";
         } else if (e.response && e.response.status === 404) {
           this.error = "Comment not found";
         } else {
@@ -456,13 +457,13 @@ export default {
         this.showCommentWindow = true
       } catch (e) {
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to request post.";
+          this.error = "Failed to request comments";
         } else if (e.response && e.response.status === 401) {
-          this.error = "toggleLike not authorized";
+          this.error = "Operation not authorized";
         } else if (e.response && e.response.status === 404) {
-          this.error = "Post not found.";
+          this.error = "Post not found";
         } else if (e.response && e.response.status === 500) {
-          this.error = "Internal Server Error.";
+          this.error = "An internal error occurred, please try again later";
         } else {
           this.error = e.toString();
         }
@@ -565,7 +566,6 @@ export default {
         }
       }
       await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
-      console.log(this.userProfile.banned_from)
     },
 
 
@@ -634,22 +634,27 @@ export default {
 
   <div class="col-lg-7">
     <div class="d-flex align-items-center">
-      <h1 v-if="this.userProfile" style="white-space: nowrap;">{{ userProfile.profile.username }}</h1>
+      <div>
+        <h1 style="white-space: nowrap; margin-bottom: 0;">{{ userProfile.profile.username }}</h1>
+        <h6 v-if="isBanned" style="color: red; margin-top: 0;">(banned)</h6>
+      </div>
       <div class="col-lg-6 mx-5">
         <div class="d-flex mt-3 justify-content-between align-items-center">
           <h6 style="margin-right: 10px;">{{ userProfile.profile.follower_count }} Follower</h6>
           <h6 style="margin-right: 10px;">{{ userProfile.profile.following_count }} Following</h6>
           <h6>{{ userProfile.profile.post_count }} Post</h6>
-          <button type="button" class="btn" @click="toggleFollow(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
-            <svg :class="{ 'feather': true, 'mb-2': true, 'is-following': isFollowing }">
-              <use :href="isFollowing ? '/feather-sprite-v4.29.0.svg#user-minus' : '/feather-sprite-v4.29.0.svg#user-plus'"/>
-            </svg>
-          </button>
-          <button type="button" class="btn" @click="toggleBan(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
-            <svg :class="{ 'feather': true, 'mb-2': true, 'is-following': isBanned }">
-              <use :href="isBanned ? '/feather-sprite-v4.29.0.svg#user-check' : '/feather-sprite-v4.29.0.svg#user-x'"/>
-            </svg>
-          </button>
+          <div>
+            <button type="button" class="btn" @click="toggleFollow(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
+              <svg :class="{ 'feather': true, 'mb-2': true, 'is-following': isFollowing }">
+                <use :href="isFollowing ? '/feather-sprite-v4.29.0.svg#user-minus' : '/feather-sprite-v4.29.0.svg#user-plus'"/>
+              </svg>
+            </button>
+            <button type="button" class="btn" @click="toggleBan(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
+              <svg :class="{ 'feather': true, 'mb-2': true, 'is-following': isBanned }">
+                <use :href="isBanned ? '/feather-sprite-v4.29.0.svg#user-check' : '/feather-sprite-v4.29.0.svg#user-x'"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -760,7 +765,7 @@ export default {
               <div v-if="showUploadInput" style="margin-right: 10px;">
                 <input type="file" id="newPhoto" @change="handleFileChange" class="form-control form-control-sm">
                 <input type="text" id="newDescription" v-model="newDescription" class="form-control form-control-sm"
-                       placeholder="Photo description" aria-label="Recipient's description"
+                       placeholder="Photo description (max 35 characters)" aria-label="Recipient's description"
                        aria-describedby="basic-addon2">
               </div>
               <button v-if="showUploadInput" type="button" class="btn btn-sm btn-primary" @click="uploadPhoto">Upload

@@ -130,12 +130,13 @@ export default {
         await localStorage.setItem("stream", JSON.stringify(this.stream));
         this.showLoading = false;
       } catch (e) {
+        this.showLoading = false;
         if (e.response && e.response.status === 400) {
-          this.error = "Failed to get stream.";
+          this.error = "Failed to get stream";
         } else if (e.response && e.response.status === 404) {
-          this.error = "Stream not found.";
+          this.error = "User not found";
         } else if (e.response && e.response.status === 500) {
-          this.error = "An internal error occurred, please try again later.";
+          this.error = "An internal error occurred, please try again later";
         } else {
           this.error = e.toString();
         }

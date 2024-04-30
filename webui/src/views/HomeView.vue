@@ -11,6 +11,7 @@ export default {
       newUsername: "",
       profileOwner: "",
       newText: "",
+      userID: 0,
 
       userProfile: {
         profile: {
@@ -42,7 +43,8 @@ export default {
             description: "",
             like_count: 0,
             comment_count: 0,
-            date_time: ""
+            date_time: "",
+            showCommentInput: false
           },
           like_owners: [
             {
@@ -94,7 +96,8 @@ export default {
       showSearchInput: false,
       showCommentWindow: false,
       showLikeWindow: false,
-      showLoading: false
+      showLoading: false,
+      isMyProfile: false,
     }
   },
 
@@ -144,39 +147,28 @@ export default {
     },
 
     async getProfile() {
+      this.isMyProfile = true;
+      localStorage.setItem("isMyProfile", JSON.stringify(this.isMyProfile));
       await this.$router.push({path: `/users/${this.myID}/profile`})
     },
 
     async searchUser() {
-      this.error = null
+      this.error = null;
+      this.showLoading = true;
       try {
         let response = await this.$axios.get(`/users?username=${this.profileOwner}`, {
           headers: {
             Authorization: localStorage.getItem("username")
           }
         })
-        this.userProfile.profile.ID = response.data
-        try {
-          let res = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
-            headers: {
-              Authorization: localStorage.getItem("username")
-            }
-          })
-          this.userProfile = res.data
-          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-          this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
-        } catch (e) {
-          if (e.response && e.response.status === 400) {
-            this.error = "Failed to request user's profile.";
-          } else if (e.response && e.response.status === 404) {
-            this.error = "User not found.";
-          } else if (e.response && e.response.status === 500) {
-            this.error = "An internal error occurred, please try again later.";
-          } else {
-            this.error = e.toString();
-          }
-        }
+        this.userID = response.data
+        this.showLoading = false;
+        this.isMyProfile = false;
+        localStorage.setItem("isMyProfile", this.isMyProfile)
+        await localStorage.setItem("userID", this.userID)
+        this.$router.push({path: `/users/${this.userID}/profile`})
       } catch (e) {
+        await this.getStream()
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request user's profile.";
         } else if (e.response && e.response.status === 404) {
@@ -187,19 +179,20 @@ export default {
           this.error = e.toString();
         }
       }
+      await this.toggleSearchInput()
     },
 
     async toggleSearchInput() {
       this.showSearchInput = !this.showSearchInput;
       if (!this.showSearchInput) {
-        await localStorage.removeItem(this.newUsername)
-        this.newUsername = ""
+        await localStorage.removeItem(this.profileOwner)
+        this.profileOwner = ""
       }
     },
 
     async toggleLike(postID) {
       this.error = null;
-      let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+      let i = this.stream.findIndex(post => post.post.ID === postID);
       try {
         let response = await this.$axios.get(`/posts/${postID}`, {
           headers: {
@@ -218,8 +211,7 @@ export default {
                 Authorization: localStorage.getItem("username")
               }
             });
-            this.userProfile.posts[i].like_count--;
-
+            this.stream[i].post.like_count--;
           } catch (e) {
             if (e.response && e.response.status === 400) {
               this.error = "Failed to delete.";
@@ -239,7 +231,7 @@ export default {
                 Authorization: localStorage.getItem("username")
               }
             });
-            this.userProfile.posts[i].like_count++;
+            this.stream[i].post.like_count++;
 
           } catch (e) {
             if (e.response && e.response.status === 400) {
@@ -254,7 +246,6 @@ export default {
           }
 
         }
-        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request post.";
@@ -297,8 +288,9 @@ export default {
     },
 
     async commentPhoto(postID) {
+      this.error = null;
       try {
-        let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+        let i = this.stream.findIndex(post => post.post.ID === postID);
         let formData = new FormData();
         let tmp = this.newComments.reverse();
         formData.append('text', tmp[i])
@@ -307,8 +299,7 @@ export default {
             Authorization: localStorage.getItem("username"),
           }
         })
-        this.userProfile.posts[i].comment_count++;
-        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+        this.stream[i].post.comment_count++;
         await this.toggleCommentInput(postID)
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -334,10 +325,9 @@ export default {
           }
         })
         if (this.myUsername) {
-          let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+          let i = this.stream.findIndex(post => post.post.ID === postID);
           this.fullPost.full_comments = this.fullPost.full_comments.filter(comment => comment.post_ID !== comment.post_ID);
-          this.userProfile.posts[i].comment_count--;
-          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          this.stream[i].post.comment_count--;
         }
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -379,12 +369,11 @@ export default {
     },
 
     async toggleCommentInput(postID) {
-      let i = this.userProfile.posts.findIndex(post => post.ID === postID);
-      this.userProfile.posts[i].showCommentInput = !this.userProfile.posts[i].showCommentInput;
-      if (!this.userProfile.posts[i].showCommentInput) {
+      let i = this.stream.findIndex(post => post.post.ID === postID);
+      this.stream[i].post.showCommentInput = !this.stream[i].post.showCommentInput;
+      if (!this.stream[i].post.showCommentInput) {
         this.newComments[i] = ""
       }
-      await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
     },
 
     async closeLikeWindow() {
@@ -401,13 +390,16 @@ export default {
 </script>
 
 <template>
+  <div class="d-flex position-relative">
+    <div class="d-flex position-absolute top-0 end-0 mt-3">
+      <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
+    </div>
+  </div>
   <div>
     <div style="display: flex; justify-content: center;">
       <h2 class="h2">Home</h2>
     </div>
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
-
-    <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
   </div>
 
 
@@ -426,23 +418,23 @@ export default {
         <p>{{ post.post.date_time }}</p>
       </div>
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
-      <button type="button" class="btn" @click="showLikes(post.ID)">
+      <button type="button" class="btn" @click="showLikes(post.post.ID)">
         Likes: {{ post.post.like_count}}
       </button>
-      <button type="button" class="btn mb-1" @click="toggleLike(post.ID)">
+      <button type="button" class="btn mb-1" @click="toggleLike(post.post.ID)">
         <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
       </button>
       <div>
-        <button type="button" class="btn" @click="showComments(post.ID)">
+        <button type="button" class="btn" @click="showComments(post.post.ID)">
           Comments: {{ post.post.comment_count }}
         </button>
-        <button type="button" class="btn mb-1" @click="toggleCommentInput(post.ID)">
+        <button type="button" class="btn mb-1" @click="toggleCommentInput(post.post.ID)">
           <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
         </button>
         <div v-if="post.post.showCommentInput" style="margin-right: 10px;">
           <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm"
                  placeholder="comment text" aria-label="Recipient's comment" aria-describedby="basic-addon2">
-          <button v-if="post.post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.ID)">
+          <button v-if="post.post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.post.ID)">
             <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
           </button>
         </div>

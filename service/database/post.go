@@ -265,7 +265,7 @@ func (db *appdbimpl) DeleteComment(UID uint64, postID uint64, commentID uint64) 
 		}
 	}
 
-	// Check if the user are allowed to delete the comment
+	// Check if the user is allowed to delete the comment
 	if ownerID == UID || ownerID == userID {
 		_, err = db.c.Exec("DELETE FROM comments WHERE ID = ?", commentID)
 		if err != nil {

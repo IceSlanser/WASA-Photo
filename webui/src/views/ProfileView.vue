@@ -8,6 +8,8 @@ export default {
       error: null,
       myID: localStorage.getItem("ID"),
       myUsername: localStorage.getItem("username"),
+      userID: localStorage.getItem("userID"),
+      isMyProfile: JSON.parse(localStorage.getItem("isMyProfile")),
       userProfile: {
         profile: {
           ID: 0,
@@ -27,7 +29,7 @@ export default {
         followings: [],
         followers: [],
         banned_from: [],
-      } ,
+      },
       profileOwner: "",
       newUsername: "",
       newPhoto: "",
@@ -105,8 +107,13 @@ export default {
     async getProfile() {
       this.error = null
       this.showLoading = true;
+        if (this.isMyProfile) {
+        this.userProfile.profile.ID = this.myID
+      } else {
+        this.userProfile.profile.ID = this.userID
+      }
       try {
-        let response = await this.$axios.get(`/users/${this.myID}/profile`, {
+        let response = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
           headers: {
             Authorization: localStorage.getItem("username")
           }
@@ -138,6 +145,7 @@ export default {
           this.error = e.toString();
         }
       }
+      this.isMyProfile = true;
     },
 
     async searchUser() {
@@ -169,12 +177,14 @@ export default {
           if (this.userProfile.banned_from == null) {
             this.userProfile.banned_from = []
           }
-          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
-          await this.toggleSearchInput()
           this.showLoading = false;
+          this.isMyProfile = false;
+          localStorage.setItem("isMyProfile", this.isMyProfile)
+          await localStorage.setItem("userID", this.userProfile.profile.ID)
           this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
         } catch (e) {
           this.showLoading = false;
+          await this.getProfile()
           if (e.response && e.response.status === 400) {
             this.error = "Failed to request user's profile";
           } else if (e.response && e.response.status === 404) {
@@ -186,6 +196,7 @@ export default {
           }
         }
       } catch (e) {
+        await this.getProfile()
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request user's profile.";
         } else if (e.response && e.response.status === 404) {
@@ -196,6 +207,8 @@ export default {
           this.error = e.toString();
         }
       }
+      await this.toggleSearchInput();
+      this.isMyProfile = true;
     },
 
     handleFileChange(event) {
@@ -389,6 +402,7 @@ export default {
     },
 
     async commentPhoto(postID) {
+      this.error = null;
       try {
         let i = this.userProfile.posts.findIndex(post => post.ID === postID);
         let formData = new FormData();
@@ -429,7 +443,6 @@ export default {
           let i = this.userProfile.posts.findIndex(post => post.ID === postID);
           this.fullPost.full_comments = this.fullPost.full_comments.filter(comment => comment.post_ID !== comment.post_ID);
           this.userProfile.posts[i].comment_count--;
-          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         }
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -632,27 +645,35 @@ export default {
 
   </div>
 
-  <div class="col-lg-7">
-    <div class="d-flex align-items-center">
-      <div>
+  <div class="col-lg-8">
+    <div >
+      <div class="d-flex align-items-center">
         <h1 style="white-space: nowrap; margin-bottom: 0;">{{ userProfile.profile.username }}</h1>
-        <h6 v-if="isBanned" style="color: red; margin-top: 0;">(banned)</h6>
+        <h6 v-if="isBanned" style="color: red; margin-top: 20px">(banned)</h6>
       </div>
       <div class="col-lg-6 mx-5">
         <div class="d-flex mt-3 justify-content-between align-items-center">
           <h6 style="margin-right: 10px;">{{ userProfile.profile.follower_count }} Follower</h6>
           <h6 style="margin-right: 10px;">{{ userProfile.profile.following_count }} Following</h6>
           <h6>{{ userProfile.profile.post_count }} Post</h6>
-          <div>
+          <div class="ms-5">
             <button type="button" class="btn" @click="toggleFollow(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
-              <svg :class="{ 'feather': true, 'mb-2': true, 'is-following': isFollowing }">
-                <use :href="isFollowing ? '/feather-sprite-v4.29.0.svg#user-minus' : '/feather-sprite-v4.29.0.svg#user-plus'"/>
-              </svg>
+              <div style="display: flex; align-items: center;">
+                <svg :class="{ 'feather': true, 'mb-2': true, 'me-1':true, 'is-following': isFollowing }">
+                  <use :href="isFollowing ? '/feather-sprite-v4.29.0.svg#user-minus' : '/feather-sprite-v4.29.0.svg#user-plus'"/>
+                </svg>
+                <h6 class="btn-follow-text" v-if="isFollowing"> Unfollow </h6>
+                <h6 class="btn-follow-text" v-else> Follow </h6>
+              </div>
             </button>
             <button type="button" class="btn" @click="toggleBan(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
-              <svg :class="{ 'feather': true, 'mb-2': true, 'is-following': isBanned }">
-                <use :href="isBanned ? '/feather-sprite-v4.29.0.svg#user-check' : '/feather-sprite-v4.29.0.svg#user-x'"/>
-              </svg>
+              <div style="display: flex; align-items: center;">
+                <svg :class="{ 'feather': true, 'mb-2': true, 'me-1':true, 'is-following': isBanned }">
+                  <use :href="isBanned ? '/feather-sprite-v4.29.0.svg#user-check' : '/feather-sprite-v4.29.0.svg#user-x'"/>
+                </svg>
+                <h6 class="btn-ban-text" v-if="isBanned">Unban</h6>
+                <h6 class="btn-ban-text" v-else>Ban</h6>
+              </div>
             </button>
           </div>
         </div>
@@ -890,13 +911,22 @@ export default {
   width: 100%;
   height: 100%;
   display: flex;
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  background-color: rgba(255, 255, 255, 0.5); /* Semi-transparent background */
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.5);
 }
 
 .loading {
   text-align: center;
+}
+
+.btn-follow-text {
+  width: 60px;
+  text-align: left;
+}
+.btn-ban-text {
+  width: 40px;
+  text-align: left;
 }
 
 </style>

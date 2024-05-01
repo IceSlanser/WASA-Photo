@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"time"
 )
 
 func (db *appdbimpl) GetUserPosts(myUID uint64, userID uint64) ([]Post, error) {
@@ -40,7 +41,9 @@ func (db *appdbimpl) GetPostInfo(myUID uint64, postID uint64) (Post, error) {
 
 func (db *appdbimpl) PostPost(UID uint64, photo []byte, description string) (uint64, error) {
 	// Post a new post
-	res, err := db.c.Exec("INSERT INTO posts (ProfileID, File, Description) VALUES (?, ?, ?)", UID, photo, description)
+	now := time.Now()
+	dateTime := now.Format("2002-11-20 20:20:20 GMT+2")
+	res, err := db.c.Exec("INSERT INTO posts (ProfileID, File, Description, DateTime) VALUES (?, ?, ?, ?)", UID, photo, description, dateTime)
 	if err != nil {
 		return 0, err
 	}

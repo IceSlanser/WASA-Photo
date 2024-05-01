@@ -424,17 +424,19 @@ export default {
       <button type="button" class="btn mb-1" @click="toggleLike(post.post.ID)">
         <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
       </button>
-      <div>
-        <button type="button" class="btn" @click="showComments(post.post.ID)">
-          Comments: {{ post.post.comment_count }}
-        </button>
-        <button type="button" class="btn mb-1" @click="toggleCommentInput(post.post.ID)">
-          <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
-        </button>
-        <div v-if="post.post.showCommentInput" style="margin-right: 10px;">
-          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm"
-                 placeholder="comment text" aria-label="Recipient's comment" aria-describedby="basic-addon2">
-          <button v-if="post.post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.post.ID)">
+      <div style="align-content: center">
+        <div style="display: inline-block;">
+          <button type="button" class="btn" @click="showComments(post.post.ID)">
+            Comments: {{ post.post.comment_count }}
+          </button>
+          <button type="button" class="btn mb-1" @click="toggleCommentInput(post.post.ID)">
+            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
+          </button>
+        </div>
+        <div v-if="post.post.showCommentInput" class="mx-1" style="margin-right: 10px; display: inline-flex;">
+          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 300px"
+                 placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
+          <button v-if="post.post.showCommentInput" type="button" class="btn btn-sm btn-primary mx-0" @click="commentPhoto(post.post.ID)">
             <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
           </button>
         </div>

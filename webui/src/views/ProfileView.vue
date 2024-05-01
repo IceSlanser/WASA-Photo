@@ -621,7 +621,6 @@ export default {
       if (!this.userProfile.posts[i].showCommentInput) {
         this.newComments[i] = ""
       }
-      await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
     },
 
   }
@@ -645,14 +644,14 @@ export default {
 
   </div>
 
-  <div class="col-lg-8">
+  <div class="col-lg-9">
     <div >
       <div class="d-flex align-items-center">
         <h1 style="white-space: nowrap; margin-bottom: 0;">{{ userProfile.profile.username }}</h1>
         <h6 v-if="isBanned" style="color: red; margin-top: 20px">(banned)</h6>
       </div>
       <div class="col-lg-6 mx-5">
-        <div class="d-flex mt-3 justify-content-between align-items-center">
+        <div class="d-flex mt-2 justify-content-between align-items-center">
           <h6 style="margin-right: 10px;">{{ userProfile.profile.follower_count }} Follower</h6>
           <h6 style="margin-right: 10px;">{{ userProfile.profile.following_count }} Following</h6>
           <h6>{{ userProfile.profile.post_count }} Post</h6>
@@ -705,21 +704,25 @@ export default {
       <button type="button" class="btn mb-1" @click="toggleLike(post.ID)">
         <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
       </button>
-      <div>
-        <button type="button" class="btn" @click="showComments(post.ID)">
-          Comments: {{ post.comment_count }}
-        </button>
-        <button type="button" class="btn mb-1" @click="toggleCommentInput(post.ID)">
-          <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
-        </button>
-        <div v-if="post.showCommentInput" style="margin-right: 10px;">
-          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm"
-                 placeholder="comment text" aria-label="Recipient's comment" aria-describedby="basic-addon2">
-          <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.ID)">
+      <div style="align-content: center">
+        <div style="display: inline-block;">
+          <button type="button" class="btn" @click="showComments(post.ID)">
+            Comments: {{ post.comment_count }}
+          </button>
+          <button type="button" class="btn mb-1" @click="toggleCommentInput(post.ID)">
+            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
+          </button>
+        </div>
+        <div v-if="post.showCommentInput" class="mx-1" style="margin-right: 10px; display: inline-flex;">
+          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 300px"
+                 placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
+          <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary mx-0" @click="commentPhoto(post.ID)">
             <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
           </button>
         </div>
       </div>
+
+
       <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
         <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
           <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>

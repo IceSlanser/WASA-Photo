@@ -13,27 +13,6 @@ export default {
       newText: "",
       userID: 0,
 
-      userProfile: {
-        profile: {
-          ID: 0,
-          username: "",
-          following_count: 0,
-          follower_count: 0,
-          post_count: 0
-        },
-        posts: [
-          {
-            ID: 0,
-            like_count: 0,
-            comment_count: 0,
-            showCommentInput: false
-          }
-        ],
-        followings: [],
-        followers: [],
-        bannedFrom: [],
-      },
-
       stream: [
         {
           post: {
@@ -314,6 +293,7 @@ export default {
           this.error = e.toString();
         }
       }
+      await this.getStream()
     },
 
     async deleteComment(postID, commentID) {
@@ -414,10 +394,10 @@ export default {
         <img v-if="post.post.file" :src="'data:image/jpeg;base64,' + post.post.file" alt="Post Image" class="post-image img-fluid align-content-center">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
       <div class="d-flex justify-content-between">
-        <p><span style="font-weight: bold;">{{ post.post.username }}</span>: {{ post.post.description }}</p>
-        <p>{{ post.post.date_time }}</p>
+        <p><span style="font-weight: bold; font-size: 15px; margin-left: 3px">{{ post.post.username }}</span>: {{ post.post.description }}</p>
+        <p style="margin-right: 3px">{{ post.post.date_time }}</p>
       </div>
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-2 border-bottom"></div>
       <button type="button" class="btn" @click="showLikes(post.post.ID)">
         Likes: {{ post.post.like_count}}
       </button>
@@ -441,6 +421,7 @@ export default {
           </button>
         </div>
       </div>
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mt-1 mb-2 border-bottom"></div>
     </div>
   </div>
 
@@ -553,6 +534,13 @@ export default {
 
 .loading {
   text-align: center;
+}
+
+.comment-text {
+  font-style: italic;
+  font-size: 13px;
+  color: #1a1e21;
+  margin-left: 10px;
 }
 
 </style>

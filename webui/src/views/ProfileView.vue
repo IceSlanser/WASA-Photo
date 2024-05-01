@@ -720,14 +720,13 @@ export default {
             <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
           </button>
         </div>
+        <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
+          <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
+            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
+          </button>
+        </div>
       </div>
-
-
-      <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
-        <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
-          <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
-        </button>
-      </div>
+      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mt-1 mb-2 border-bottom"></div>
     </div>
   </div>
 
@@ -873,7 +872,7 @@ export default {
 
 .delete-button-container {
   position: absolute;
-  bottom: 0;
+  top: 75%;
   right: 0;
 }
 

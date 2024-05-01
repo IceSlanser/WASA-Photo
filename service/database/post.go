@@ -274,7 +274,6 @@ func (db *appdbimpl) DeleteComment(UID uint64, postID uint64, commentID uint64) 
 		if err != nil {
 			return true, err
 		}
-		return true, nil
 	}
 
 	// Update CommentCount

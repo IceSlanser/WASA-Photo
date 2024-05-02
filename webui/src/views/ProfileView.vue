@@ -230,7 +230,9 @@ export default {
           }
         })
         await this.togglePhotoInput()
-        this.newDescription = "";
+        if (this.showUsernameInput) {
+          await this.togglePhotoInput()
+        }
         await this.getProfile()
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -285,9 +287,14 @@ export default {
             }
           })
           this.userProfile.profile.username = this.newUsername;
-          await localStorage.setItem("username", this.newUsername);
+          this.myUsername = this.newUsername
+          await localStorage.setItem("username", this.myUsername);
+          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          if (this.showUploadInput) {
+            await this.togglePhotoInput()
+          }
+          await this.toggleUsernameInput()
           await this.getProfile();
-          window.location.reload();
         } catch (e) {
           if (e.response && e.response.status === 400) {
             this.error = "This username is not available";
@@ -405,9 +412,13 @@ export default {
       this.error = null;
       try {
         let i = this.userProfile.posts.findIndex(post => post.ID === postID);
-        let formData = new FormData();
+        if (!this.newComments[i]) {
+          this.newComments[i] = "";
+        }
         let tmp = this.newComments.reverse();
+        let formData = new FormData();
         formData.append('text', tmp[i])
+
         await this.$axios.post(`/posts/${postID}/comments`, formData, {
           headers: {
             Authorization: localStorage.getItem("username"),
@@ -416,6 +427,7 @@ export default {
         this.userProfile.posts[i].comment_count++;
         await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         await this.toggleCommentInput(postID)
+
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to comment";
@@ -429,6 +441,7 @@ export default {
           this.error = e.toString();
         }
       }
+
     },
 
     async deleteComment(postID, commentID) {
@@ -444,6 +457,7 @@ export default {
           this.fullPost.full_comments = this.fullPost.full_comments.filter(comment => comment.post_ID !== comment.post_ID);
           this.userProfile.posts[i].comment_count--;
         }
+
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to delete comment";
@@ -455,6 +469,7 @@ export default {
           this.error = e.toString();
         }
       }
+
     },
 
     async showComments(postID) {
@@ -634,17 +649,25 @@ export default {
       <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
     </div>
   </div>
-  <div>
+
+
+
+  <div class="loading-container mt-5" v-if="showLoading">
+    <div style="text-align: center">
+      <h1 class="h1">Loading...</h1>
+      <div class="spinner-border"></div>
+    </div >
+  </div>
+
+  <div v-else>
     <div style="display: flex; justify-content: center;" v-if="this.userProfile.profile.username">
       <h2 class="h2" v-if="this.myUsername === this.userProfile.profile.username">Profile</h2>
       <h2 class="h2" v-else>Search</h2>
     </div>
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
-
-
+    <div class="mb-3 border-bottom"></div>
   </div>
 
-  <div class="col-lg-9">
+  <div class="col-lg-9" v-if="!showLoading">
     <div >
       <div class="d-flex align-items-center">
         <h1 style="white-space: nowrap; margin-bottom: 0;">{{ userProfile.profile.username }}</h1>
@@ -678,26 +701,19 @@ export default {
         </div>
       </div>
     </div>
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
+    <div class="mb-3 border-bottom"></div>
+    <div class="mb-3 border-bottom"></div>
   </div>
 
-
-  <div class="post-grid">
-    <div class="loading-container" v-if="showLoading">
-      <div class="loading">
-        <h1 class="h1">Loading...</h1>
-        <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#loader"/></svg>
-      </div>
-    </div>
-    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container" v-else>
+  <div class="post-grid" v-if="!showLoading">
+    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container">
       <img v-if="post.file" :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid align-content-center">
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
+      <div class="mb-3 border-bottom"></div>
       <div class="d-flex justify-content-between">
         <p><span style="font-weight: bold;">{{ userProfile.profile.username }}</span>: {{ post.description }}</p>
         <p>{{post.date_time}}</p>
       </div>
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
+      <div class="mb-3 border-bottom"></div>
       <button type="button" class="btn" @click="showLikes(post.ID)">
         Likes: {{ post.like_count}}
       </button>
@@ -714,9 +730,9 @@ export default {
           </button>
         </div>
         <div v-if="post.showCommentInput" class="mx-1" style="margin-right: 10px; display: inline-flex;">
-          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 300px"
-                 placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
-          <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary mx-0" @click="commentPhoto(post.ID)">
+          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
+                 placeholder="say something" aria-label="Recipient's comment" aria-describedby="basic-addon2">
+          <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.ID)">
             <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
           </button>
         </div>
@@ -726,7 +742,7 @@ export default {
           </button>
         </div>
       </div>
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mt-1 mb-2 border-bottom"></div>
+      <div class="mb-3 border-bottom"></div>
     </div>
   </div>
 
@@ -801,7 +817,7 @@ export default {
                 </svg>
                 Change Username
               </button>
-              <div class="d-flex ">
+              <div>
                 <input v-if="showUsernameInput" type="text" id="newUsername" v-model="newUsername"
                        class="form-control form-control-sm"
                        placeholder="New Username" aria-label="Recipient's username" aria-describedby="basic-addon2">
@@ -902,12 +918,8 @@ export default {
   overflow-y: auto;
 }
 
-.followed .feather-user-minus {
-  color: red;
-}
-
 .loading-container {
-  position: absolute;
+  position: relative;
   top: 0;
   left: 0;
   width: 100%;
@@ -915,11 +927,10 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.5);
 }
 
-.loading {
-  text-align: center;
+.followed .feather-user-minus {
+  color: red;
 }
 
 .btn-follow-text {

@@ -80,6 +80,12 @@ func New(db *sql.DB) (AppDatabase, error) {
 		return nil, errors.New("database is required when building a AppDatabase")
 	}
 
+	_, errFK := db.Exec("PRAGMA foreign_keys = ON;")
+	if errFK != nil {
+		fmt.Println("Error enabling foreign key constraints:", errFK)
+		return &appdbimpl{}, errFK
+	}
+
 	// Check if table exists. If not, the database is empty, and we need to create the structure
 	var tableName string
 	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='example_table';`).Scan(&tableName)

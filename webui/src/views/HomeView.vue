@@ -45,7 +45,7 @@ export default {
         }
       ],
 
-      newComments: ["",],
+      newComments: [],
       fullPost: {
         post: {
           ID: 0,
@@ -270,8 +270,11 @@ export default {
       this.error = null;
       try {
         let i = this.stream.findIndex(post => post.post.ID === postID);
+        if (!this.newComments[i]) {
+          this.newComments[i] = "";
+        }
+        let tmp = this.newComments.reverse()
         let formData = new FormData();
-        let tmp = this.newComments.reverse();
         formData.append('text', tmp[i])
         await this.$axios.post(`/posts/${postID}/comments`, formData, {
           headers: {
@@ -293,7 +296,6 @@ export default {
           this.error = e.toString();
         }
       }
-      await this.getStream()
     },
 
     async deleteComment(postID, commentID) {
@@ -375,29 +377,31 @@ export default {
       <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
     </div>
   </div>
-  <div>
+  <div class="loading-container mt-5" v-if="showLoading">
+    <div style="text-align: center">
+      <h1 class="h1">Loading...</h1>
+      <div class="spinner-border"></div>
+    </div >
+  </div>
+
+  <div v-else>
     <div style="display: flex; justify-content: center;">
       <h2 class="h2">Home</h2>
     </div>
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
+    <div class="mb-3 border-bottom"></div>
   </div>
 
 
-  <div class="loading-container" v-if="showLoading">
-    <div class="loading">
-      <h1 class="h1">Loading...</h1>
-      <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#loader"/></svg>
-    </div >
-  </div>
-  <div class="post-grid" v-else>
+
+  <div class="post-grid" v-if="!showLoading">
     <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container" >
         <img v-if="post.post.file" :src="'data:image/jpeg;base64,' + post.post.file" alt="Post Image" class="post-image img-fluid align-content-center">
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-3 border-bottom"></div>
-      <div class="d-flex justify-content-between">
+      <div class="d-flex justify-content-between mt-3">
         <p><span style="font-weight: bold; font-size: 15px; margin-left: 3px">{{ post.post.username }}</span>: {{ post.post.description }}</p>
         <p style="margin-right: 3px">{{ post.post.date_time }}</p>
       </div>
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-2 border-bottom"></div>
+      <div class="mb-3 border-bottom"></div>
+      <div class="mb-3 border-bottom"></div>
       <button type="button" class="btn" @click="showLikes(post.post.ID)">
         Likes: {{ post.post.like_count}}
       </button>
@@ -526,15 +530,16 @@ export default {
 }
 
 .loading-container {
-  top: 50%;
-  left: 50%;
+  position: relative;
+  top: 100%;
+  left: 0;
   width: 100%;
-  height: 100%
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.loading {
-  text-align: center;
-}
 
 .comment-text {
   font-style: italic;

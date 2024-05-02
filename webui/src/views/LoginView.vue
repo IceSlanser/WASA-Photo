@@ -34,20 +34,35 @@ export default {
 </script>
 
 <template>
-  <div
-      class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 ">
-    <h1 class="h2" v-if="this.username">Welcome to WASAPhoto {{this.username}}</h1>
-    <h1 class="h2" v-else>Welcome to WASAPhoto </h1>
-  </div>
-  <div class="input-group mb-2">
-    <input type="text" id="username" v-model="username" class="form-control"
-           placeholder="Please, insert your username." aria-label="Recipient's username"
-           aria-describedby="basic-addon2">
-    <div class="input-group-append">
-      <button class="btn btn-outline-success" type="button" @click="doLogin">Login</button>
+  <div class="d-flex position-relative">
+    <div class="d-flex position-absolute top-0 end-0 mt-3">
+      <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
     </div>
   </div>
-  <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
+
+  <div class="d-flex justify-content-center position-absolute" style="top: 25%; left: 0; width: 100%; height: 100%;">
+    <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center mb-2">
+      <h1 class="h1">Welcome to WASAPhoto</h1>
+      <h1 class="h2 text-center" v-if="this.username">{{ this.username }}</h1>
+    </div>
+  </div>
+  <div class="d-flex justify-content-center position-absolute" style="top: 35%; left: 0; width: 100%; height: 100%;" >
+    <div>
+      <div class="mb-3 border-bottom"></div>
+      <input type="text" id="username" v-model="username" class="form-control"
+             placeholder="What's your name?" aria-label="Recipient's username" aria-describedby="basic-addon2">
+      <div class="mt-2 text-center">
+        <button class="btn" type="button" @click="doLogin">
+          <div class="d-flex justify-content-between">
+            <svg class="feather mt-1 me-1"><use href="/feather-sprite-v4.29.0.svg#key"/></svg>
+            <span>Login</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
 </template>
 
 <style>

@@ -107,7 +107,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			Description TEXT NOT NULL,
 			LikeCount INTEGER DEFAULT 0,
 			CommentCount INTEGER DEFAULT 0,
-			Date DATE DEFAULT (date('now')),
+			DateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
 			FOREIGN KEY (ProfileID) REFERENCES profiles(ID)
 		)`

@@ -2,10 +2,12 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+
 	"github.com/IceSlanserUni/WASAPhoto/service/api/reqcontext"
 	"github.com/IceSlanserUni/WASAPhoto/service/database"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
 )
 
 //	doLogin If the username does not exist, it will create a new profile, and an identifier is returned.
@@ -85,6 +87,8 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		var fullPost FullPost
 		fullPost.Post = NewPost(DBPost)
 		fullPost.Post.DateTime = DBPost.DateTime.Format("2006-01-02 15:04:05")
+		fmt.Println("DBPost Time: ", DBPost.DateTime)
+		fmt.Println("Post Time: ", fullPost.Post.DateTime)
 		fullPost.Post.Username, err = rt.IDtoUsername(DBPost.ProfileID)
 		if err != nil {
 			ctx.Logger.WithError(err).Error("Failed to IDtoUsername")

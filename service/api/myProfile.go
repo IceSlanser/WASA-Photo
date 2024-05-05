@@ -84,6 +84,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 	for _, DBPost := range DBPosts {
 		var fullPost FullPost
 		fullPost.Post = NewPost(DBPost)
+		fullPost.Post.DateTime = DBPost.DateTime.Format("2006-01-02 15:04:05")
 		fullPost.Post.Username, err = rt.IDtoUsername(DBPost.ProfileID)
 		if err != nil {
 			ctx.Logger.WithError(err).Error("Failed to IDtoUsername")
@@ -111,7 +112,9 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 				return
 			}
 			fullComment.Username = temp.Username
+			fullComment.Comment.DateTime = DBComment.DateTime.Format("2006-01-02 15:04:05")
 			fullPost.FullComments = append(fullPost.FullComments, fullComment)
+
 		}
 
 		// Get likeOwners

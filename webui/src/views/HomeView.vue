@@ -122,6 +122,9 @@ export default {
         } else {
           this.error = e.toString();
         }
+        setTimeout(() => {
+          this.error = null;
+        }, 3000);
       }
     },
 
@@ -157,6 +160,9 @@ export default {
         } else {
           this.error = e.toString();
         }
+        setTimeout(() => {
+          this.error = null;
+        }, 3000);
       }
       await this.toggleSearchInput()
     },
@@ -201,6 +207,9 @@ export default {
             } else {
               this.error = e.toString();
             }
+            setTimeout(() => {
+              this.error = null;
+            }, 3000);
           }
 
         } else {
@@ -222,9 +231,12 @@ export default {
             } else {
               this.error = e.toString();
             }
+            setTimeout(() => {
+              this.error = null;
+            }, 3000);
           }
-
         }
+
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request post.";
@@ -237,6 +249,9 @@ export default {
         } else {
           this.error = e.toString();
         }
+        setTimeout(() => {
+          this.error = null;
+        }, 3000);
       }
     },
 
@@ -263,6 +278,9 @@ export default {
         } else {
           this.error = e.toString();
         }
+        setTimeout(() => {
+          this.error = null;
+        }, 3000);
       }
     },
 
@@ -295,6 +313,9 @@ export default {
         } else {
           this.error = e.toString();
         }
+        setTimeout(() => {
+          this.error = null;
+        }, 3000);
       }
     },
 
@@ -321,6 +342,9 @@ export default {
         } else {
           this.error = e.toString();
         }
+        setTimeout(() => {
+          this.error = null;
+        }, 3000);
       }
     },
 
@@ -347,6 +371,9 @@ export default {
         } else {
           this.error = e.toString();
         }
+        setTimeout(() => {
+          this.error = null;
+        }, 3000);
       }
     },
 
@@ -397,10 +424,9 @@ export default {
     <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container" >
         <img v-if="post.post.file" :src="'data:image/jpeg;base64,' + post.post.file" alt="Post Image" class="post-image img-fluid align-content-center">
       <div class="d-flex justify-content-between mt-3">
-        <p><span style="font-weight: bold; font-size: 15px; margin-left: 3px">{{ post.post.username }}</span>: {{ post.post.description }}</p>
-        <p style="margin-right: 3px">{{ post.post.date_time }}</p>
+        <p><span style="font-weight: bold; font-size: 15px; margin-left: 5px">{{ post.post.username }}</span>: {{ post.post.description }}</p>
+        <p style="margin-right: 5px">{{ post.post.date_time }}</p>
       </div>
-      <div class="mb-3 border-bottom"></div>
       <div class="mb-3 border-bottom"></div>
       <button type="button" class="btn" @click="showLikes(post.post.ID)">
         Likes: {{ post.post.like_count}}
@@ -408,7 +434,7 @@ export default {
       <button type="button" class="btn mb-1" @click="toggleLike(post.post.ID)">
         <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
       </button>
-      <div style="align-content: center">
+      <div style=" display: flex">
         <div style="display: inline-block;">
           <button type="button" class="btn" @click="showComments(post.post.ID)">
             Comments: {{ post.post.comment_count }}
@@ -417,15 +443,14 @@ export default {
             <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
           </button>
         </div>
-        <div v-if="post.post.showCommentInput" class="mx-1" style="margin-right: 10px; display: inline-flex;">
-          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 300px"
+        <div v-if="post.post.showCommentInput" class="mx-1" style="margin-right: 10px; display: flex; flex-grow: 1; padding:  0.35rem 0.75rem">
+          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
                  placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
-          <button v-if="post.post.showCommentInput" type="button" class="btn btn-sm btn-primary mx-0" @click="commentPhoto(post.post.ID)">
+          <button v-if="post.post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.post.ID)">
             <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
           </button>
         </div>
       </div>
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mt-1 mb-2 border-bottom"></div>
     </div>
   </div>
 

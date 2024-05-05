@@ -56,6 +56,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Convert DBPosts to APIPosts
 	for _, DBPost := range DBPosts {
 		APIPost := NewPost(DBPost)
+		APIPost.DateTime = DBPost.DateTime.Format("2006-01-02 15:04:05")
 		APIPost.Username, err = rt.IDtoUsername(DBPost.ProfileID)
 		if err != nil {
 			ctx.Logger.WithError(err).Error("Failed to IDtoUsername")

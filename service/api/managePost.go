@@ -71,6 +71,7 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 			return
 		}
 		fullComment.Username = temp.Username
+		fullComment.Comment.DateTime = DBComment.DateTime.Format("2006-01-02 15:04:05")
 		fullPost.FullComments = append(fullPost.FullComments, fullComment)
 	}
 

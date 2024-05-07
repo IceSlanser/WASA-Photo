@@ -23,9 +23,8 @@ type Post struct {
 }
 
 type Like struct {
-	ID      uint64 `json:"ID"`
-	PostID  uint64 `json:"post_ID"`
-	OwnerID uint64 `json:"owner_ID"`
+	OwnerID   uint64 `json:"owner_ID"`
+	OwnerName string `json:"owner_name"`
 }
 
 type Comment struct {

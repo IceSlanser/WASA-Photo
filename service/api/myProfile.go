@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/IceSlanserUni/WASAPhoto/service/api/reqcontext"
@@ -87,8 +86,6 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 		var fullPost FullPost
 		fullPost.Post = NewPost(DBPost)
 		fullPost.Post.DateTime = DBPost.DateTime.Format("2006-01-02 15:04:05")
-		fmt.Println("DBPost Time: ", DBPost.DateTime)
-		fmt.Println("Post Time: ", fullPost.Post.DateTime)
 		fullPost.Post.Username, err = rt.IDtoUsername(DBPost.ProfileID)
 		if err != nil {
 			ctx.Logger.WithError(err).Error("Failed to IDtoUsername")
@@ -118,15 +115,21 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 			fullComment.Username = temp.Username
 			fullComment.Comment.DateTime = DBComment.DateTime.Format("2006-01-02 15:04:05")
 			fullPost.FullComments = append(fullPost.FullComments, fullComment)
-
 		}
 
 		// Get likeOwners
-		fullPost.LikeOwners, err = rt.db.GetLikes(UID, fullPost.Post.ID)
+		var DBLikes []database.Like
+		DBLikes, err = rt.db.GetLikes(UID, fullPost.Post.ID)
 		if err != nil {
 			ctx.Logger.WithError(err).Error("Failed to GetLikes")
 			w.WriteHeader(http.StatusNotFound)
 			return
+		}
+		// Convert DBPosts to APIComments
+		for _, DBLike := range DBLikes {
+			var like Like
+			like = NewLike(DBLike)
+			fullPost.LikeOwners = append(fullPost.LikeOwners, like)
 		}
 
 		stream = append(stream, fullPost)

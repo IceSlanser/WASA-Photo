@@ -23,7 +23,9 @@ export default {
             ID: 0,
             like_count: 0,
             comment_count: 0,
-            showCommentInput: false
+            showCommentInput: false,
+            showLikeWindow: false,
+            showCommentWindow: false,
           }
         ],
         followings: [],
@@ -65,8 +67,6 @@ export default {
       showSearchInput: false,
       showUploadInput: false,
       showCommentInput: false,
-      showLikeWindow: false,
-      showCommentWindow: false,
       showLoading: false
     }
   },
@@ -159,8 +159,6 @@ export default {
     async searchUser() {
       this.error = null;
       this.showLoading = true;
-      this.isMyProfile = false;
-      localStorage.setItem("isMyProfile", this.isMyProfile)
       try {
         let response = await this.$axios.get(`/users?username=${this.profileOwner}`, {
           headers: {
@@ -209,6 +207,7 @@ export default {
           this.error = null;
         }, 3000);
       }
+      this.isMyProfile = false;
       await this.toggleSearchInput();
     },
 
@@ -408,7 +407,12 @@ export default {
         });
         this.fullPost = response.data;
         await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
-        this.showLikeWindow = true
+        this.userProfile.posts.forEach(post => {
+          post.showLikeWindow = post.ID === postID;
+        });
+        this.userProfile.posts.forEach(post => {
+          post.showCommentWindow = false;
+        });
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request post";
@@ -507,7 +511,14 @@ export default {
         });
         this.fullPost = response.data;
         await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
-        this.showCommentWindow = true
+        let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+        this.userProfile.posts[i].showCommentWindow = true
+        this.userProfile.posts.forEach(post => {
+          post.showLikeWindow = false;
+        });
+        this.userProfile.posts.forEach(post => {
+          post.showCommentWindow = post.ID === postID;
+        });
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request comments";
@@ -637,12 +648,14 @@ export default {
     },
 
 
-    async closeLikeWindow() {
-      this.showLikeWindow = false
+    async closeLikeWindow(postID) {
+      let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+      this.userProfile.posts[i].showLikeWindow = false
     },
 
-    async closeCommentWindow() {
-      this.showCommentWindow = false
+    async closeCommentWindow(postID) {
+      let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+      this.userProfile.posts[i].showCommentWindow = false
     },
 
     async toggleUsernameInput() {
@@ -700,7 +713,7 @@ export default {
   </div>
 
   <div v-else>
-    <div style="display: flex; justify-content: center;" v-if="this.userProfile.profile.username">
+    <div style="display: flex; justify-content: center;">
       <h2 class="h2" v-if="this.myUsername === this.userProfile.profile.username">Profile</h2>
       <h2 class="h2" v-else>Search</h2>
     </div>
@@ -710,8 +723,8 @@ export default {
   <div class="col-lg-10" v-if="!showLoading">
     <div >
       <div class="d-flex align-items-center">
-        <h1 style="white-space: nowrap; margin-bottom: 0;">{{ userProfile.profile.username }}</h1>
-        <h6 v-if="isBanned" style="color: red; margin-top: 20px">(banned)</h6>
+        <h1 style="white-space: nowrap; font-size: 3rem">{{ userProfile.profile.username }}</h1>
+        <h6 v-if="isBanned" style="color: red; margin-top: 2rem">(banned)</h6>
       </div>
       <div class="col-lg-5 mx-5">
         <div class="d-flex mt-2 justify-content-between align-items-center">
@@ -748,67 +761,71 @@ export default {
   <div class="post-grid" v-if="!showLoading">
     <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container">
       <img v-if="post.file" :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid align-content-center">
-      <div class="mb-3 border-bottom"></div>
-      <div class="d-flex justify-content-between">
-        <p><span style="font-weight: bold; font-size: 15px; margin-left: 5px">{{ userProfile.profile.username }}</span>: {{ post.description }}</p>
-        <p style="margin-right: 5px">{{post.date_time}}</p>
+      <div class="position-relative">
+        <div class="d-flex justify-content-between pt-3">
+          <p><span style="font-weight: bold; font-size: 0.8rem; margin-left: 0.5rem">{{ userProfile.profile.username }}</span>: {{ post.description }}</p>
+          <p style="margin-right: 0.5rem; font-size: 0.8rem; font-style: italic">{{post.date_time}}</p>
+        </div>
+        <div class="border-bottom"></div>
+        <button type="button" class="btn" @click="showLikes(post.ID)">
+          Likes: {{ post.like_count}}
+        </button>
+        <button type="button" class="btn mb-1" @click="toggleLike(post.ID)">
+          <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
+        </button>
+        <div style="display: flex">
+          <div style="display: inline-block;">
+            <button type="button" class="btn" @click="showComments(post.ID)">
+              Comments: {{ post.comment_count }}
+            </button>
+            <button type="button" class="btn mb-1" @click="toggleCommentInput(post.ID)">
+              <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
+            </button>
+          </div>
+          <div v-if="post.showCommentInput" class="mx-1" style="margin-right: 10px; display: flex; flex-grow: 1; padding:  0.35rem 0.75rem">
+            <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
+                   placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
+            <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.ID)">
+              <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
+            </button>
+          </div>
+          <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
+            <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
+              <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="user-like-overlay" v-if="this.sortedPosts[index].showLikeWindow">
+          <div class="user-like-modal">
+            <h2>Likes</h2>
+            <ul>
+              <li v-for="username in this.fullPost.like_owners" :key="username">{{ username }}</li>
+            </ul>
+            <button @click="this.closeLikeWindow(post.ID)">Close</button>
+          </div>
+        </div>
+
+        <div class="user-comment-overlay" v-if="this.sortedPosts[index].showCommentWindow">
+          <div class="user-comment-modal">
+            <h2>Comments</h2>
+            <ul>
+              <li v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username">
+                {{ fullComment.username + ": " + fullComment.comment.text }}
+                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-button mb-2" @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
+                  <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
+                </button>
+              </li>
+            </ul>
+            <button @click="this.closeCommentWindow(post.ID)">Close</button>
+          </div>
+        </div>
       </div>
-      <div class="mb-3 border-bottom"></div>
-      <button type="button" class="btn" @click="showLikes(post.ID)">
-        Likes: {{ post.like_count}}
-      </button>
-      <button type="button" class="btn mb-1" @click="toggleLike(post.ID)">
-        <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
-      </button>
-      <div style="display: flex">
-        <div style="display: inline-block;">
-          <button type="button" class="btn" @click="showComments(post.ID)">
-            Comments: {{ post.comment_count }}
-          </button>
-          <button type="button" class="btn mb-1" @click="toggleCommentInput(post.ID)">
-            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
-          </button>
-        </div>
-        <div v-if="post.showCommentInput" class="mx-1" style="margin-right: 10px; display: flex; flex-grow: 1; padding:  0.35rem 0.75rem">
-          <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
-                 placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
-          <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.ID)">
-            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
-          </button>
-        </div>
-        <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
-          <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
-            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
-          </button>
-        </div>
-      </div>
+
     </div>
   </div>
 
-  <div class="liked-users-overlay" v-if="this.showLikeWindow">
-    <div class="liked-users-modal">
-      <h2>Likes</h2>
-      <ul>
-        <li v-for="username in this.fullPost.like_owners" :key="username">{{ username }}</li>
-      </ul>
-      <button @click="this.closeLikeWindow()">Close</button>
-    </div>
-  </div>
 
-  <div class="liked-users-overlay" v-if="this.showCommentWindow">
-    <div class="liked-users-modal">
-      <h2>Comments</h2>
-      <ul>
-        <li v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username">
-          {{ fullComment.username + ": " + fullComment.comment.text }}
-          <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-button mb-2" @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
-            <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
-          </button>
-        </li>
-      </ul>
-      <button @click="this.closeCommentWindow()">Close</button>
-    </div>
-  </div>
 
 
   <div class="container-fluid">
@@ -928,34 +945,13 @@ export default {
 
 .delete-button-container {
   position: absolute;
-  top: 77%;
+  top: 3.5rem;
   right: 0;
 }
 
 .delete-button {
   font-size: 20px;
   color: red;
-}
-
-.liked-users-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.liked-users-modal {
-  background-color: white;
-  padding: 20px;
-  border-color: #000000;
-  border-width: 2px;
-  border-style: solid;
-  max-height: 80%;
-  overflow-y: auto;
 }
 
 .loading-container {
@@ -967,10 +963,6 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.followed .feather-user-minus {
-  color: red;
 }
 
 .btn-follow-text {

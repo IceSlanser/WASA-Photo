@@ -101,7 +101,7 @@ func (db *appdbimpl) GetPhoto(UID uint64, postID uint64) ([]byte, error) {
 	return file, nil
 }
 
-func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]string, error) {
+func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]Like, error) {
 	// Store likes
 	query := `SELECT OwnerID 
 				FROM likes
@@ -110,21 +110,20 @@ func (db *appdbimpl) GetLikes(myUID uint64, postID uint64) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	var likeOwners []string
+	var likeOwners []Like
 	for rows.Next() {
-		var ownerID uint64
-		var ownerUsername string
-		err = rows.Scan(&ownerID)
+		var likeOwner Like
+		err = rows.Scan(&likeOwner.OwnerID)
 		if err != nil {
 			return nil, err
 		}
-		err = db.c.QueryRow("SELECT Username FROM profiles WHERE ID = ?", ownerID).Scan(&ownerUsername)
+		err = db.c.QueryRow("SELECT Username FROM profiles WHERE ID = ?", likeOwner.OwnerID).Scan(&likeOwner.OwnerName)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, err
 			}
 		}
-		likeOwners = append(likeOwners, ownerUsername)
+		likeOwners = append(likeOwners, likeOwner)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err

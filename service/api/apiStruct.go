@@ -23,6 +23,11 @@ type Post struct {
 	DateTime     string `json:"date_time"`
 }
 
+type Like struct {
+	OwnerID   uint64 `json:"owner_ID"`
+	OwnerName string `json:"owner_name"`
+}
+
 type Comment struct {
 	ID       uint64 `json:"ID"`
 	PostID   uint64 `json:"post_ID"`
@@ -38,7 +43,7 @@ type FullComment struct {
 
 type FullPost struct {
 	Post         Post          `json:"post"`
-	LikeOwners   []string      `json:"like_owners"`
+	LikeOwners   []Like        `json:"like_owners"`
 	FullComments []FullComment `json:"full_comments"`
 }
 
@@ -61,6 +66,13 @@ func NewPost(post database.Post) Post {
 		LikeCount:    post.LikeCount,
 		CommentCount: post.CommentCount,
 		DateTime:     "",
+	}
+}
+
+func NewLike(like database.Like) Like {
+	return Like{
+		OwnerID:   like.OwnerID,
+		OwnerName: like.OwnerName,
 	}
 }
 

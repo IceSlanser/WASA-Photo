@@ -169,38 +169,11 @@ export default {
       await this.toggleSearchInput()
     },
 
-    async getUser(profileOwner) {
-      this.error = null;
-      this.showLoading = true;
-      console.log(profileOwner)
-      try {
-        let response = await this.$axios.get(`/users/${profileOwner}`, {
-          headers: {
-            Authorization: localStorage.getItem("username")
-          }
-        })
-        this.userID = response.data
-        console.log(this.userID)
-        this.showLoading = false;
-        this.isMyProfile = false;
-        localStorage.setItem("isMyProfile", this.isMyProfile)
-        await localStorage.setItem("userID", this.userID)
-        this.$router.push({path: `/users/${this.userID}/profile`})
-      } catch (e) {
-        await this.getStream()
-        if (e.response && e.response.status === 400) {
-          this.error = "Failed to request user's profile.";
-        } else if (e.response && e.response.status === 404) {
-          this.error = "User not found.";
-        } else if (e.response && e.response.status === 500) {
-          this.error = "An internal error occurred, please try again later.";
-        } else {
-          this.error = e.toString();
-        }
-        setTimeout(() => {
-          this.error = null;
-        }, 3000);
-      }
+    async getUser(UID) {
+      this.isMyProfile = false;
+      localStorage.setItem("isMyProfile", this.isMyProfile)
+      await localStorage.setItem("userID", UID)
+      this.$router.push({path: `/users/${UID}/profile`})
     },
 
 
@@ -223,7 +196,7 @@ export default {
         });
         this.fullPost = response.data;
         const listOfLikeOwners = this.fullPost.like_owners || [];
-        let isLiked = listOfLikeOwners.includes(this.myUsername);
+        let isLiked = listOfLikeOwners.some(owner => owner.owner_name === this.myUsername);
 
 
         if (isLiked) {
@@ -328,20 +301,22 @@ export default {
 
     async commentPhoto(postID) {
       this.error = null;
+      console.log("---------")
+      console.log("postID: ", postID)
       try {
-        let i = this.stream.findIndex(post => post.post.ID === postID);
+        let i = this.sortedPosts.findIndex(post => post.post.ID === postID);
         if (!this.newComments[i]) {
           this.newComments[i] = "";
         }
-        let tmp = this.newComments.reverse()
         let formData = new FormData();
-        formData.append('text', tmp[i])
+        formData.append('text', this.newComments[i])
         await this.$axios.post(`/posts/${postID}/comments`, formData, {
           headers: {
             Authorization: localStorage.getItem("username"),
           }
         })
-        this.stream[i].post.comment_count++;
+        let j = this.stream.findIndex(post => post.post.ID === postID);
+        this.stream[j].post.comment_count++;
         await this.toggleCommentInput(postID)
       } catch (e) {
         if (e.response && e.response.status === 400) {
@@ -370,8 +345,8 @@ export default {
           }
         })
         if (this.myUsername) {
-          let i = this.stream.findIndex(post => post.post.ID === postID);
-          this.fullPost.full_comments = this.fullPost.full_comments.filter(comment => comment.post_ID !== comment.post_ID);
+          this.fullPost.full_comments = this.fullPost.full_comments.filter(full_comment => full_comment.comment.ID !== commentID);
+          let i = this.stream.findIndex(full_post => full_post.post.ID === postID);
           this.stream[i].post.comment_count--;
         }
       } catch (e) {
@@ -429,7 +404,7 @@ export default {
       let i = this.stream.findIndex(post => post.post.ID === postID);
       this.stream[i].post.showCommentInput = !this.stream[i].post.showCommentInput;
       if (!this.stream[i].post.showCommentInput) {
-        this.newComments[i] = ""
+        this.newComments = []
       }
     },
 
@@ -476,14 +451,16 @@ export default {
 
       <div class="position-relative">
         <div class="d-flex justify-content-between pt-3">
-          <p><span style="font-weight: bold; font-size: 15px; margin-left: 5px">{{ post.post.username }}</span>: {{ post.post.description }}</p>
-          <p style="margin-right: 5px; font-size: 0.8rem; font-style: italic">{{ post.post.date_time }}</p>
+          <p><span class="username">{{ post.post.username }}:</span>
+            <span class="text">{{ post.post.description }}</span>
+          </p>
+          <p style="margin-right: 0.5rem; font-size: 0.8rem; font-style: italic">{{ post.post.date_time }}</p>
         </div>
         <div class="border-bottom"></div>
         <button type="button" class="btn" @click="showLikes(post.post.ID)">
           Likes: {{ post.post.like_count}}
         </button>
-        <button type="button" class="btn mb-1" @click="toggleLike(post.post.ID)">
+        <button type="button" class="btn" @click="toggleLike(post.post.ID)">
           <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
         </button>
         <div style=" display: flex">
@@ -495,7 +472,7 @@ export default {
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
             </button>
           </div>
-          <div v-if="post.post.showCommentInput" class="mx-1" style="margin-right: 10px; display: flex; flex-grow: 1; padding:  0.35rem 0.75rem">
+          <div v-if="post.post.showCommentInput" style="display: flex; flex-grow: 1; padding: 0.35rem;">
             <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
                    placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
             <button v-if="post.post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.post.ID)">
@@ -512,11 +489,12 @@ export default {
 
             <div class="vertical-line"></div>
 
-            <div  style="margin-left: 6rem">
-                <h4 v-for="username in this.fullPost.like_owners" :key="username" class="btn mb-1" @click="getUser(username)">{{ username }}</h4>
+            <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem;">
+                <span v-for="owner in this.fullPost.like_owners" :key="owner" class="btn me-2" style="font-size: 1.1rem"
+                      @click="getUser(owner.owner_ID)">{{ owner.owner_name }}</span>
             </div>
-            <button class="btn close-button" @click="this.closeLikeWindow(post.post.ID)">
-              <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
+            <button class="btn close-button no-border-btn no-padding-btn" @click="this.closeLikeWindow(post.post.ID)">
+              <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
             </button>
           </div>
         </div>
@@ -529,16 +507,19 @@ export default {
 
             <div class="vertical-line"></div>
 
-            <ul>
-              <li v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username">
-                {{ fullComment.username + ": " + fullComment.comment.text }}
-                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-button mb-2" @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
+            <ul style="margin-left: 1.5rem; margin-right: 1.70rem; margin-top: 0.5rem">
+              <span v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username" class="comment">
+
+                <div class="username" >{{fullComment.username + ":  "}}</div>
+                <div class="text">{{fullComment.comment.text }}</div>
+                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn no-padding-btn"
+                        @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
                   <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
                 </button>
-              </li>
+              </span>
             </ul>
-            <button class="btn close-button" @click="this.closeCommentWindow(post.post.ID)">
-              <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
+            <button class="btn close-button no-border-btn no-padding-btn" @click="this.closeCommentWindow(post.post.ID)">
+              <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
             </button>
           </div>
         </div>
@@ -624,6 +605,18 @@ export default {
   height: 275px;
 }
 
+.username {
+  font-style: italic;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-left: .5rem
+}
+
+.text {
+  font-size: 1rem;
+  margin-left: .3rem
+}
+
 .loading-container {
   position: relative;
   top: 100%;
@@ -667,7 +660,6 @@ export default {
 
 .vertical-text h6 {
   margin-left: -1rem;
-  font-weight: bold;
 }
 
 .user-comment-overlay {
@@ -692,17 +684,36 @@ export default {
   min-height: 100%;
 }
 
+.comment {
+  display: flex;
+  align-items: center;
+  padding-bottom: .5rem;
+}
+
+.delete-comment {
+  margin-left: .5rem;
+  font-size: 1.1rem;
+  color: red;
+}
+
 .close-button {
   position: absolute;
-  right: 1rem;
-  width: 2.5rem;
-  height: 2.5rem;
+  inset-inline-end: 1.5rem;
+  margin-top: .2rem;
+  color: red;
+}
+
+.no-border-btn {
   border: transparent;
+}
+
+.no-padding-btn {
+  padding: 0;
 }
 
 .vertical-line {
   position: absolute;
-  border-right: 0.15rem solid #000;
+  border-right: 0.15rem solid #D3D3D3;
   height: 100%;
   padding-left: 3rem;
 }

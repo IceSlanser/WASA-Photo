@@ -37,7 +37,7 @@ export default {
       newPhoto: "",
       newDescription: "",
       newSearch: "",
-      newComments: ["",],
+      newComments: [],
       fullPost: {
         post: {
           ID: 0,
@@ -109,6 +109,13 @@ export default {
       await this.getProfile()
     },
 
+    async getUser(UID) {
+      this.isMyProfile = false;
+      this.userProfile.profile.ID = UID
+      this.userID = UID
+      await this.getProfile()
+    },
+
     async getProfile() {
       this.error = null
       this.showLoading = true;
@@ -137,7 +144,6 @@ export default {
           this.userProfile.banned_from = []
         }
         this.showLoading = false;
-        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
       } catch (e) {
         this.showLoading = false;
         if (e.response && e.response.status === 400) {
@@ -329,7 +335,7 @@ export default {
         });
         this.fullPost = response.data;
         const listOfLikeOwners = this.fullPost.like_owners || [];
-        let isLiked = listOfLikeOwners.includes(this.myUsername);
+        let isLiked = listOfLikeOwners.some(owner => owner.owner_name === this.myUsername);
 
 
         if (isLiked) {
@@ -479,8 +485,8 @@ export default {
           }
         })
         if (this.myUsername) {
+          this.fullPost.full_comments = this.fullPost.full_comments.filter(full_comment => full_comment.comment.ID !== commentID);
           let i = this.userProfile.posts.findIndex(post => post.ID === postID);
-          this.fullPost.full_comments = this.fullPost.full_comments.filter(comment => comment.post_ID !== comment.post_ID);
           this.userProfile.posts[i].comment_count--;
         }
 
@@ -687,7 +693,7 @@ export default {
       let i = this.userProfile.posts.findIndex(post => post.ID === postID);
       this.userProfile.posts[i].showCommentInput = !this.userProfile.posts[i].showCommentInput;
       if (!this.userProfile.posts[i].showCommentInput) {
-        this.newComments[i] = ""
+        this.newComments = []
       }
     },
 
@@ -778,11 +784,11 @@ export default {
             <button type="button" class="btn" @click="showComments(post.ID)">
               Comments: {{ post.comment_count }}
             </button>
-            <button type="button" class="btn mb-1" @click="toggleCommentInput(post.ID)">
+            <button type="button" class="btn" @click="toggleCommentInput(post.ID)">
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
             </button>
           </div>
-          <div v-if="post.showCommentInput" class="mx-1" style="margin-right: 10px; display: flex; flex-grow: 1; padding:  0.35rem 0.75rem">
+          <div v-if="post.showCommentInput" style=" display: flex; flex-grow: 1; padding: 0.35rem">
             <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
                    placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
             <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.ID)">
@@ -790,7 +796,7 @@ export default {
             </button>
           </div>
           <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
-            <button type="button" class="btn delete-button" @click="deletePhoto(post.ID)">
+            <button type="button" class="btn delete-photo" @click="deletePhoto(post.ID)">
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
             </button>
           </div>
@@ -798,26 +804,43 @@ export default {
 
         <div class="user-like-overlay" v-if="this.sortedPosts[index].showLikeWindow">
           <div class="user-like-modal">
-            <h2>Likes</h2>
-            <ul>
-              <li v-for="username in this.fullPost.like_owners" :key="username">{{ username }}</li>
+            <ul class="vertical-text" style="font-size: 1.1rem">
+              <h6 v-for="letter in 'LIKES'">{{ letter }}</h6>
             </ul>
-            <button @click="this.closeLikeWindow(post.ID)">Close</button>
+
+            <div class="vertical-line"></div>
+
+            <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem">
+              <span v-for="owner in this.fullPost.like_owners" :key="owner" class="btn" style="font-size: 1.1rem" @click="getUser(owner.owner_ID)">{{ owner.owner_name }}</span>
+            </div>
+            <button class="btn close-button" @click="this.closeLikeWindow(post.ID)">
+              <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
+            </button>
           </div>
         </div>
 
         <div class="user-comment-overlay" v-if="this.sortedPosts[index].showCommentWindow">
           <div class="user-comment-modal">
-            <h2>Comments</h2>
-            <ul>
-              <li v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username">
-                {{ fullComment.username + ": " + fullComment.comment.text }}
-                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-button mb-2" @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
+            <ul class="vertical-text " style="font-size: 1.1rem">
+              <h6  v-for="letter in 'CMMNT'" >{{ letter }}</h6>
+            </ul>
+
+            <div class="vertical-line"></div>
+
+            <ul style="margin-left: 1.5rem; margin-right: 1.70rem; margin-top: 0.5rem">
+              <span v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username" class="comment">
+
+                <div class="username" >{{fullComment.username + ":  "}}</div>
+                <div class="text">{{fullComment.comment.text }}</div>
+                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn no-padding-btn"
+                        @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
                   <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
                 </button>
-              </li>
+              </span>
             </ul>
-            <button @click="this.closeCommentWindow(post.ID)">Close</button>
+            <button class="btn close-button no-border-btn no-padding-btn" @click="this.closeCommentWindow(post.ID)">
+              <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -949,8 +972,8 @@ export default {
   right: 0;
 }
 
-.delete-button {
-  font-size: 20px;
+.delete-photo {
+  font-size: 1.1rem;
   color: red;
 }
 

@@ -59,7 +59,7 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	// Convert DBPosts to APIComments
+	// Convert DBComment to APIComments
 	for _, DBComment := range DBComments {
 		var fullComment FullComment
 		var temp database.User
@@ -76,11 +76,19 @@ func (rt *_router) getFullPost(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	// Get likeOwners
-	fullPost.LikeOwners, err = rt.db.GetLikes(myUID, postID)
+	var DBLikes []database.Like
+	DBLikes, err = rt.db.GetLikes(myUID, fullPost.Post.ID)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to GetLikes")
 		w.WriteHeader(http.StatusNotFound)
 		return
+	}
+
+	// Convert DBLikes to APILikes
+	for _, DBLike := range DBLikes {
+		var like Like
+		like = NewLike(DBLike)
+		fullPost.LikeOwners = append(fullPost.LikeOwners, like)
 	}
 
 	w.WriteHeader(http.StatusOK)

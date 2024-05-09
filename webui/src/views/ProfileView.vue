@@ -440,20 +440,20 @@ export default {
     async commentPhoto(postID) {
       this.error = null;
       try {
-        let i = this.userProfile.posts.findIndex(post => post.ID === postID);
+        let i = this.sortedPosts.findIndex(post => post.ID === postID);
         if (!this.newComments[i]) {
           this.newComments[i] = "";
         }
-        let tmp = this.newComments.reverse();
         let formData = new FormData();
-        formData.append('text', tmp[i])
+        formData.append('text', this.newComments[i])
 
         await this.$axios.post(`/posts/${postID}/comments`, formData, {
           headers: {
             Authorization: localStorage.getItem("username"),
           }
         })
-        this.userProfile.posts[i].comment_count++;
+        let j = this.userProfile.posts.findIndex(post => post.ID === postID);
+        this.userProfile.posts[j].comment_count++;
         await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         await this.toggleCommentInput(postID)
 
@@ -548,14 +548,17 @@ export default {
         this.userProfile.followers = []
       }
       const isFollowed = this.userProfile.followers.includes(Number(this.myID))
-      
+      console.log("-------------")
+      console.log("isFollowed: ", isFollowed)
       if (isFollowed) {
         try {
+          console.log("Trying to delete...")
           await this.$axios.delete(`/users/${UID}/follow`, {
             headers: {
               Authorization: localStorage.getItem("username")
             }
           });
+          console.log("Deleted")
           this.userProfile.profile.follower_count--;
           this.userProfile.followers = this.userProfile.followers.filter(user => user !== Number(this.myID))
 
@@ -574,11 +577,13 @@ export default {
 
       } else {
         try {
+          console.log("Trying to add...")
           await this.$axios.put(`/users/${UID}/follow`, {}, {
             headers: {
               Authorization: localStorage.getItem("username")
             }
           });
+          console.log("Added")
           this.userProfile.profile.follower_count++;
           this.userProfile.followers.push(Number(this.myID))
 
@@ -738,22 +743,22 @@ export default {
           <h6 style="margin-right: 10px;">{{ userProfile.profile.following_count }} Following</h6>
           <h6>{{ userProfile.profile.post_count }} Post</h6>
           <div class="ms-5">
-            <button type="button" class="btn" @click="toggleFollow(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
+            <button type="button" class="btn no-vertical-align-btn" @click="toggleFollow(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
               <div style="display: flex; align-items: center;">
                 <svg :class="{ 'feather': true, 'mb-2': true, 'me-1':true, 'is-following': isFollowing }">
                   <use :href="isFollowing ? '/feather-sprite-v4.29.0.svg#user-minus' : '/feather-sprite-v4.29.0.svg#user-plus'"/>
                 </svg>
-                <h6 class="btn-follow-text" v-if="isFollowing"> Unfollow </h6>
-                <h6 class="btn-follow-text" v-else> Follow </h6>
+                <h6 class="btn-follow-text no-vertical-align-btn" v-if="isFollowing"> Unfollow </h6>
+                <h6 class="btn-follow-text no-vertical-align-btn" v-else> Follow </h6>
               </div>
             </button>
-            <button type="button" class="btn" @click="toggleBan(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
+            <button type="button" class="btn no-vertical-align-btn" @click="toggleBan(userProfile.profile.ID)" v-if="Number(this.myID) !== userProfile.profile.ID">
               <div style="display: flex; align-items: center;">
                 <svg :class="{ 'feather': true, 'mb-2': true, 'me-1':true, 'is-following': isBanned }">
                   <use :href="isBanned ? '/feather-sprite-v4.29.0.svg#user-check' : '/feather-sprite-v4.29.0.svg#user-x'"/>
                 </svg>
-                <h6 class="btn-ban-text" v-if="isBanned">Unban</h6>
-                <h6 class="btn-ban-text" v-else>Ban</h6>
+                <h6 class="btn-ban-text no-vertical-align-btn" v-if="isBanned">Unban</h6>
+                <h6 class="btn-ban-text no-vertical-align-btn" v-else>Ban</h6>
               </div>
             </button>
           </div>
@@ -773,30 +778,30 @@ export default {
           <p style="margin-right: 0.5rem; font-size: 0.8rem; font-style: italic">{{post.date_time}}</p>
         </div>
         <div class="border-bottom"></div>
-        <button type="button" class="btn" @click="showLikes(post.ID)">
+        <button type="button" class="btn no-vertical-align-btn" @click="showLikes(post.ID)">
           Likes: {{ post.like_count}}
         </button>
-        <button type="button" class="btn mb-1" @click="toggleLike(post.ID)">
+        <button type="button" class="btn no-vertical-align-btn" @click="toggleLike(post.ID)">
           <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
         </button>
         <div style="display: flex">
           <div style="display: inline-block;">
-            <button type="button" class="btn" @click="showComments(post.ID)">
+            <button type="button" class="btn no-vertical-align-btn" @click="showComments(post.ID)">
               Comments: {{ post.comment_count }}
             </button>
-            <button type="button" class="btn" @click="toggleCommentInput(post.ID)">
+            <button type="button" class="btn no-vertical-align-btn" @click="toggleCommentInput(post.ID)">
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
             </button>
           </div>
           <div v-if="post.showCommentInput" style=" display: flex; flex-grow: 1; padding: 0.35rem">
             <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
                    placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
-            <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.ID)">
+            <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary no-vertical-align-btn" @click="commentPhoto(post.ID)">
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
             </button>
           </div>
           <div class="delete-button-container" v-if="this.myUsername === this.userProfile.profile.username">
-            <button type="button" class="btn delete-photo" @click="deletePhoto(post.ID)">
+            <button type="button" class="btn delete-photo no-vertical-align-btn" @click="deletePhoto(post.ID)">
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
             </button>
           </div>
@@ -811,9 +816,11 @@ export default {
             <div class="vertical-line"></div>
 
             <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem">
-              <span v-for="owner in this.fullPost.like_owners" :key="owner" class="btn" style="font-size: 1.1rem" @click="getUser(owner.owner_ID)">{{ owner.owner_name }}</span>
+              <span v-for="owner in this.fullPost.like_owners" :key="owner" class="me-2 like username btn no-vertical-align-btn" @click="getUser(owner.owner_ID)">
+                {{ owner.owner_name }}
+              </span>
             </div>
-            <button class="btn close-button" @click="this.closeLikeWindow(post.ID)">
+            <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeLikeWindow(post.ID)">
               <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
             </button>
           </div>
@@ -830,15 +837,17 @@ export default {
             <ul style="margin-left: 1.5rem; margin-right: 1.70rem; margin-top: 0.5rem">
               <span v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username" class="comment">
 
-                <div class="username" >{{fullComment.username + ":  "}}</div>
+                <div class="username btn no-padding-btn no-vertical-align-btn" @click="getUser(fullComment.comment.owner_ID)">
+                  {{fullComment.username + ":  "}}
+                </div>
                 <div class="text">{{fullComment.comment.text }}</div>
-                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn no-padding-btn"
+                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-vertical-align-btn no-border-btn no-padding-btn"
                         @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
                   <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
                 </button>
               </span>
             </ul>
-            <button class="btn close-button no-border-btn no-padding-btn" @click="this.closeCommentWindow(post.ID)">
+            <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeCommentWindow(post.ID)">
               <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
             </button>
           </div>
@@ -874,7 +883,7 @@ export default {
               </RouterLink>
             </li>
             <li class="nav-item mx-3" v-if="this.myUsername === this.userProfile.profile.username">
-              <button type="button" class="btn btn-sm" style="font-size: 15px;" @click="togglePhotoInput">
+              <button type="button" class="btn btn-sm no-vertical-align-btn" style="font-size: 15px;" @click="togglePhotoInput">
                 <svg class="feather mx-1">
                   <use href="/feather-sprite-v4.29.0.svg#log-out"/>
                 </svg>
@@ -886,11 +895,11 @@ export default {
                        placeholder="Photo description (max 35 characters)" aria-label="Recipient's description"
                        aria-describedby="basic-addon2">
               </div>
-              <button v-if="showUploadInput" type="button" class="btn btn-sm btn-primary" @click="uploadPhoto">Upload
+              <button v-if="showUploadInput" type="button" class="btn btn-sm btn-primary no-vertical-align-btn" @click="uploadPhoto">Upload
               </button>
             </li>
             <li class="nav-item mx-3" v-if="this.myUsername === this.userProfile.profile.username">
-              <button type="button" class="btn btn-sm" style="font-size: 15px;" @click="toggleUsernameInput">
+              <button type="button" class="btn btn-sm no-vertical-align-btn" style="font-size: 15px;" @click="toggleUsernameInput">
                 <svg class="feather mx-1">
                   <use href="/feather-sprite-v4.29.0.svg#edit-3"/>
                 </svg>
@@ -900,14 +909,14 @@ export default {
                 <input v-if="showUsernameInput" type="text" id="newUsername" v-model="newUsername"
                        class="form-control form-control-sm"
                        placeholder="New Username" aria-label="Recipient's username" aria-describedby="basic-addon2">
-                <button v-if="showUsernameInput" type="button" class="btn btn-sm btn-primary ml-2 me-2"
+                <button v-if="showUsernameInput" type="button" class="btn btn-sm btn-primary ml-2 me-2 no-vertical-align-btn"
                         @click="setMyUserName">
                   Change
                 </button>
               </div>
             </li>
             <li class="nav-item mx-1">
-                <button type="button" class="btn btn-sm" style="font-size: 20px;" @click="toggleSearchInput">
+                <button type="button" class="btn btn-sm no-vertical-align-btn" style="font-size: 20px;" @click="toggleSearchInput">
                   <svg class="feather mx-1">
                     <use href="/feather-sprite-v4.29.0.svg#search"/>
                   </svg>
@@ -919,7 +928,7 @@ export default {
                 <input v-if="showSearchInput" type="text" id="Searched Username" v-model="profileOwner"
                        class="form-control form-control-sm"
                        placeholder="Who are you searching for?" aria-label="Recipient's username" aria-describedby="basic-addon2">
-                <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2" @click="searchUser">
+                <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2 no-vertical-align-btn" @click="searchUser">
                   Search
                 </button>
               </div>

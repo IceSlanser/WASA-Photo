@@ -18,6 +18,7 @@ export default {
           post: {
             ID: 0,
             username: "",
+            profile_ID: 0,
             file: "",
             description: "",
             like_count: 0,
@@ -450,32 +451,34 @@ export default {
       <img v-if="post.post.file" :src="'data:image/jpeg;base64,' + post.post.file" alt="Post Image" class="post-image img-fluid align-content-center">
 
       <div class="position-relative">
-        <div class="d-flex justify-content-between pt-3">
-          <p><span class="username">{{ post.post.username }}:</span>
+        <div class="d-flex justify-content-between pt-3 ">
+          <p><span class="username btn no-border-btn no-padding-btn no-vertical-align-btn" @click="getUser(post.post.profile_ID)">
+            {{ post.post.username }}:
+          </span>
             <span class="text">{{ post.post.description }}</span>
           </p>
           <p style="margin-right: 0.5rem; font-size: 0.8rem; font-style: italic">{{ post.post.date_time }}</p>
         </div>
         <div class="border-bottom"></div>
-        <button type="button" class="btn" @click="showLikes(post.post.ID)">
+        <button type="button" class="btn no-vertical-align-btn" @click="showLikes(post.post.ID)">
           Likes: {{ post.post.like_count}}
         </button>
-        <button type="button" class="btn" @click="toggleLike(post.post.ID)">
+        <button type="button" class="btn no-vertical-align-btn" @click="toggleLike(post.post.ID)">
           <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
         </button>
         <div style=" display: flex">
           <div style="display: inline-block;">
-            <button type="button" class="btn" @click="showComments(post.post.ID)">
+            <button type="button" class="btn no-vertical-align-btn" @click="showComments(post.post.ID)">
               Comments: {{ post.post.comment_count }}
             </button>
-            <button type="button" class="btn mb-1" @click="toggleCommentInput(post.post.ID)">
+            <button type="button" class="btn no-vertical-align-btn" @click="toggleCommentInput(post.post.ID)">
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
             </button>
           </div>
           <div v-if="post.post.showCommentInput" style="display: flex; flex-grow: 1; padding: 0.35rem;">
             <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
                    placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
-            <button v-if="post.post.showCommentInput" type="button" class="btn btn-sm btn-primary" @click="commentPhoto(post.post.ID)">
+            <button v-if="post.post.showCommentInput" type="button" class="btn no-vertical-align-btn btn-sm btn-primary" @click="commentPhoto(post.post.ID)">
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
             </button>
           </div>
@@ -490,10 +493,11 @@ export default {
             <div class="vertical-line"></div>
 
             <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem;">
-                <span v-for="owner in this.fullPost.like_owners" :key="owner" class="btn me-2" style="font-size: 1.1rem"
-                      @click="getUser(owner.owner_ID)">{{ owner.owner_name }}</span>
+                <span v-for="owner in this.fullPost.like_owners" :key="owner" class="me-2 like username btn no-vertical-align-btn" @click="getUser(owner.owner_ID)">
+                  {{ owner.owner_name }}
+                </span>
             </div>
-            <button class="btn close-button no-border-btn no-padding-btn" @click="this.closeLikeWindow(post.post.ID)">
+            <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeLikeWindow(post.post.ID)">
               <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
             </button>
           </div>
@@ -509,16 +513,17 @@ export default {
 
             <ul style="margin-left: 1.5rem; margin-right: 1.70rem; margin-top: 0.5rem">
               <span v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username" class="comment">
-
-                <div class="username" >{{fullComment.username + ":  "}}</div>
+                <div class="username btn no-border-btn no-padding-btn no-vertical-align-btn" @click="getUser(fullComment.comment.owner_ID)">
+                  {{fullComment.username + ":  "}}
+                </div>
                 <div class="text">{{fullComment.comment.text }}</div>
-                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn no-padding-btn"
+                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn no-padding-btn no-vertical-align-btn"
                         @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
                   <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
                 </button>
               </span>
             </ul>
-            <button class="btn close-button no-border-btn no-padding-btn" @click="this.closeCommentWindow(post.post.ID)">
+            <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeCommentWindow(post.post.ID)">
               <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
             </button>
           </div>
@@ -549,7 +554,7 @@ export default {
               </RouterLink>
             </li>
             <li class="nav-item mx-1">
-              <button type="button" class="btn btn-sm" style="font-size: 20px;" @click="toggleSearchInput">
+              <button type="button" class="btn btn-sm no-vertical-align-btn" style="font-size: 20px;" @click="toggleSearchInput">
                 <svg class="feather mx-1">
                   <use href="/feather-sprite-v4.29.0.svg#search"/>
                 </svg>
@@ -559,7 +564,7 @@ export default {
                 <input v-if="showSearchInput" type="text" id="Searched Username" v-model="profileOwner"
                        class="form-control form-control-sm"
                        placeholder="Who are you searching for?" aria-label="Recipient's username" aria-describedby="basic-addon2">
-                <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2" @click="searchUser">
+                <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2 no-vertical-align-btn" @click="searchUser">
                   Search
                 </button>
               </div>
@@ -644,10 +649,14 @@ export default {
   flex-grow: 1;
   background-color: white;
   border-color: #000000;
-  border-width: 2px;
+  min-height: 100%;
   max-height: 100%;
   overflow-y: scroll;
-  min-height: 100%;
+}
+
+.like {
+  padding-bottom: .25rem;
+  padding-right: .25rem;
 }
 
 .vertical-text {
@@ -678,10 +687,9 @@ export default {
   flex-grow: 1;
   background-color: white;
   border-color: #000000;
-  border-width: 2px;
-  max-height: 100%;
-  overflow-y: auto;
   min-height: 100%;
+  max-height: 100%;
+  overflow-y: scroll;
 }
 
 .comment {
@@ -709,6 +717,10 @@ export default {
 
 .no-padding-btn {
   padding: 0;
+}
+
+.no-vertical-align-btn {
+  vertical-align: 0;
 }
 
 .vertical-line {

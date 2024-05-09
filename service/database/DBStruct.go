@@ -14,7 +14,7 @@ type User struct {
 
 type Post struct {
 	ID           uint64    `json:"ID"`
-	ProfileID    uint64    `json:"profile_id"`
+	ProfileID    uint64    `json:"profile_ID"`
 	File         []byte    `json:"file"`
 	Description  string    `json:"description"`
 	LikeCount    uint64    `json:"like_count"`

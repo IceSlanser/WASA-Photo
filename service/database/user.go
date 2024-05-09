@@ -251,12 +251,12 @@ func (db *appdbimpl) DeleteFollow(UID uint64, followedUID uint64) (bool, error) 
 	}
 
 	// Update FollowingCount for the follower
-	_, err = db.c.Exec("UPDATE profiles SET CASE WHEN FollowingCount > 0 THEN FollowingCount - 1 ELSE 0 END WHERE ID = ?", UID)
+	_, err = db.c.Exec("UPDATE profiles SET CASE WHEN FollowingCount = FollowingCount - 1 WHERE ID = ?", UID)
 	if err != nil {
 		return true, err
 	}
 	// Update FollowerCount for the followed user
-	_, err = db.c.Exec("UPDATE profiles SET CASE WHEN FollowerCount > 0 THEN FollowerCount - 1 ELSE 0 END WHERE ID = ?", followedUID)
+	_, err = db.c.Exec("UPDATE profiles SET CASE WHEN FollowerCount = FollowerCount - 1 WHERE ID = ?", followedUID)
 	if err != nil {
 		return true, err
 	}

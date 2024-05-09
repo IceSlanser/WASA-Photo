@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/IceSlanserUni/WASAPhoto/service/database"
-	"strconv"
 )
 
 type User struct {
@@ -16,6 +15,7 @@ type User struct {
 type Post struct {
 	ID           uint64 `json:"ID"`
 	Username     string `json:"username"`
+	ProfileID    uint64 `json:"profile_ID"`
 	File         []byte `json:"file"`
 	Description  string `json:"description"`
 	LikeCount    uint64 `json:"like_count"`
@@ -60,7 +60,8 @@ func NewUser(user database.User) User {
 func NewPost(post database.Post) Post {
 	return Post{
 		ID:           post.ID,
-		Username:     strconv.FormatUint(post.ProfileID, 10),
+		Username:     "",
+		ProfileID:    post.ProfileID,
 		File:         post.File,
 		Description:  post.Description,
 		LikeCount:    post.LikeCount,

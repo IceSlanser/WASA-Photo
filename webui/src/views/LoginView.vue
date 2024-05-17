@@ -16,8 +16,8 @@ export default {
         this.error = null
         try {
           let response = await this.$axios.put("/session", { username: this.username })
-          await localStorage.setItem("ID", response.data);
-          await localStorage.setItem("username", this.username);
+          await sessionStorage.setItem("ID", response.data);
+          await sessionStorage.setItem("username", this.username);
           this.$router.push({ path: '/stream' })
         } catch (e) {
           if (e.response && e.response.status === 400) {

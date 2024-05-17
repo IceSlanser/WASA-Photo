@@ -6,8 +6,8 @@ export default {
   data: function() {
     return {
       error: null,
-      myID: localStorage.getItem("ID"),
-      myUsername: localStorage.getItem("username"),
+      myID: sessionStorage.getItem("ID"),
+      myUsername: sessionStorage.getItem("username"),
       newUsername: "",
       profileOwner: "",
       newText: "",
@@ -98,7 +98,7 @@ export default {
 
 	methods: {
     async doLogout() {
-      await localStorage.clear()
+      await sessionStorage.clear()
       this.$router.push({path: '/'})
     },
 
@@ -108,11 +108,10 @@ export default {
       try {
         let response = await this.$axios.get(`/stream`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         })
         this.stream = response.data
-        await localStorage.setItem("stream", JSON.stringify(this.stream));
         this.showLoading = false;
       } catch (e) {
         this.showLoading = false;
@@ -133,7 +132,7 @@ export default {
 
     async getProfile() {
       this.isMyProfile = true;
-      localStorage.setItem("isMyProfile", JSON.stringify(this.isMyProfile));
+      sessionStorage.setItem("isMyProfile", JSON.stringify(this.isMyProfile));
       await this.$router.push({path: `/users/${this.myID}/profile`})
     },
 
@@ -143,14 +142,14 @@ export default {
       try {
         let response = await this.$axios.get(`/users?username=${this.profileOwner}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         })
         this.userID = response.data
         this.showLoading = false;
         this.isMyProfile = false;
-        localStorage.setItem("isMyProfile", this.isMyProfile)
-        await localStorage.setItem("userID", this.userID)
+        sessionStorage.setItem("isMyProfile", this.isMyProfile)
+        await sessionStorage.setItem("userID", this.userID)
         this.$router.push({path: `/users/${this.userID}/profile`})
       } catch (e) {
         await this.getStream()
@@ -172,8 +171,8 @@ export default {
 
     async getUser(UID) {
       this.isMyProfile = false;
-      localStorage.setItem("isMyProfile", this.isMyProfile)
-      await localStorage.setItem("userID", UID)
+      sessionStorage.setItem("isMyProfile", this.isMyProfile)
+      await sessionStorage.setItem("userID", UID)
       this.$router.push({path: `/users/${UID}/profile`})
     },
 
@@ -181,7 +180,7 @@ export default {
     async toggleSearchInput() {
       this.showSearchInput = !this.showSearchInput;
       if (!this.showSearchInput) {
-        await localStorage.removeItem(this.profileOwner)
+        await sessionStorage.removeItem(this.profileOwner)
         this.profileOwner = ""
       }
     },
@@ -192,7 +191,7 @@ export default {
       try {
         let response = await this.$axios.get(`/posts/${postID}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         });
         this.fullPost = response.data;
@@ -204,7 +203,7 @@ export default {
           try {
             await this.$axios.delete(`/posts/${postID}/likes`, {
               headers: {
-                Authorization: localStorage.getItem("username")
+                Authorization: sessionStorage.getItem("username")
               }
             });
             this.stream[i].post.like_count--;
@@ -227,7 +226,7 @@ export default {
           try {
             await this.$axios.put(`/posts/${postID}/likes`, {}, {
               headers: {
-                Authorization: localStorage.getItem("username")
+                Authorization: sessionStorage.getItem("username")
               }
             });
             this.stream[i].post.like_count++;
@@ -271,11 +270,10 @@ export default {
       try {
         let response = await this.$axios.get(`/posts/${postID}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         });
         this.fullPost = response.data;
-        await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
         this.stream.forEach(post => {
           post.post.showLikeWindow = post.post.ID === postID;
         });
@@ -313,7 +311,7 @@ export default {
         formData.append('text', this.newComments[i])
         await this.$axios.post(`/posts/${postID}/comments`, formData, {
           headers: {
-            Authorization: localStorage.getItem("username"),
+            Authorization: sessionStorage.getItem("username"),
           }
         })
         let j = this.stream.findIndex(post => post.post.ID === postID);
@@ -342,7 +340,7 @@ export default {
       try {
         await this.$axios.delete(`/posts/${postID}/comments/${commentID}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         })
         if (this.myUsername) {
@@ -371,12 +369,11 @@ export default {
       try {
         let response = await this.$axios.get(`/posts/${postID}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         });
 
         this.fullPost = response.data;
-        await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
         this.stream.forEach(post => {
           post.post.showLikeWindow = false;
         });

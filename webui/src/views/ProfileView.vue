@@ -6,10 +6,10 @@ export default {
   data: function () {
     return {
       error: null,
-      myID: localStorage.getItem("ID"),
-      myUsername: localStorage.getItem("username"),
-      userID: localStorage.getItem("userID"),
-      isMyProfile: JSON.parse(localStorage.getItem("isMyProfile")),
+      myID: sessionStorage.getItem("ID"),
+      myUsername: sessionStorage.getItem("username"),
+      userID: sessionStorage.getItem("userID"),
+      isMyProfile: JSON.parse(sessionStorage.getItem("isMyProfile")),
       userProfile: {
         profile: {
           ID: 0,
@@ -73,21 +73,21 @@ export default {
 
   computed: {
     sortedPosts() {
-      if (!this.userProfile.posts) {
+      if (this.userProfile.posts == null) {
         this.userProfile.posts = []
       }
       return this.userProfile.posts.slice().sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
     },
 
     isFollowing() {
-      if (!this.userProfile.followers) {
+      if (this.userProfile.followers == null) {
         this.userProfile.followers = []
       }
       return this.userProfile.followers.includes(Number(this.myID));
     },
 
     isBanned() {
-      if (!this.userProfile.banned_from) {
+      if (this.userProfile.banned_from == null) {
         this.userProfile.banned_from = []
       }
       return this.userProfile.banned_from.includes(Number(this.myID));
@@ -100,7 +100,7 @@ export default {
 
   methods: {
     async doLogout() {
-      await localStorage.clear()
+      await sessionStorage.clear()
       this.$router.push({path: '/'})
     },
 
@@ -127,7 +127,7 @@ export default {
       try {
         let response = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         })
         this.userProfile = response.data
@@ -168,18 +168,17 @@ export default {
       try {
         let response = await this.$axios.get(`/users?username=${this.profileOwner}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         })
         this.userProfile.profile.ID = response.data
         try {
           let res = await this.$axios.get(`/users/${this.userProfile.profile.ID}/profile`, {
             headers: {
-              Authorization: localStorage.getItem("username")
+              Authorization: sessionStorage.getItem("username")
             }
           })
           this.userProfile = res.data
-          await localStorage.setItem("userID", this.userProfile.profile.ID)
           this.showLoading = false;
           this.$router.push({path: `/users/${this.userProfile.profile.ID}/profile`})
         } catch (e) {
@@ -231,7 +230,7 @@ export default {
         formData.append('description', this.newDescription)
         await this.$axios.post("/posts", formData, {
           headers: {
-            Authorization: localStorage.getItem("username"),
+            Authorization: sessionStorage.getItem("username"),
             "Content-Type": "multipart/form-data"
           }
         })
@@ -263,12 +262,11 @@ export default {
       try {
         await this.$axios.delete(`/posts/${postID}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         })
         if (this.myUsername) {
           this.userProfile.posts = this.userProfile.posts.filter(post => post.ID !== postID);
-          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
           await this.getProfile()
         }
       } catch (e) {
@@ -295,13 +293,12 @@ export default {
         try {
           await this.$axios.put("/profile/setUserName", {username: this.newUsername}, {
             headers: {
-              Authorization: localStorage.getItem("username")
+              Authorization: sessionStorage.getItem("username")
             }
           })
           this.userProfile.profile.username = this.newUsername;
           this.myUsername = this.newUsername
-          await localStorage.setItem("username", this.myUsername);
-          await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
+          await sessionStorage.setItem("username", this.myUsername);
           if (this.showUploadInput) {
             await this.togglePhotoInput()
           }
@@ -330,7 +327,7 @@ export default {
       try {
         let response = await this.$axios.get(`/posts/${postID}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         });
         this.fullPost = response.data;
@@ -342,7 +339,7 @@ export default {
           try {
             await this.$axios.delete(`/posts/${postID}/likes`, {
               headers: {
-                Authorization: localStorage.getItem("username")
+                Authorization: sessionStorage.getItem("username")
               }
             });
             this.userProfile.posts[i].like_count--;
@@ -366,7 +363,7 @@ export default {
           try {
             await this.$axios.put(`/posts/${postID}/likes`, {}, {
               headers: {
-                Authorization: localStorage.getItem("username")
+                Authorization: sessionStorage.getItem("username")
               }
             });
             this.userProfile.posts[i].like_count++;
@@ -384,7 +381,6 @@ export default {
           }
 
         }
-        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
       } catch (e) {
         if (e.response && e.response.status === 400) {
           this.error = "Failed to request post";
@@ -408,11 +404,10 @@ export default {
       try {
         let response = await this.$axios.get(`/posts/${postID}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         });
         this.fullPost = response.data;
-        await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
         this.userProfile.posts.forEach(post => {
           post.showLikeWindow = post.ID === postID;
         });
@@ -449,12 +444,11 @@ export default {
 
         await this.$axios.post(`/posts/${postID}/comments`, formData, {
           headers: {
-            Authorization: localStorage.getItem("username"),
+            Authorization: sessionStorage.getItem("username"),
           }
         })
         let j = this.userProfile.posts.findIndex(post => post.ID === postID);
         this.userProfile.posts[j].comment_count++;
-        await localStorage.setItem("userProfile", JSON.stringify(this.userProfile));
         await this.toggleCommentInput(postID)
 
       } catch (e) {
@@ -481,7 +475,7 @@ export default {
       try {
         await this.$axios.delete(`/posts/${postID}/comments/${commentID}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         })
         if (this.myUsername) {
@@ -512,11 +506,10 @@ export default {
       try {
         let response = await this.$axios.get(`/posts/${postID}`, {
           headers: {
-            Authorization: localStorage.getItem("username")
+            Authorization: sessionStorage.getItem("username")
           }
         });
         this.fullPost = response.data;
-        await localStorage.setItem("fullPost", JSON.stringify(this.fullPost))
         let i = this.userProfile.posts.findIndex(post => post.ID === postID);
         this.userProfile.posts[i].showCommentWindow = true
         this.userProfile.posts.forEach(post => {
@@ -548,17 +541,14 @@ export default {
         this.userProfile.followers = []
       }
       const isFollowed = this.userProfile.followers.includes(Number(this.myID))
-      console.log("-------------")
-      console.log("isFollowed: ", isFollowed)
       if (isFollowed) {
         try {
           console.log("Trying to delete...")
           await this.$axios.delete(`/users/${UID}/follow`, {
             headers: {
-              Authorization: localStorage.getItem("username")
+              Authorization: sessionStorage.getItem("username")
             }
           });
-          console.log("Deleted")
           this.userProfile.profile.follower_count--;
           this.userProfile.followers = this.userProfile.followers.filter(user => user !== Number(this.myID))
 
@@ -580,7 +570,7 @@ export default {
           console.log("Trying to add...")
           await this.$axios.put(`/users/${UID}/follow`, {}, {
             headers: {
-              Authorization: localStorage.getItem("username")
+              Authorization: sessionStorage.getItem("username")
             }
           });
           console.log("Added")
@@ -602,7 +592,6 @@ export default {
           }, 3000);
         }
       }
-      await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
 
     },
 
@@ -613,7 +602,7 @@ export default {
         try {
           await this.$axios.delete(`/users/${UID}/ban`, {
             headers: {
-              Authorization: localStorage.getItem("username")
+              Authorization: sessionStorage.getItem("username")
             }
           });
           this.userProfile.banned_from = this.userProfile.banned_from.filter(user => user !== Number(this.myID))
@@ -635,7 +624,7 @@ export default {
         try {
           await this.$axios.put(`/users/${UID}/ban`, {}, {
             headers: {
-              Authorization: localStorage.getItem("username")
+              Authorization: sessionStorage.getItem("username")
             }
           });
           this.userProfile.banned_from.push(Number(this.myID))
@@ -655,7 +644,6 @@ export default {
           }, 3000);
         }
       }
-      await localStorage.setItem("userProfile", JSON.stringify(this.userProfile))
     },
 
 
@@ -672,7 +660,7 @@ export default {
     async toggleUsernameInput() {
       this.showUsernameInput = !this.showUsernameInput;
       if (!this.showUsernameInput) {
-        await localStorage.removeItem(this.newUsername)
+        await sessionStorage.removeItem(this.newUsername)
         this.newUsername = ""
       }
     },
@@ -680,7 +668,7 @@ export default {
     async toggleSearchInput() {
       this.showSearchInput = !this.showSearchInput;
       if (!this.showSearchInput) {
-        await localStorage.removeItem(this.profileOwner)
+        await sessionStorage.removeItem(this.profileOwner)
         this.profileOwner = ""
       }
     },
@@ -688,7 +676,7 @@ export default {
     async togglePhotoInput() {
       this.showUploadInput = !this.showUploadInput;
       if (!this.showUploadInput) {
-        await localStorage.removeItem(this.newPhoto)
+        await sessionStorage.removeItem(this.newPhoto)
         this.newPhoto = ""
         this.newDescription = ""
       }

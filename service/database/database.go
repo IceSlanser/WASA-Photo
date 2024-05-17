@@ -82,7 +82,6 @@ func New(db *sql.DB) (AppDatabase, error) {
 
 	_, errFK := db.Exec("PRAGMA foreign_keys = ON;")
 	if errFK != nil {
-		fmt.Println("Error enabling foreign key constraints:", errFK)
 		return &appdbimpl{}, errFK
 	}
 

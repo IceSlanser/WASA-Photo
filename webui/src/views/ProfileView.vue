@@ -798,13 +798,13 @@ export default {
         <div class="user-like-overlay" v-if="this.sortedPosts[index].showLikeWindow">
           <div class="user-like-modal">
             <ul class="vertical-text" style="font-size: 1.1rem">
-              <h6 v-for="letter in 'LIKES'">{{ letter }}</h6>
+              <h6 v-for="letter in 'LIKES'" :key = "letter">{{ letter }}</h6>
             </ul>
 
             <div class="vertical-line"></div>
 
             <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem">
-              <span v-for="owner in this.fullPost.like_owners" :key="owner" class="me-2 like username btn no-vertical-align-btn" @click="getUser(owner.owner_ID)">
+              <span v-for="owner in this.fullPost.like_owners" :key="owner.username" class="me-2 like username btn no-vertical-align-btn" @click="getUser(owner.owner_ID)">
                 {{ owner.owner_name }}
               </span>
             </div>
@@ -817,7 +817,7 @@ export default {
         <div class="user-comment-overlay" v-if="this.sortedPosts[index].showCommentWindow">
           <div class="user-comment-modal">
             <ul class="vertical-text " style="font-size: 1.1rem">
-              <h6  v-for="letter in 'CMMNT'" >{{ letter }}</h6>
+              <h6  v-for="letter in 'CMMNT'" :key = "letter">{{ letter }}</h6>
             </ul>
 
             <div class="vertical-line"></div>

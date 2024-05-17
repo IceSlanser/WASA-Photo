@@ -75,9 +75,11 @@ func (db *appdbimpl) GetStream(UID uint64) ([]Post, error) {
 	query := `SELECT posts.*
 				FROM posts
 				LEFT JOIN follows ON FollowedUID = ProfileID
-				WHERE ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)
-				AND ProfileID NOT IN (SELECT BannedUID FROM bans WHERE BannerUID = ?) AND follows.FollowerUID = ?`
-	rows, err := db.c.Query(query, UID, UID, UID)
+				WHERE (ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)
+					AND ProfileID NOT IN (SELECT BannedUID FROM bans WHERE BannerUID = ?) AND follows.FollowerUID = ?)
+					OR ProfileID = ?
+				ORDER BY DateTime DESC;`
+	rows, err := db.c.Query(query, UID, UID, UID, UID)
 
 	if err != nil {
 		return nil, err
@@ -95,30 +97,6 @@ func (db *appdbimpl) GetStream(UID uint64) ([]Post, error) {
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	// query my posts
-	query2 := `SELECT posts.*
-				FROM posts
-				WHERE ProfileID = ?`
-	rows2, err := db.c.Query(query2, UID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Store my posts
-	for rows2.Next() {
-		var post Post
-		err = rows2.Scan(&post.ID, &post.ProfileID, &post.File, &post.Description, &post.LikeCount, &post.CommentCount, &post.DateTime)
-		if err != nil {
-			return nil, err
-		}
-		posts = append(posts, post)
-	}
-
-	if err = rows2.Err(); err != nil {
 		return nil, err
 	}
 
@@ -203,7 +181,7 @@ func (db *appdbimpl) PutFollow(UID uint64, followedUID uint64) (bool, error) {
 	}
 	if !valid {
 		return false, err
-	}
+	} //TODO: delete isValidProfile and returned bool
 
 	var followID uint64
 	// Try to insert the follow into the database

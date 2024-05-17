@@ -83,15 +83,6 @@ export default {
     }
   },
 
-  computed: {
-    sortedPosts() {
-      if (!this.stream) {
-        this.stream = []
-      }
-      return this.stream.slice().sort((a, b) => new Date(b.post.date_time) - new Date(a.post.date_time));
-    },
-  },
-
   mounted() {
     this.getStream();
   },
@@ -303,7 +294,7 @@ export default {
       console.log("---------")
       console.log("postID: ", postID)
       try {
-        let i = this.sortedPosts.findIndex(post => post.post.ID === postID);
+        let i = this.stream.findIndex(post => post.post.ID === postID);
         if (!this.newComments[i]) {
           this.newComments[i] = "";
         }
@@ -444,7 +435,7 @@ export default {
 
 
   <div class="post-grid" v-if="!showLoading">
-    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container" >
+    <div v-for="(post, index) in stream" :key="post.ID" class="post-container" >
       <img v-if="post.post.file" :src="'data:image/jpeg;base64,' + post.post.file" alt="Post Image" class="post-image img-fluid align-content-center">
 
       <div class="position-relative">
@@ -481,7 +472,7 @@ export default {
           </div>
         </div>
 
-        <div class="user-like-overlay" v-if="this.sortedPosts[index].post.showLikeWindow">
+        <div class="user-like-overlay" v-if="this.stream[index].post.showLikeWindow">
           <div class="user-like-modal">
             <ul class="vertical-text" style="font-size: 1.1rem">
               <h6 v-for="letter in 'LIKES'" :key = "letter">{{ letter }}</h6>
@@ -500,7 +491,7 @@ export default {
           </div>
         </div>
 
-        <div class="user-comment-overlay" v-if="this.sortedPosts[index].post.showCommentWindow">
+        <div class="user-comment-overlay" v-if="this.stream[index].post.showCommentWindow">
           <div class="user-comment-modal">
             <ul class="vertical-text " style="font-size: 1.1rem">
               <h6  v-for="letter in 'CMMNT'" :key = "letter">{{ letter }}</h6>

@@ -72,23 +72,16 @@ export default {
   },
 
   computed: {
-    sortedPosts() {
-      if (this.userProfile.posts == null) {
-        this.userProfile.posts = []
-      }
-      return this.userProfile.posts.slice().sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
-    },
-
     isFollowing() {
-      if (this.userProfile.followers == null) {
-        this.userProfile.followers = []
+      if (this.userProfile.followers == null || this.userProfile.followers === []) {
+        return false
       }
       return this.userProfile.followers.includes(Number(this.myID));
     },
 
     isBanned() {
-      if (this.userProfile.banned_from == null) {
-        this.userProfile.banned_from = []
+      if (this.userProfile.banned_from == null || this.userProfile.banned_from === []) {
+        return false
       }
       return this.userProfile.banned_from.includes(Number(this.myID));
     },
@@ -435,7 +428,7 @@ export default {
     async commentPhoto(postID) {
       this.error = null;
       try {
-        let i = this.sortedPosts.findIndex(post => post.ID === postID);
+        let i = this.userProfile.posts.findIndex(post => post.ID === postID);
         if (!this.newComments[i]) {
           this.newComments[i] = "";
         }
@@ -758,7 +751,7 @@ export default {
   </div>
 
   <div class="post-grid" v-if="!showLoading">
-    <div v-for="(post, index) in sortedPosts" :key="post.ID" class="post-container">
+    <div v-for="(post, index) in userProfile.posts" :key="post.ID" class="post-container">
       <img v-if="post.file" :src="'data:image/jpeg;base64,' + post.file" alt="Post Image" class="post-image img-fluid align-content-center">
       <div class="position-relative">
         <div class="d-flex justify-content-between pt-3">
@@ -795,7 +788,7 @@ export default {
           </div>
         </div>
 
-        <div class="user-like-overlay" v-if="this.sortedPosts[index].showLikeWindow">
+        <div class="user-like-overlay" v-if="this.userProfile.posts[index].showLikeWindow">
           <div class="user-like-modal">
             <ul class="vertical-text" style="font-size: 1.1rem">
               <h6 v-for="letter in 'LIKES'" :key = "letter">{{ letter }}</h6>
@@ -814,7 +807,7 @@ export default {
           </div>
         </div>
 
-        <div class="user-comment-overlay" v-if="this.sortedPosts[index].showCommentWindow">
+        <div class="user-comment-overlay" v-if="this.userProfile.posts[index].showCommentWindow">
           <div class="user-comment-modal">
             <ul class="vertical-text " style="font-size: 1.1rem">
               <h6  v-for="letter in 'CMMNT'" :key = "letter">{{ letter }}</h6>

@@ -7,7 +7,7 @@ import (
 
 func (db *appdbimpl) GetUserPosts(myUID uint64, userID uint64) ([]Post, error) {
 	// Store posts
-	rows, err := db.c.Query("SELECT * FROM posts WHERE ProfileID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", userID, myUID)
+	rows, err := db.c.Query("SELECT * FROM posts WHERE ProfileID = ? AND ProfileID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?) ORDER BY DateTime DESC", userID, myUID)
 	if err != nil {
 		return nil, err
 	}

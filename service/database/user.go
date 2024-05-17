@@ -118,7 +118,7 @@ func (db *appdbimpl) GetStream(UID uint64) ([]Post, error) {
 		posts = append(posts, post)
 	}
 
-	if err = rows.Err(); err != nil {
+	if err = rows2.Err(); err != nil {
 		return nil, err
 	}
 

@@ -440,9 +440,12 @@ export default {
 
       <div class="position-relative">
         <div class="d-flex justify-content-between pt-3 ">
-          <p><span class="username btn no-border-btn no-padding-btn no-vertical-align-btn" @click="getUser(post.post.profile_ID)">
-            {{ post.post.username }}:
-          </span>
+          <p>
+            <a :href="'http://users/' + post.post.profile_ID + '/profile'">
+              <span class="username btn no-border-btn no-padding-btn no-vertical-align-btn" @click="getUser(post.post.profile_ID)">
+                {{ post.post.username }}:
+              </span>
+            </a>
             <span class="text">{{ post.post.description }}</span>
           </p>
           <p style="margin-right: 0.5rem; font-size: 0.8rem; font-style: italic">{{ post.post.date_time }}</p>
@@ -454,7 +457,7 @@ export default {
         <button type="button" class="btn no-vertical-align-btn" @click="toggleLike(post.post.ID)">
           <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
         </button>
-        <div style=" display: flex">
+        <div style=" display: flex; padding-bottom: 0.35rem; padding-right: 0.35rem">
           <div style="display: inline-block;">
             <button type="button" class="btn no-vertical-align-btn" @click="showComments(post.post.ID)">
               Comments: {{ post.post.comment_count }}
@@ -463,7 +466,7 @@ export default {
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
             </button>
           </div>
-          <div v-if="post.post.showCommentInput" style="display: flex; flex-grow: 1; padding: 0.35rem;">
+          <div v-if="post.post.showCommentInput" style="display: flex; flex-grow: 1">
             <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
                    placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
             <button v-if="post.post.showCommentInput" type="button" class="btn no-vertical-align-btn btn-sm btn-primary" @click="commentPhoto(post.post.ID)">
@@ -474,16 +477,16 @@ export default {
 
         <div class="user-like-overlay" v-if="this.stream[index].post.showLikeWindow">
           <div class="user-like-modal">
-            <ul class="vertical-text" style="font-size: 1.1rem">
-              <h6 v-for="letter in 'LIKES'" :key = "letter">{{ letter }}</h6>
-            </ul>
-
-            <div class="vertical-line"></div>
+            <div class="vertical-line">
+              <svg class="feather icon"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
+            </div>
 
             <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem;">
-                <span v-for="owner in this.fullPost.like_owners" :key="owner.owner_ID" class="me-2 like username btn no-vertical-align-btn" @click="getUser(owner.owner_ID)">
+              <a href="'http://users/' + {{post.post.profile_ID}} + '/profile'">
+                <span v-for="owner in this.fullPost.like_owners" :key="owner.owner_ID" class="me-2 like username btn no-vertical-align-btn no-border-btn" @click="getUser(owner.owner_ID)">
                   {{ owner.owner_name }}
                 </span>
+              </a>
             </div>
             <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeLikeWindow(post.post.ID)">
               <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
@@ -493,22 +496,25 @@ export default {
 
         <div class="user-comment-overlay" v-if="this.stream[index].post.showCommentWindow">
           <div class="user-comment-modal">
-            <ul class="vertical-text " style="font-size: 1.1rem">
-              <h6  v-for="letter in 'CMMNT'" :key = "letter">{{ letter }}</h6>
-            </ul>
-
-            <div class="vertical-line"></div>
+            <div class="vertical-line">
+              <svg class="feather icon"><use href="/feather-sprite-v4.29.0.svg#message-square"/></svg>
+            </div>
 
             <ul style="margin-left: 1.5rem; margin-right: 1.70rem; margin-top: 0.5rem">
               <span v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username" class="comment">
-                <div class="username btn no-border-btn no-padding-btn no-vertical-align-btn" @click="getUser(fullComment.comment.owner_ID)">
-                  {{fullComment.username + ":  "}}
-                </div>
-                <div class="text">{{fullComment.comment.text }}</div>
-                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn no-padding-btn no-vertical-align-btn"
+                <div class="d-flex">
+                  <a href="'http://users/' + {{post.post.profile_ID}} + '/profile'">
+                    <div class="username btn no-border-btn no-padding-btn no-vertical-align-btn" @click="getUser(fullComment.comment.owner_ID)">
+                      {{fullComment.username + ":  "}}
+                    </div>
+                  </a>
+                  <div class="text">{{fullComment.comment.text }}</div>
+                  <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn px-0"
                         @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
-                  <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
-                </button>
+                    <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
+                  </button>
+                </div>
+                <div class="datetime">{{ fullComment.comment.date_time }}</div>
               </span>
             </ul>
             <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeCommentWindow(post.post.ID)">
@@ -681,12 +687,13 @@ export default {
 }
 
 .comment {
-  display: flex;
   align-items: center;
   padding-bottom: .5rem;
 }
 
 .delete-comment {
+  display: flex;
+  height:100%;
   margin-left: .5rem;
   font-size: 1.1rem;
   color: red;
@@ -718,5 +725,13 @@ export default {
   padding-left: 3rem;
 }
 
+.icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 2.5rem !important;
+  width: 2.5rem !important;
+}
 
 </style>

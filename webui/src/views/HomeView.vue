@@ -482,13 +482,14 @@ export default {
               <svg class="feather icon"><use href="/feather-sprite-v4.29.0.svg#heart"/></svg>
             </div>
 
-            <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem;">
-              <button class="btn no-border-btn no-padding-btn no-vertical-align-btn">
-                <span v-for="owner in this.fullPost.like_owners" :key="owner.owner_ID" class="me-2 like username btn no-vertical-align-btn no-border-btn" @click="getUser(owner.owner_ID)">
+            <div style="margin-left: 50%; transform: translateX(-50%); margin-top: 0.1rem;">
+              <button class="btn no-border-btn no-padding-btn no-vertical-align-btn" style="display: flex; flex-direction: column; align-items: center">
+                <span v-for="owner in this.fullPost.like_owners" :key="owner.owner_ID" class="like username btn no-vertical-align-btn no-border-btn" @click="getUser(owner.owner_ID)">
                   {{ owner.owner_name }}
                 </span>
               </button>
             </div>
+
             <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeLikeWindow(post.post.ID)">
               <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
             </button>
@@ -652,18 +653,6 @@ export default {
 .like {
   padding-bottom: .25rem;
   padding-right: .25rem;
-}
-
-.vertical-text {
-  position: absolute;
-  flex-direction: column;
-  text-align: center;
-  margin-top: 0.3rem;
-  margin-bottom: 0.3rem;
-}
-
-.vertical-text h6 {
-  margin-left: -1rem;
 }
 
 .user-comment-overlay {

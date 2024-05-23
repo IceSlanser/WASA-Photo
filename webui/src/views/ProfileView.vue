@@ -816,10 +816,9 @@ export default {
             </div>
 
             <div class="vertical-line"></div>
-
-            <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem">
-              <button class="btn no-border-btn no-padding-btn no-vertical-align-btn">
-                <span v-for="owner in this.fullPost.like_owners" :key="owner.username" class="me-2 like username btn no-border-btn no-vertical-align-btn" @click="getUser(owner.owner_ID)">
+            <div style="margin-left: 50%; transform: translateX(-50%); margin-top: 0.1rem;">
+              <button class="btn no-border-btn no-padding-btn no-vertical-align-btn" style="display: flex; flex-direction: column; align-items: center">
+                <span v-for="owner in this.fullPost.like_owners" :key="owner.username" class="like username btn no-vertical-align-btn no-border-btn" @click="getUser(owner.owner_ID)">
                   {{ owner.owner_name }}
                 </span>
               </button>

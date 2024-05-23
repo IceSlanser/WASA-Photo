@@ -62,7 +62,7 @@ func (db *appdbimpl) GetProfile(myUID uint64, userID uint64) (User, error) {
 
 func (db *appdbimpl) GetUID(myUID uint64, username string) (uint64, error) {
 	var UID uint64
-	err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ? AND ID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", username, myUID).Scan(&UID)
+	err := db.c.QueryRow("SELECT ID FROM profiles WHERE LOWER(Username) = LOWER(?) AND ID NOT IN (SELECT BannerUID FROM bans WHERE BannedUID = ?)", username, myUID).Scan(&UID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, err
@@ -289,7 +289,7 @@ func (db *appdbimpl) IsAvailable(newName string) (uint64, bool) {
 	var UID uint64
 
 	// Return true if the username is not taken, false otherwise
-	err := db.c.QueryRow("SELECT ID FROM profiles WHERE Username = ?", newName).Scan(&UID)
+	err := db.c.QueryRow("SELECT ID FROM profiles WHERE LOWER(Username) = LOWER(?)", newName).Scan(&UID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, true

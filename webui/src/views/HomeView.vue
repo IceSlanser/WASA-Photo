@@ -167,15 +167,6 @@ export default {
       this.$router.push({path: `/users/${UID}/profile`})
     },
 
-
-    async toggleSearchInput() {
-      this.showSearchInput = !this.showSearchInput;
-      if (!this.showSearchInput) {
-        await sessionStorage.removeItem(this.profileOwner)
-        this.profileOwner = ""
-      }
-    },
-
     async toggleLike(postID) {
       this.error = null;
       let i = this.stream.findIndex(post => post.post.ID === postID);
@@ -291,8 +282,6 @@ export default {
 
     async commentPhoto(postID) {
       this.error = null;
-      console.log("---------")
-      console.log("postID: ", postID)
       try {
         let i = this.stream.findIndex(post => post.post.ID === postID);
         if (!this.newComments[i]) {
@@ -389,6 +378,13 @@ export default {
       }
     },
 
+    async toggleSearchInput() {
+      this.showSearchInput = !this.showSearchInput;
+      if (!this.showSearchInput) {
+        this.profileOwner = ""
+      }
+    },
+
     async toggleCommentInput(postID) {
       let i = this.stream.findIndex(post => post.post.ID === postID);
       this.stream[i].post.showCommentInput = !this.stream[i].post.showCommentInput;
@@ -418,7 +414,7 @@ export default {
       <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
     </div>
   </div>
-  <div class="loading-container mt-5" v-if="showLoading">
+  <div class="loading-container" style="padding-top: 10rem" v-if="showLoading">
     <div style="text-align: center">
       <h1 class="h1">Loading...</h1>
       <div class="spinner-border"></div>
@@ -426,10 +422,15 @@ export default {
   </div>
 
   <div v-else>
-    <div style="display: flex; justify-content: center;">
-      <h2 class="h2">Home</h2>
+    <div>
+      <h2 class="h2" style="display: flex; justify-content: center">Home</h2>
     </div>
     <div class="mb-3 border-bottom"></div>
+    <div v-if="!this.stream">
+      <div class="h3" style="display: flex; justify-content: center; padding-top: 15rem">Follow someone to get started</div>
+      <div class="h3" style="display: flex; justify-content: center">or</div>
+      <div class="h3" style="display: flex; justify-content: center">post something yourself</div>
+    </div>
   </div>
 
 
@@ -441,11 +442,11 @@ export default {
       <div class="position-relative">
         <div class="d-flex justify-content-between pt-3 ">
           <p>
-            <a :href="'http://users/' + post.post.profile_ID + '/profile'">
-              <span class="username btn no-border-btn no-padding-btn no-vertical-align-btn" @click="getUser(post.post.profile_ID)">
+            <button class="btn no-border-btn no-padding-btn no-vertical-align-btn">
+              <span class="username" @click="getUser(post.post.profile_ID)">
                 {{ post.post.username }}:
               </span>
-            </a>
+            </button>
             <span class="text">{{ post.post.description }}</span>
           </p>
           <p style="margin-right: 0.5rem; font-size: 0.8rem; font-style: italic">{{ post.post.date_time }}</p>
@@ -482,11 +483,11 @@ export default {
             </div>
 
             <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem;">
-              <a href="'http://users/' + {{post.post.profile_ID}} + '/profile'">
+              <button class="btn no-border-btn no-padding-btn no-vertical-align-btn">
                 <span v-for="owner in this.fullPost.like_owners" :key="owner.owner_ID" class="me-2 like username btn no-vertical-align-btn no-border-btn" @click="getUser(owner.owner_ID)">
                   {{ owner.owner_name }}
                 </span>
-              </a>
+              </button>
             </div>
             <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeLikeWindow(post.post.ID)">
               <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
@@ -503,11 +504,11 @@ export default {
             <ul style="margin-left: 1.5rem; margin-right: 1.70rem; margin-top: 0.5rem">
               <span v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username" class="comment">
                 <div class="d-flex">
-                  <a href="'http://users/' + {{post.post.profile_ID}} + '/profile'">
+                  <button class="btn no-border-btn no-padding-btn no-vertical-align-btn">
                     <div class="username btn no-border-btn no-padding-btn no-vertical-align-btn" @click="getUser(fullComment.comment.owner_ID)">
                       {{fullComment.username + ":  "}}
                     </div>
-                  </a>
+                  </button>
                   <div class="text">{{fullComment.comment.text }}</div>
                   <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn px-0"
                         @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
@@ -547,8 +548,8 @@ export default {
                 Profile
               </RouterLink>
             </li>
-            <li class="nav-item mx-1">
-              <button type="button" class="btn btn-sm no-vertical-align-btn" style="font-size: 20px;" @click="toggleSearchInput">
+            <li class="nav-item">
+              <button type="button" class="btn no-border-btn" style="font-size: 20px;" @click="toggleSearchInput">
                 <svg class="feather mx-1">
                   <use href="/feather-sprite-v4.29.0.svg#search"/>
                 </svg>

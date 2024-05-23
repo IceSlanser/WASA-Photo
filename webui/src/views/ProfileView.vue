@@ -536,7 +536,6 @@ export default {
       const isFollowed = this.userProfile.followers.includes(Number(this.myID))
       if (isFollowed) {
         try {
-          console.log("Trying to delete...")
           await this.$axios.delete(`/users/${UID}/follow`, {
             headers: {
               Authorization: sessionStorage.getItem("username")
@@ -560,13 +559,11 @@ export default {
 
       } else {
         try {
-          console.log("Trying to add...")
           await this.$axios.put(`/users/${UID}/follow`, {}, {
             headers: {
               Authorization: sessionStorage.getItem("username")
             }
           });
-          console.log("Added")
           this.userProfile.profile.follower_count++;
           this.userProfile.followers.push(Number(this.myID))
 
@@ -589,6 +586,9 @@ export default {
     },
 
     async toggleBan(UID) {
+      if (this.userProfile.banned_from == null) {
+        this.userProfile.banned_from = []
+      }
       const isBanned = this.userProfile.banned_from.includes(Number(this.myID))
 
       if (isBanned) {
@@ -650,28 +650,42 @@ export default {
       this.userProfile.posts[i].showCommentWindow = false
     },
 
+    async togglePhotoInput() {
+      this.showUploadInput = !this.showUploadInput;
+      if (!this.showUploadInput) {
+        this.newUsername = ""
+        this.profileOwner = ""
+        this.newPhoto = ""
+        this.newDescription = ""
+        this.newComments = []
+        this.showSearchInput = false;
+        this.showUsernameInput = false;
+      }
+    },
+
     async toggleUsernameInput() {
       this.showUsernameInput = !this.showUsernameInput;
       if (!this.showUsernameInput) {
-        await sessionStorage.removeItem(this.newUsername)
         this.newUsername = ""
+        this.profileOwner = ""
+        this.newPhoto = ""
+        this.newDescription = ""
+        this.newComments = []
+        this.showSearchInput = false;
+        this.showUploadInput = false;
       }
     },
 
     async toggleSearchInput() {
       this.showSearchInput = !this.showSearchInput;
       if (!this.showSearchInput) {
-        await sessionStorage.removeItem(this.profileOwner)
+        this.newUsername = ""
         this.profileOwner = ""
-      }
-    },
-
-    async togglePhotoInput() {
-      this.showUploadInput = !this.showUploadInput;
-      if (!this.showUploadInput) {
-        await sessionStorage.removeItem(this.newPhoto)
         this.newPhoto = ""
         this.newDescription = ""
+        this.newComments = []
+        this.showUploadInput = false;
+        this.showUsernameInput = false;
       }
     },
 
@@ -697,7 +711,7 @@ export default {
 
 
 
-  <div class="loading-container mt-5" v-if="showLoading">
+  <div class="loading-container" style="padding-top: 10rem" v-if="showLoading">
     <div style="text-align: center">
       <h1 class="h1">Loading...</h1>
       <div class="spinner-border"></div>
@@ -756,11 +770,11 @@ export default {
       <div class="position-relative">
         <div class="d-flex justify-content-between pt-3">
           <p>
-            <a href="'http://users/' + {{post.profile_ID}} + '/profile'">
+            <button class="btn no-border-btn no-padding-btn no-vertical-align-btn">
               <span class="username btn no-border-btn no-padding-btn no-vertical-align-btn" @click="getUser(post.profile_ID)">
                 {{ post.username }}:
               </span>
-            </a>
+            </button>
             <span class="text">{{ post.description }}</span>
           </p>
           <p style="margin-right: 0.5rem; font-size: 0.8rem; font-style: italic">{{post.date_time}}</p>
@@ -804,11 +818,11 @@ export default {
             <div class="vertical-line"></div>
 
             <div style="margin-left: 4rem; margin-right: 1.70rem; margin-top: 0.1rem">
-              <a href="'http://users/' + {{post.post.profile_ID}} + '/profile'">
+              <button class="btn no-border-btn no-padding-btn no-vertical-align-btn">
                 <span v-for="owner in this.fullPost.like_owners" :key="owner.username" class="me-2 like username btn no-border-btn no-vertical-align-btn" @click="getUser(owner.owner_ID)">
                   {{ owner.owner_name }}
                 </span>
-              </a>
+              </button>
             </div>
             <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeLikeWindow(post.ID)">
               <svg class="feather" style="width: 1.5rem; height: 1.5rem"><use href="/feather-sprite-v4.29.0.svg#x"/></svg>
@@ -825,11 +839,11 @@ export default {
             <ul style="margin-left: 1.5rem; margin-right: 1.70rem; margin-top: 0.5rem">
               <span v-for="fullComment in this.fullPost.full_comments" :key="fullComment.username" class="comment">
                 <div class="d-flex">
-                  <a href="'http://users/' + {{post.post.profile_ID}} + '/profile'">
+                  <button class="btn no-border-btn no-padding-btn no-vertical-align-btn">
                     <div class="username btn no-padding-btn no-vertical-align-btn no-border-btn" @click="getUser(fullComment.comment.owner_ID)">
                      {{ fullComment.username + ":  " }}
                     </div>
-                  </a>
+                  </button>
                   <div class="text">{{ fullComment.comment.text }}</div>
                   <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn px-0" @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
                     <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
@@ -907,8 +921,8 @@ export default {
                 </button>
               </div>
             </li>
-            <li class="nav-item mx-1">
-                <button type="button" class="btn btn-sm no-vertical-align-btn" style="font-size: 20px;" @click="toggleSearchInput">
+            <li class="nav-item">
+                <button type="button" class="btn no-border-btn" style="font-size: 20px;" @click="toggleSearchInput">
                   <svg class="feather mx-1">
                     <use href="/feather-sprite-v4.29.0.svg#search"/>
                   </svg>

@@ -797,7 +797,7 @@ export default {
           </div>
           <div v-if="post.showCommentInput" style=" display: flex; flex-grow: 1">
             <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
-                   placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
+                   placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2" autocomplete="off">
             <button v-if="post.showCommentInput" type="button" class="btn btn-sm btn-primary no-vertical-align-btn" @click="commentPhoto(post.ID)">
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
             </button>
@@ -844,11 +844,14 @@ export default {
                     </div>
                   </button>
                   <div class="text">{{ fullComment.comment.text }}</div>
-                  <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn px-0" @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
-                    <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
-                  </button>
                 </div>
-                <div class="datetime">{{ fullComment.comment.date_time }}</div>
+                <div class="d-flex">
+                  <div class="datetime">{{ fullComment.comment.date_time }}</div>
+                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn"
+                        @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
+                  <span>delete</span>
+                </button>
+                </div>
               </span>
             </ul>
             <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeCommentWindow(post.ID)">
@@ -898,7 +901,7 @@ export default {
                 <input type="file" id="newPhoto" @change="handleFileChange" class="form-control form-control-sm">
                 <input type="text" id="newDescription" v-model="newDescription" class="form-control form-control-sm"
                        placeholder="Photo description (max 35 characters)" aria-label="Recipient's description"
-                       aria-describedby="basic-addon2">
+                       aria-describedby="basic-addon2" autocomplete="off">
               </div>
               <button v-if="showUploadInput" type="button" class="btn btn-sm btn-primary no-vertical-align-btn" @click="uploadPhoto">Upload
               </button>
@@ -913,7 +916,7 @@ export default {
               <div>
                 <input v-if="showUsernameInput" type="text" id="newUsername" v-model="newUsername"
                        class="form-control form-control-sm"
-                       placeholder="New Username" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                       placeholder="New Username" aria-label="Recipient's username" aria-describedby="basic-addon2" autocomplete="off">
                 <button v-if="showUsernameInput" type="button" class="btn btn-sm btn-primary ml-2 me-2 no-vertical-align-btn"
                         @click="setMyUserName">
                   Change
@@ -932,7 +935,7 @@ export default {
               <div class="d-flex ">
                 <input v-if="showSearchInput" type="text" id="Searched Username" v-model="profileOwner"
                        class="form-control form-control-sm"
-                       placeholder="Who are you searching for?" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                       placeholder="Who are you searching for?" aria-label="Recipient's username" aria-describedby="basic-addon2" autocomplete="off">
                 <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2 no-vertical-align-btn" @click="searchUser">
                   Search
                 </button>

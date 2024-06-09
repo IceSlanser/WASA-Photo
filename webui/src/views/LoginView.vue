@@ -51,21 +51,21 @@ export default {
       </div>
 
       <div class="d-flex justify-content-center position-absolute" style="top: 40%; left: 0; width: 100%; height: 100%;">
-        <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center mb-2">
+        <div class="justify-content-between flex-wrap flex-md-nowrap align-items-center">
           <h2 class="h2">Welcome to WASAPhoto</h2>
           <h2 class="h2 text-center" v-if="username">{{ username }}</h2>
+          <div class="border-bottom"></div>
         </div>
       </div>
-      <div class="d-flex justify-content-center position-absolute" style="top: 50%; left: 0; width: 100%; height: 100%;" >
+      <div class="d-flex justify-content-center position-absolute" style="top: 50%; left: 0; width: 100%; height: 100%; padding-top: .5rem" >
         <form @submit.prevent="doLogin">
           <div>
-            <div class="mb-3 border-bottom"></div>
             <input type="text" id="username" v-model="username" class="form-control"
-                   placeholder="What's your name?" aria-label="Recipient's username" aria-describedby="basic-addon2">
-            <div class="mt-2 text-center">
+                   placeholder="What's your name?" aria-label="Recipient's username" aria-describedby="basic-addon2" autocomplete="off">
+            <div class="text-center">
               <button class="btn" type="submit">
                 <div class="d-flex justify-content-between">
-                  <svg class="feather mt-1 me-1"><use href="/feather-sprite-v4.29.0.svg#key"/></svg>
+                  <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#key"/></svg>
                   <span>Login</span>
                 </div>
               </button>

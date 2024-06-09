@@ -469,7 +469,7 @@ export default {
           </div>
           <div v-if="post.post.showCommentInput" style="display: flex; flex-grow: 1">
             <input type="text" id="newComment" v-model="newComments[index]" class="form-control form-control-sm" style="width: 100%"
-                   placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2">
+                   placeholder="What do you want to comment?" aria-label="Recipient's comment" aria-describedby="basic-addon2" autocomplete="off">
             <button v-if="post.post.showCommentInput" type="button" class="btn no-vertical-align-btn btn-sm btn-primary" @click="commentPhoto(post.post.ID)">
               <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#send"/></svg>
             </button>
@@ -511,12 +511,14 @@ export default {
                     </div>
                   </button>
                   <div class="text">{{fullComment.comment.text }}</div>
-                  <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn px-0"
-                        @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
-                    <svg class="feather"><use href="/feather-sprite-v4.29.0.svg#trash-2"/></svg>
-                  </button>
                 </div>
-                <div class="datetime">{{ fullComment.comment.date_time }}</div>
+                <div class="d-flex">
+                  <div class="datetime">{{ fullComment.comment.date_time }}</div>
+                <button v-if="fullComment.username === this.myUsername" type="button" class="btn delete-comment no-border-btn"
+                        @click="deleteComment(fullComment.comment.post_ID, fullComment.comment.ID)">
+                  <span>delete</span>
+                </button>
+                </div>
               </span>
             </ul>
             <button class="btn close-button no-border-btn no-padding-btn no-vertical-align-btn" @click="this.closeCommentWindow(post.post.ID)">
@@ -559,7 +561,7 @@ export default {
               <div class="d-flex ">
                 <input v-if="showSearchInput" type="text" id="Searched Username" v-model="profileOwner"
                        class="form-control form-control-sm"
-                       placeholder="Who are you searching for?" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                       placeholder="Who are you searching for?" aria-label="Recipient's username" aria-describedby="basic-addon2" autocomplete="off">
                 <button v-if="showSearchInput" type="button" class="btn btn-sm btn-primary ml-2 me-2 no-vertical-align-btn" @click="searchUser">
                   Search
                 </button>
@@ -615,7 +617,8 @@ export default {
 
 .text {
   font-size: 1rem;
-  margin-left: .3rem
+  margin-left: .3rem;
+  margin-top: .1rem;
 }
 
 .loading-container {
@@ -677,15 +680,16 @@ export default {
 }
 
 .comment {
+  display: block;
   align-items: center;
   padding-bottom: .5rem;
 }
 
 .delete-comment {
-  display: flex;
-  height:100%;
-  margin-left: .5rem;
-  font-size: 1.1rem;
+  padding-top: 0;
+  padding-left: .5rem;
+  padding-bottom: 0.75rem;
+  font-size: 0.75rem;
   color: red;
 }
 

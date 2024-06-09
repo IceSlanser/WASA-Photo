@@ -93,8 +93,8 @@ func New(db *sql.DB) (AppDatabase, error) {
 		// Database's tables
 		profiles := `CREATE TABLE IF NOT EXISTS profiles (
 			ID INTEGER PRIMARY KEY,
-			Username TEXT UNIQUE,
-			FollowingCount INTEGER DEFAULT 0,
+			Username TEXT UNIQUE COLLATE NOCASE,
+			FollowingCount INTEGER DEFAULT 0,	
 			FollowerCount INTEGER DEFAULT 0,
 			PostCount INTEGER DEFAULT 0
 		)`

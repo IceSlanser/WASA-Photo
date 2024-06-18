@@ -73,14 +73,14 @@ export default {
 
   computed: {
     isFollowing() {
-      if (this.userProfile.followers == null || this.userProfile.followers === []) {
+      if (this.userProfile.followers == null) {
         return false
       }
       return this.userProfile.followers.includes(Number(this.myID));
     },
 
     isBanned() {
-      if (this.userProfile.banned_from == null || this.userProfile.banned_from === []) {
+      if (this.userProfile.banned_from == null) {
         return false
       }
       return this.userProfile.banned_from.includes(Number(this.myID));

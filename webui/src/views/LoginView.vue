@@ -56,7 +56,7 @@ export default {
       </div>
 
     </div>
-    <div class="d-flex justify-content-center position-absolute" style="top: 50%; left: 0; width: 100%; height: 100%; padding-top: .5rem" >
+    <div class="d-flex justify-content-center position-absolute" style="top: 50%; left: 0; width: 100%; height: 100%; padding-top: 1.25rem" >
       <form @submit.prevent="doLogin">
         <div>
           <input type="text" id="username" v-model="username" class="form-control"
@@ -80,7 +80,6 @@ body, html {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow: hidden;
 }
 
 .site-name {
